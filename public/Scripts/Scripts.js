@@ -18,4 +18,3 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdownMenu.classList.toggle("hidden");
     });
   });
-  

@@ -27,6 +27,10 @@ app.get('/', (req, res) => {
 app.get("/Stats", (req, res) => {
   res.render("Stats");
 });
+//taskmanager
+app.get("/Taskmanager", (req, res) => {
+  res.render("Taskmanager");
+});
 
 // Login
 app.get("/Login", (req, res) => {
