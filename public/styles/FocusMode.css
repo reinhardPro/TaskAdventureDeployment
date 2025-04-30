@@ -1,0 +1,31 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #4b0082; 
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.exit {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 24px;
+    color: lightgray;
+    cursor: pointer;
+}
+
+.focus-text {
+    color: #32004d;
+    font-size: 100px;
+    letter-spacing: 10px;
+    text-shadow: 2px 2px #2e003e;
+}
