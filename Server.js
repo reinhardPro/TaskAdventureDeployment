@@ -35,7 +35,7 @@ app.get("/Login", (req, res) => {
 
 // Create Account
 app.get("/CreateAccount", (req, res) => {
-  res.render("CrAccount", {camps});
+  res.render("create_character", {camps});
 });
 
 // Focus Mode
