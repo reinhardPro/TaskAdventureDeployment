@@ -1,0 +1,63 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #3b006a;
+    font-family: sans-serif;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.podium {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.block {
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #222;
+    font-size: 2em;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+.first {
+    background-color: #28a745;
+    height: 200px;
+}
+
+.second {
+    background-color: #dc3545;
+    height: 150px;
+}
+
+.third {
+    background-color: #ffc107;
+    height: 100px;
+}
+
+.scroll-box {
+    margin-left: auto;
+    width: 300px;
+    height: 300px;
+    background-color: #5a2677;
+    padding: 20px;
+    overflow-y: auto;
+    border-radius: 8px;
+}
+
+.scroll-content .item {
+    background-color: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
