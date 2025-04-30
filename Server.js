@@ -59,17 +59,6 @@ app.get("/CharacterCreation", (req, res) => {
 });
 
 
-// Custom 404 page
-app.use((req, res) => {
-  res.render("errors/404");
-});
-
-// Custom 500 page
-app.use((err, req, res, next) => {
-  console.error(err.message);
-  res.render("errors/500");
-});
-
 // Start server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
