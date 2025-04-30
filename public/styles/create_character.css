@@ -1,51 +1,52 @@
 body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #1e1e1e;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.character-selection {
-  display: flex;
-  gap: 60px;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.character {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px; /* ruimte tussen knop en afbeelding */
-}
-
-
-.select-button {
-  padding: 12px 24px;
-  font-size: 16px;
-  margin-bottom: 20px;
-  background-color: #6200ea;
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.select-button:hover {
-  background-color: #3700b3;
-}
-
-.character img {
-  width: 200px;
-  height: 300px;
-  object-fit: contain; 
-  background-color: #2a2a2a;
-  border: 2px solid white;
-  border-radius: 12px;
-}
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1e1e1e;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .character-selection {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .character {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* ruimte tussen knop en afbeelding */
+  }
+  
+  
+  .select-button {
+    padding: 12px 24px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    background-color: #6200ea;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .select-button:hover {
+    background-color: #3700b3;
+  }
+  
+  .character img {
+    width: 200px;
+    height: 300px;
+    object-fit: contain; /* of 'cover' als je wilt dat hij volledig gevuld is */
+    background-color: #2a2a2a;
+    border: 2px solid white;
+    border-radius: 12px;
+  }
+  
