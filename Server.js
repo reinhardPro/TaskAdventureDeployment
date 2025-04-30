@@ -53,7 +53,7 @@ app.get("/Settings", (req, res) => {
 });
 
 // Leaderboard
-app.get("/Leaderboard", (req, res) => {
+app.get("/LeaderBoard", (req, res) => {
   res.render("Leaderboard");
 });
 

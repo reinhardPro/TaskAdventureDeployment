@@ -8,56 +8,90 @@ body, html {
 
 .container {
     display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
     height: 100vh;
     padding: 40px;
     box-sizing: border-box;
+    flex-wrap: wrap;
+    padding-top: 100px;
 }
 
 .podium {
     display: flex;
     align-items: flex-end;
-    gap: 10px;
+    gap: 20px;
+    margin-right: 40px;
+    margin-top: 40px;
 }
 
 .block {
-    width: 80px;
+    width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #222;
-    font-size: 2em;
+    font-size: 3em;
     font-weight: bold;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    padding: 20px 0;
 }
 
 .first {
     background-color: #28a745;
-    height: 200px;
+    height: 300px;
 }
 
 .second {
     background-color: #dc3545;
-    height: 150px;
+    height: 225px;
 }
 
 .third {
     background-color: #ffc107;
-    height: 100px;
+    height: 150px;
 }
 
 .scroll-box {
     margin-left: auto;
-    width: 300px;
-    height: 300px;
+    width: 400px; /* Increased from 300px */
+    height: 400px; /* Increased from 300px */
     background-color: #5a2677;
-    padding: 20px;
+    padding: 25px; /* Increased padding */
     overflow-y: auto;
-    border-radius: 8px;
+    border-radius: 10px; /* Slightly larger radius */
+    margin-top: 40px;
+    font-size: 1.1em; /* Slightly larger text */
 }
 
 .scroll-content .item {
     background-color: white;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
+    padding: 15px; /* Increased padding */
+    margin-bottom: 15px; /* Increased margin */
+    border-radius: 6px; /* Slightly larger radius */
+    transition: all 0.3s ease; /* Smooth transition for all properties */
+}
+
+.scroll-content .item:hover {
+    background-color: #ddd;
+    cursor: pointer;
+    transform: scale(1.02); /* Slight grow effect on hover */
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+        padding-top: 60px;
+    }
+
+    .podium, .scroll-box {
+        margin-top: 20px;
+        margin-right: 0;
+    }
+
+    .scroll-box {
+        width: 90%;
+        height: 350px; /* Adjusted height for mobile */
+    }
 }
