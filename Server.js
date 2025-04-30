@@ -35,7 +35,7 @@ app.get("/Login", (req, res) => {
 
 // Create Account
 app.get("/CreateAccount", (req, res) => {
-  res.render("create_character", {camps});
+  res.render("create_character");
 });
 
 // Focus Mode
@@ -74,3 +74,5 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+
