@@ -1,0 +1,142 @@
+/* Styles */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #1c0038;
+  color: white;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #2a005f;
+  padding: 10px 20px;
+  position: relative;
+}
+
+.logo img {
+  height: 40px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.burger {
+  font-size: 26px;
+  cursor: pointer;
+  color: white;
+  padding: 10px;
+  display: block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: #2a005f;
+  border: 1px solid #ffffff33;
+  border-radius: 12px;
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  min-width: 180px;
+  box-shadow: 0 0 10px #00000066;
+}
+
+.dropdown-menu a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-menu a:hover {
+  background-color: #3e0080;
+}
+
+.container {
+  padding: 20px;
+}
+
+.character-image {
+  max-width: 100px;
+  margin-bottom: 20px;
+}
+
+.task-section {
+  margin-top: 20px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  background-color: #330066;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.task-icon {
+  background-color: #5900b3;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.task-info {
+  flex-grow: 1;
+}
+
+.task-title {
+  font-size: 16px;
+}
+
+.task-date {
+  font-size: 12px;
+  color: #ccc;
+}
+
+.task-expand {
+  font-size: 18px;
+  margin-left: 10px;
+}
+
+.task-details {
+  background-color: #eee;
+  color: black;
+  padding: 10px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+.footer {
+  background-color: #2a005f;
+  color: #ccc;
+  text-align: center;
+  padding: 10px;
+  margin-top: 40px;
+}
+
