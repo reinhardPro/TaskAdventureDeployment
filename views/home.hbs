@@ -1,3 +1,30 @@
 {{!-- Home page --}}
-<h1>Welcome to the Task Adventure website!</h1>
-<p>This is the home page.</p>
+  <link rel="stylesheet" href="/Homestyle.css" />
+<div class="container">
+  <div class="character-section">
+    <img src="/goku.png" alt="Character" class="character-image">
+  </div>
+  <div class="task-section">
+    <h2>Active tasks</h2>
+    <div class="task-list">
+      {{#if tasks.length}}
+        {{#each tasks}}
+          <div class="task-card">
+            <div class="task-icon">{{initial}}</div>
+            <div class="task-info">
+              <div class="task-title">{{title}}</div>
+              <div class="task-date">{{date}}</div>
+            </div>
+            <div class="task-expand">&#9660;</div>
+          </div>
+          <div class="task-details hidden">
+            <p>Omschrijving: {{description}}</p>
+          </div>
+        {{/each}}
+      {{else}}
+        <p>Geen actieve taken gevonden.</p>
+      {{/if}}
+    </div>
+  </div>
+</div>
+<script src="/HomeScript.js"></script>
