@@ -1,0 +1,45 @@
+body {
+    padding-top: 80px;
+    padding-bottom: 70px;
+    background-color: #63099C;
+    color: white; 
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    color: white;
+}
+
+li {
+    margin: 5px 0;
+    font-size: 20px;
+}
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      cursor: pointer;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    li:hover {
+      background-color: #230B66;
+    }
+
+    .details {
+      display: none;
+      margin-top: 5px;
+      font-size: 0.9em;
+      color: #FFFFFF;
+    }
+
+    li.open .details {
+      display: block;
+    }

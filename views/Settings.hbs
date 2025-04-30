@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="/styles/Settings.css">
+  <title>Settings</title>
+  
+</head>
+<body>
+  <h1>Default Settings</h1>
+  <ul>
+    <li>
+      Language
+      <div class="details">Choose your preferred language.</div>
+    </li>
+    <li>
+      Notifications
+      <div class="details">Enable or disable app notifications.</div>
+    </li>
+    <li>
+      Time
+      <div class="details">Set your time zone and time format.</div>
+    </li>
+  </ul>
+
+  <h1>Account Settings</h1>
+  <ul>
+    <li>
+      Profile data
+      <div class="details">Update your name, email address, and profile picture.</div>
+    </li>
+    <li>
+      Change password
+      <div class="details">Change or update your password.</div>
+    </li>
+    <li>
+      Account security
+      <div class="details">See active sessions, login history, and manage trusted devices.</div>
+    </li>
+    <li>
+      Remove account
+      <div class="details">Permanently delete your account.</div>
+    </li>
+  </ul>
+
+  <h1>Notifications & Communication</h1>
+  <ul>
+    <li>
+      Email
+      <div class="details">Manage your emails you receive from us.</div>
+    </li>
+    <li>
+      Push notifications
+      <div class="details">Control push alerts on desktop.</div>
+    </li>
+  </ul>
+
+  <h1>Privacy & Security</h1>
+  <ul>
+    <li>
+      Access rights and permissions
+      <div class="details">Manage rights.</div>
+    </li>
+    <li>
+      2FA
+      <div class="details">Enable or disable two-factor authentication.</div>
+    </li>
+  </ul>
+
+  <h1>Support & Feedback</h1>
+  <ul>
+    <li>
+      Frequently Asked Questions (FAQ)
+      <div class="details">frequently asked questions.</div>
+    </li>
+    <li>
+      Contact support
+      <div class="details">Reach out to our team.</div>
+    </li>
+    <li>
+      Report Bug / Give Suggestions
+      <div class="details">Let us know what’s wrong or how we can improve.</div>
+    </li>
+  </ul>
+<script>    document.querySelectorAll("li").forEach(item => {
+      item.addEventListener("click", () => {
+        item.classList.toggle("open");
+      });
+    });
+ </script>
+
+</body>
+</html>
