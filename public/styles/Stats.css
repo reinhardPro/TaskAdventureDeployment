@@ -1,0 +1,51 @@
+html {
+    font-family: sans-serif;
+  }
+  body {
+    padding-top: 80px;
+    background-color: #540991;
+}
+
+  h4 {
+    text-align: center;
+    color: whitesmoke;
+    line-height: 10px;
+    margin: 0;
+  }
+
+  article {
+    padding: 10px;
+    margin: 10px;
+    flex: 200px;
+    border-radius: 10px;
+  }
+  section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+  }
+  .TaskCopleted {
+    background: #0FE147;
+  }
+  .TaskNotCopleted {
+    background: red;
+  }
+  .TaskPaused{
+    background: orange;
+  }
+  .Friends{
+        background: lightskyblue;
+  }
+  .unkown{
+    background: grey;
+  }
+  .Stats {
+    font-size:150%;
+    text-align: center;
+    color: whitesmoke;
+  }
+  .UserStats{
+    text-align: center;
+    color: whitesmoke;
+  }
