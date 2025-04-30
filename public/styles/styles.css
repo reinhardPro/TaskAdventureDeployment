@@ -1,20 +1,15 @@
-/* Styles */
-
-.footer {
-  background-color: #2a005f;
-  color: #ccc;
-  text-align: center;
-  padding: 10px;
-  margin-top: 40px;
-}
-
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background-color: #2a005f;
   padding: 10px 20px;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  box-sizing: border-box;
 }
 
 .burger {
@@ -52,4 +47,18 @@
 
 .dropdown-menu a:hover {
   background-color: #3e0080;
+}
+
+
+.footer {
+  background-color: #2a005f;
+  color: #ccc;
+  text-align: center;
+  padding: 10px;
+  margin-top: auto;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
 }
