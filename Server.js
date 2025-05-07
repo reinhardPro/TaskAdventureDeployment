@@ -94,7 +94,7 @@ app.post('/CreateAccount', (req, res) => {
     // Optionally, you could store the user in the session after account creation
     req.session.user = { id: userId, username, email }; // Create session data for the new user
 
-    res.redirect('/Login');
+    res.redirect('/CharacterCreation');
   });
 });
 
