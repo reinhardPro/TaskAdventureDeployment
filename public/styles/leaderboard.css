@@ -14,7 +14,7 @@ body, html {
     padding: 40px;
     box-sizing: border-box;
     flex-wrap: wrap;
-    padding-top: 100px;
+    padding-top: 150px; /* Increased from 100px to lower everything */
 }
 
 .podium {
@@ -22,10 +22,12 @@ body, html {
     align-items: flex-end;
     gap: 20px;
     margin-right: 40px;
-    margin-top: 40px;
+    margin-top: 200px; 
+    margin-left: 90px/* Increased from 40px for more downward shift */
 }
 
 .block {
+    position: relative;
     width: 120px;
     display: flex;
     align-items: center;
@@ -52,46 +54,68 @@ body, html {
     height: 150px;
 }
 
+.character {
+            position: absolute;
+            bottom: 100%; /* Position above the block */
+            margin-bottom: -130px; /* Overlap slightly with podium */
+            z-index: 2;
+        }
+
+        .first .character {
+            width: 450px;
+        }
+
+        .second .character, .third .character {
+            width: 425px; /* Slightly smaller for 2nd and 3rd */
+        }
+
 .scroll-box {
     margin-left: auto;
-    width: 400px; /* Increased from 300px */
-    height: 400px; /* Increased from 300px */
+    width: 700px;
+    height: 400px;
     background-color: #5a2677;
-    padding: 25px; /* Increased padding */
+    padding: 25px;
     overflow-y: auto;
-    border-radius: 10px; /* Slightly larger radius */
-    margin-top: 40px;
-    font-size: 1.1em; /* Slightly larger text */
+    border-radius: 10px;
+    margin-top: 60px; /* Increased to match podium's new position */
 }
 
 .scroll-content .item {
     background-color: white;
-    padding: 15px; /* Increased padding */
-    margin-bottom: 15px; /* Increased margin */
-    border-radius: 6px; /* Slightly larger radius */
-    transition: all 0.3s ease; /* Smooth transition for all properties */
+    padding: 20px 15px; /* Increased vertical padding */
+    margin-bottom: 15px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    min-height: 60px; /* Added minimum height for white boxes */
+    display: flex;
+    align-items: center; /* Center content vertically */
 }
 
 .scroll-content .item:hover {
     background-color: #ddd;
     cursor: pointer;
-    transform: scale(1.02); /* Slight grow effect on hover */
+    transform: scale(1.02);
 }
 
 @media (max-width: 768px) {
     .container {
         flex-direction: column;
         align-items: center;
-        padding-top: 60px;
+        padding-top: 80px; /* Adjusted for mobile */
     }
 
     .podium, .scroll-box {
-        margin-top: 20px;
+        margin-top: 30px; /* Adjusted for mobile */
         margin-right: 0;
     }
 
     .scroll-box {
         width: 90%;
-        height: 350px; /* Adjusted height for mobile */
+        height: 350px;
+    }
+    
+    .scroll-content .item {
+        min-height: 50px; /* Slightly smaller for mobile */
+        padding: 15px 10px;
     }
 }
