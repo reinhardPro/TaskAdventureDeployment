@@ -1,7 +1,7 @@
 body {
   padding-top: 80px;
   padding-bottom: 70px;
-  background-color: #63099C;
+  background-color: #1e1e1e;
   
   font-family: Arial, sans-serif;
   margin: 20px;
@@ -38,6 +38,7 @@ li {
     font-size: 0.9em;
     color: #FFFFFF;
   }
+
 
   li.open .details {
     display: block;
