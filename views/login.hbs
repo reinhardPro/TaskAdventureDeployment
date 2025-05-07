@@ -1,5 +1,7 @@
 <head>
   <link rel="stylesheet" href="/styles/login.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
   <div class="login-container">
@@ -24,9 +26,16 @@
     <button type="submit">Login</button>
   </div>
 </form>
+{{#if error}}
 <script>
-  alert("{{error}}");
+  Swal.fire({
+    icon: 'error',
+    title: 'Oops...',
+    text: '{{error}}',
+    confirmButtonColor: '#d33'
+  });
 </script>
+{{/if}}
     <div class="links">
       <a href="/CreateAccount">Create Account</a>
       <a href="#">Forgot your Password</a>
