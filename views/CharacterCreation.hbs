@@ -3,23 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CharacterCreation</title>
+  <title>Character Creation</title>
   <link rel="stylesheet" href="/styles/create_character.css" />
 </head>
-
-
 <body>
-  <div class="character-selection">
-    <div class="character">
-      <button class="select-button">Male</button>
-      <img src="/img/malePixel.png" alt="Male character" />
+  <div class="container">
+    <h1>Create Your Character</h1>
+
+    <div class="input-group">
+      <label for="character-name">Character Name:</label>
+      <input type="text" id="character-name" name="character-name" placeholder="Enter your character name" />
     </div>
-    <div class="character">
-      <button class="select-button">Female</button>
-      <img src="/img/pixelFemale.png" alt="Female character" />
+
+    <div class="gender-selection">
+      <button class="gender-button" data-gender="male">Male</button>
+      <button class="gender-button" data-gender="female">Female</button>
     </div>
+
+    <div class="carousel">
+      <button class="carousel-btn prev">◀</button>
+
+      <div class="character-display">
+        <img id="character-image" src="/img/malePixel.png" alt="Character preview" />
+      </div>
+
+      <button class="carousel-btn next">▶</button>
+    </div>
+
+    <button class="confirm-button">Create Character</button>
   </div>
+
+  <script src="/scripts/character_creation.js" defer></script>
 </body>
-
-
 </html>
+
+
