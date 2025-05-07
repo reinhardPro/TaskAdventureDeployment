@@ -6,6 +6,13 @@ const bcrypt = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./TAdatabase.db');
 
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+  }
+  next();
+}
+
 // Express setup
 const app = express();
 const port = 3000;
@@ -41,9 +48,10 @@ app.get('/Stats', (req, res) => {
 });
 
 // Taskmanager route
-app.get('/Taskmanager', (req, res) => {
+app.get('/Taskmanager', requireLogin, (req, res) => {
   res.render('Taskmanager');
 });
+
 
 // Login route
 app.get('/Login', (req, res) => {
@@ -56,12 +64,12 @@ app.post('/Login', (req, res) => {
 
   findUser(username, (err, user) => {
     if (err || !user) {
-      return res.status(400).send('User not found');
+      return res.render('Login', { error: 'Gebruiker niet gevonden' });
     }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.status(400).send('Incorrect password');
+        return res.render('Login', { error: 'Wachtwoord incorrect' });
       }
 
       // Store user in session
@@ -92,12 +100,12 @@ app.post('/CreateAccount', (req, res) => {
     // Optionally, you could store the user in the session after account creation
     req.session.user = { id: userId, username, email }; // Create session data for the new user
 
-    res.redirect('/Login');
+    res.redirect('/CharacterCreation');
   });
 });
 
 // Focus Mode route
-app.get('/FocusMode', (req, res) => {
+app.get('/FocusMode', requireLogin, (req, res) => {
   res.render('FocusMode');
 });
 
@@ -126,7 +134,7 @@ app.get('/leaderboard', (req, res) => {
 const { createUser, findUser } = require('./db/database');
 
 // Character Creation route
-app.get('/CharacterCreation', (req, res) => {
+app.get('/CharacterCreation', requireLogin, (req, res) => {
   res.render('CharacterCreation');
 });
 
