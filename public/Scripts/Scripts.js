@@ -19,11 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
+  // Theme kleuren
   window.addEventListener('load', function() {
-    const savedTheme = localStorage.getItem('theme');  // Haal het opgeslagen thema op
+    const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
-        document.body.classList.add(savedTheme + '-theme');  // Voeg het opgeslagen thema toe aan de body
+        document.body.classList.add(savedTheme + '-theme');
     } else {
-        document.body.classList.add('default-theme');  // Gebruik het standaardthema als er geen voorkeur is opgeslagen
+        document.body.classList.add('default-theme');
     }
 });
