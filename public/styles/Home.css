@@ -1,3 +1,4 @@
+/* Styles */
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
@@ -109,3 +110,6 @@ body {
   height: auto;
 }
 
+.hidden {
+  display: none;
+}
