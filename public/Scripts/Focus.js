@@ -14,7 +14,6 @@ function startTimer() {
     totalSeconds = parseInt(minutesInput) * 60;
     isPaused = false;
 
-    // Verberg interface-elementen
     document.querySelector(".header").style.visibility = "hidden";
     document.querySelector(".footer").style.visibility = "hidden";
     document.getElementById("minutesInput").style.display = "none";
