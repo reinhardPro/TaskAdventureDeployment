@@ -8,6 +8,13 @@ const bcrypt = require('bcrypt');
 // Import database functions
 const { createUser, findUser } = require('./db/database');
 
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+  }
+  next();
+}
+
 // Express setup
 const app = express();
 const port = 3000;
@@ -43,9 +50,10 @@ app.get('/Stats', (req, res) => {
 });
 
 // Taskmanager route
-app.get('/Taskmanager', (req, res) => {
+app.get('/Taskmanager', requireLogin, (req, res) => {
   res.render('Taskmanager');
 });
+
 
 // Login route
 app.get('/Login', (req, res) => {
@@ -99,7 +107,7 @@ app.post('/CreateAccount', (req, res) => {
 });
 
 // Focus Mode route
-app.get('/FocusMode', (req, res) => {
+app.get('/FocusMode', requireLogin, (req, res) => {
   res.render('FocusMode');
 });
 
@@ -114,7 +122,7 @@ app.get('/LeaderBoard', (req, res) => {
 });
 
 // Character Creation route
-app.get('/CharacterCreation', (req, res) => {
+app.get('/CharacterCreation', requireLogin, (req, res) => {
   res.render('CharacterCreation');
 });
 
