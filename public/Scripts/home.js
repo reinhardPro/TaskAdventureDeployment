@@ -1,42 +1,30 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const characterImg = document.getElementById("character-image");
-  
-    document.getElementById("btnMale").addEventListener("click", function () {
-      if (characterImg) characterImg.src = '/img/malePixel.png';
-      localStorage.setItem("selectedGender", "male");
-    });
-  
-    document.getElementById("btnFemale").addEventListener("click", function () {
-      if (characterImg) characterImg.src = '/img/pixelFemale.png';
-      localStorage.setItem("selectedGender", "female");
-    });
-  });
+    const taskCards = document.querySelectorAll(".task-card");
 
-  
+    taskCards.forEach(card => {
+      const title = card.querySelector(".task-title");
+      const expand = card.querySelector(".task-expand");
+      const details = card.nextElementSibling;
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const characterImgHome = document.getElementById("characterImgHome");
-    const selectedGender = localStorage.getItem("selectedGender");
-  
-    if (characterImgHome) {
-      if (selectedGender === "female") {
-        characterImgHome.src = '/img/pixelFemale.png';
-      } else {
-        characterImgHome.src = '/img/malePixel.png';
+      function toggleDetails() {
+        if (details && details.classList.contains("task-details")) {
+          const isShown = details.classList.contains("show");
+
+          if (isShown) {
+            details.classList.remove("show");
+            details.classList.add("hidden");
+            card.classList.remove("open");
+          } else {
+            details.classList.add("show");
+            details.classList.remove("hidden");
+            card.classList.add("open");
+          }
+        }
       }
-    }
-  });
 
-
-
-  document.getElementById("btnMale").addEventListener("click", function () {
-    localStorage.setItem("selectedGender", "male");
-    window.location.href = "/"; // Verander dit pad naar jouw juiste route
-  });
-  
-  document.getElementById("btnFemale").addEventListener("click", function () {
-    localStorage.setItem("selectedGender", "female");
-    window.location.href = "/"; // Verander dit pad naar jouw juiste route
+      title?.addEventListener("click", toggleDetails);
+      expand?.addEventListener("click", toggleDetails);
+    });
   });
   
   
