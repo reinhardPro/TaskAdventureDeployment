@@ -18,3 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdownMenu.classList.toggle("hidden");
     });
   });
+  
+  window.addEventListener('load', function() {
+    const savedTheme = localStorage.getItem('theme');  // Haal het opgeslagen thema op
+    if (savedTheme) {
+        document.body.classList.add(savedTheme + '-theme');  // Voeg het opgeslagen thema toe aan de body
+    } else {
+        document.body.classList.add('default-theme');  // Gebruik het standaardthema als er geen voorkeur is opgeslagen
+    }
+});
