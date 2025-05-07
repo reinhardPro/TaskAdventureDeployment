@@ -22,8 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      title?.addEventListener("click", toggleDetails);
-      expand?.addEventListener("click", toggleDetails);
+      card.addEventListener("click", toggleDetails);
     });
   });
   
