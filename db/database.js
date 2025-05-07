@@ -1,12 +1,10 @@
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 
-// Initialize the database with the Users table
 const db = new sqlite3.Database('./TAdatabase.db');
 
-// Initialize the database with a users table if it doesn't exist
 db.serialize(() => {
-  // Users table
+  // Create tables
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,7 +14,6 @@ db.serialize(() => {
     )
   `);
 
-  // Tasks table
   db.run(`
     CREATE TABLE IF NOT EXISTS tasks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +26,6 @@ db.serialize(() => {
     )
   `);
 
-  // Characters table
   db.run(`
     CREATE TABLE IF NOT EXISTS characters (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +37,6 @@ db.serialize(() => {
     )
   `);
 
-  // LevelUp table
   db.run(`
     CREATE TABLE IF NOT EXISTS levelup (
       level INTEGER PRIMARY KEY,
@@ -49,7 +44,6 @@ db.serialize(() => {
     )
   `);
 
-  // Leaderboard table (could be a view in real-world case)
   db.run(`
     CREATE TABLE IF NOT EXISTS leaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +53,6 @@ db.serialize(() => {
     )
   `);
 
-  // Roles table
   db.run(`
     CREATE TABLE IF NOT EXISTS roles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +60,6 @@ db.serialize(() => {
     )
   `);
 
-  // Permissions table
   db.run(`
     CREATE TABLE IF NOT EXISTS permissions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +67,6 @@ db.serialize(() => {
     )
   `);
 
-  // RolePermissions mapping table (many-to-many)
   db.run(`
     CREATE TABLE IF NOT EXISTS role_permissions (
       roleId INTEGER NOT NULL,
@@ -86,7 +77,6 @@ db.serialize(() => {
     )
   `);
 
-  // UserRoles mapping table
   db.run(`
     CREATE TABLE IF NOT EXISTS user_roles (
       userId INTEGER NOT NULL,
@@ -96,9 +86,56 @@ db.serialize(() => {
       PRIMARY KEY (userId, roleId)
     )
   `);
+
+  // Dummy users (met email, username, password)
+  const users = [
+    ['alice@example.com', 'alice', 'password123'],
+    ['bob@example.com', 'bob', 'password123'],
+    ['carol@example.com', 'carol', 'password123'],
+    ['dave@example.com', 'dave', 'password123'],
+    ['eve@example.com', 'eve', 'password123']
+  ];
+
+  db.run(`DELETE FROM users`);
+  const userStmt = db.prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
+  users.forEach(([email, username, password]) => {
+    const hashed = bcrypt.hashSync(password, 10);
+    userStmt.run(email, username, hashed);
+  });
+  userStmt.finalize();
+
+  // Dummy characters
+  const characters = [
+    [1, 'ShadowBlade', 4, 950],
+    [2, 'IronFist', 6, 1400],
+    [3, 'WindRunner', 2, 450],
+    [4, 'FireMage', 7, 1900],
+    [5, 'NightElf', 5, 1200]
+  ];
+
+  db.run(`DELETE FROM characters`);
+  const charStmt = db.prepare("INSERT INTO characters (userId, name, level, xp) VALUES (?, ?, ?, ?)");
+  characters.forEach(char => charStmt.run(...char));
+  charStmt.finalize();
+
+  // Dummy tasks
+  const tasks = [
+    [1, 'Craft a Sword', 'Gather iron and craft a new sword.', '2025-05-10', 0],
+    [2, 'Scout the Area', 'Explore the nearby forest for enemies.', '2025-05-12', 1],
+    [3, 'Deliver Message', 'Take the letter to the capital.', '2025-05-15', 0],
+    [4, 'Defend the Wall', 'Hold the wall from invading forces.', '2025-05-20', 0],
+    [5, 'Collect Taxes', 'Visit villagers and collect taxes.', '2025-05-18', 1]
+  ];
+
+  db.run(`DELETE FROM tasks`);
+  const taskStmt = db.prepare("INSERT INTO tasks (userId, title, description, dueDate, completed) VALUES (?, ?, ?, ?, ?)");
+  tasks.forEach(task => taskStmt.run(...task));
+  taskStmt.finalize();
+
+  console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
 });
 
-// Function to insert a new user into the database
+// Gebruikersfuncties blijven ongewijzigd
 function createUser(email, username, password, callback) {
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return callback(err);
@@ -106,19 +143,18 @@ function createUser(email, username, password, callback) {
       `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
       [email, username, hashedPassword],
       function (err) {
-        callback(err, this.lastID); // Return the new user ID
+        callback(err, this.lastID);
       }
     );
   });
 }
 
-// Function to find a user by username/email and compare the password
 function findUser(usernameOrEmail, callback) {
   db.get(
     `SELECT * FROM users WHERE username = ? OR email = ?`,
     [usernameOrEmail, usernameOrEmail],
     (err, row) => {
-      callback(err, row); // Return the user row
+      callback(err, row);
     }
   );
 }
