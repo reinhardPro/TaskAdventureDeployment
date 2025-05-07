@@ -24,3 +24,9 @@ document.querySelectorAll("li").forEach(item => {
       localStorage.setItem("selectedTheme", selected);
     });
   }
+  
+document.querySelectorAll("li").forEach(item => {
+    item.addEventListener("click", () => {
+      item.classList.toggle("open");
+    });
+  });
