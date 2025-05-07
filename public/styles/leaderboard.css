@@ -2,7 +2,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    background-color: #3b006a;
+    background-color: #1e1e1e;
     font-family: sans-serif;
 }
 
@@ -73,7 +73,7 @@ body, html {
     margin-left: auto;
     width: 700px;
     height: 400px;
-    background-color: #5a2677;
+    background-color: #3b0757;
     padding: 25px;
     overflow-y: auto;
     border-radius: 10px;
