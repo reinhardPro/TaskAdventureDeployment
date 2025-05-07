@@ -3,10 +3,8 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
-
-
-// Import database functions
-const { createUser, findUser } = require('./db/database');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./TAdatabase.db');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
@@ -116,10 +114,24 @@ app.get('/Settings', (req, res) => {
   res.render('Settings');
 });
 
-// Leaderboard route
-app.get('/LeaderBoard', (req, res) => {
-  res.render('Leaderboard');
+app.get('/leaderboard', (req, res) => {
+  db.all('SELECT name, xp FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+      if (err) {
+          console.error("Query error:", err.message);  // Log specific error
+          return res.status(500).send("Database error");
+      }
+
+      const top3 = rows.slice(0, 3);
+      const others = rows.slice(3);
+
+      res.render('LeaderBoard', { top3, others });
+  });
 });
+
+
+
+// Import database functions
+const { createUser, findUser } = require('./db/database');
 
 // Character Creation route
 app.get('/CharacterCreation', requireLogin, (req, res) => {
