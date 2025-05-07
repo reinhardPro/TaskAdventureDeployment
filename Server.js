@@ -4,15 +4,19 @@ const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 
+const { db, createUser, findUser, getTasks } = require('./db/database');
 
-// Import database functions
-const { createUser, findUser } = require('./db/database');
 
-// Express setup
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+  }
+  next();
+}
+
 const app = express();
 const port = 3000;
 
-// Set up express-handlebars engine
 app.engine('hbs', exphbs.engine({
   extname: 'hbs',
   defaultLayout: 'main',
@@ -28,13 +32,38 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({
   secret: 'secretkey',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 3600000,
+    sameSite: 'lax'
+  }
 }));
+
+app.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
 
 // Home route (with dynamic user state)
 app.get('/', (req, res) => {
   const user = req.session.user;
-  res.render('home', { user });
+  if (!user) {
+    return res.redirect('/Login'); // Redirect to login if no user is logged in
+  }
+
+  const userId = user.id;
+
+  // Fetch pending tasks for the logged-in user
+  db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
+    if (err) {
+      return res.status(500).send('Error fetching tasks');
+    }
+
+    // Render the home page with tasks
+    res.render('home', { user, tasks });
+  });
 });
 
 // Stats route
@@ -44,7 +73,75 @@ app.get('/Stats', (req, res) => {
 
 // Taskmanager route
 app.get('/Taskmanager', (req, res) => {
-  res.render('Taskmanager');
+  if (!req.session.user) {
+    return res.redirect('/Login');
+  }
+
+  const userId = req.session.user.id;
+
+  // Fetch tasks for the logged-in user
+  db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
+    if (err) {
+      return res.status(500).send('Error fetching tasks');
+    }
+    res.render('Taskmanager', { tasks });
+  });
+});
+
+// Handle task creation
+app.post('/Taskmanager', requireLogin, (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/Login');
+  }
+
+  const { taskName, taskValue, taskLevel, taskDeadline, taskDescription } = req.body;
+  const userId = req.session.user.id;
+
+  // Insert new task into the database
+  db.run(
+    `INSERT INTO tasks (userId, title, description, dueDate, completed, xp) VALUES (?, ?, ?, ?, 0, ?)`, 
+    [userId, taskName, taskDescription, taskDeadline, taskValue],
+    function(err) {
+      if (err) {
+        return res.status(500).send('Error adding task');
+      }
+
+      res.redirect('/Taskmanager');
+    }
+  );
+});
+
+// Accept a task
+app.post('/task/accept/:id', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/Login');
+  }
+
+  const taskId = req.params.id;
+
+  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ? AND completed = 0', [taskId, req.session.user.id], (err) => {
+    if (err) {
+      return res.status(500).send('Error accepting task');
+    }
+    res.redirect('/Taskmanager');
+  });
+});
+
+// Delete a task
+app.post('/task/delete/:id', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/Login');
+  }
+
+  const taskId = req.params.id;
+
+  // Delete the task from the database
+  db.run('DELETE FROM tasks WHERE id = ? AND userId = ?', [taskId, req.session.user.id], (err) => {
+    if (err) {
+      return res.status(500).send('Error deleting task');
+    }
+    res.redirect('/Taskmanager');
+  });
 });
 
 // Login route
@@ -90,21 +187,19 @@ app.post('/CreateAccount', (req, res) => {
     if (err) {
       return res.status(500).send('Error creating user');
     }
-
-    // Optionally, you could store the user in the session after account creation
-    req.session.user = { id: userId, username, email }; // Create session data for the new user
+    req.session.user = { id: userId, username, email };
 
     res.redirect('/Login');
   });
 });
 
 // Focus Mode route
-app.get('/FocusMode', (req, res) => {
+app.get('/FocusMode', requireLogin, (req, res) => {
   res.render('FocusMode');
 });
 
 // Settings route
-app.get('/Settings', (req, res) => {
+app.get('/Settings', requireLogin, (req, res) => {
   res.render('Settings');
 });
 
@@ -114,7 +209,7 @@ app.get('/LeaderBoard', (req, res) => {
 });
 
 // Character Creation route
-app.get('/CharacterCreation', (req, res) => {
+app.get('/CharacterCreation', requireLogin, (req, res) => {
   res.render('CharacterCreation');
 });
 

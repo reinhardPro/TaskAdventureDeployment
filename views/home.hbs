@@ -1,30 +1,32 @@
 {{!-- Home page --}}
-  <link rel="stylesheet" href="/styles/Home.css" />
+<link rel="stylesheet" href="/styles/Home.css" />
 <div class="container">
-  <div class="character-section">
-    <img src="/img/malePixel.png" alt="Character" class="character-image">
-  </div>
+  <!-- Task Section (Left) -->
   <div class="task-section">
     <h2>Active tasks</h2>
     <div class="task-list">
       {{#if tasks.length}}
         {{#each tasks}}
           <div class="task-card">
-            <div class="task-icon">{{initial}}</div>
+            <div class="task-icon">{{this.initial}}</div> <!-- Use `this` to reference current task data -->
             <div class="task-info">
-              <div class="task-title">{{title}}</div>
-              <div class="task-date">{{date}}</div>
+              <div class="task-title">{{this.title}}</div> <!-- Use `this` for current task properties -->
+              <div class="task-date">{{this.dueDate}}</div> <!-- Use `dueDate` or adjust according to your model -->
             </div>
             <div class="task-expand">&#9660;</div>
           </div>
           <div class="task-details hidden">
-            <p>Omschrijving: {{description}}</p>
+            <p>Omschrijving: {{this.description}}</p> <!-- Use `this` for task's description -->
           </div>
         {{/each}}
       {{else}}
-        <p>No active tasks found.</p>
+        <p>Geen actieve taken gevonden.</p>
       {{/if}}
     </div>
   </div>
+
+  <!-- Character Section (Right) -->
+  <div class="character-section">
+    <img src="./img/malePixel.png" alt="Character" class="character-image">
+  </div>
 </div>
-<script src="/scripts/Home.js"></script>

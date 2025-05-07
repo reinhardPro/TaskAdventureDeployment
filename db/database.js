@@ -1,10 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 
-// Initialize the database with the Users table
 const db = new sqlite3.Database('./TAdatabase.db');
 
-// Initialize the database with a users table if it doesn't exist
 db.serialize(() => {
   // Users table
   db.run(`
@@ -23,8 +21,10 @@ db.serialize(() => {
       userId INTEGER NOT NULL,
       title TEXT NOT NULL,
       description TEXT,
-      dueDate TEXT,
+      dueDate TEXT NOT NULL,
+      Pending INTEGER DEFAULT 0,
       completed INTEGER DEFAULT 0,
+      xp INTEGER DEFAULT 0,
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
@@ -49,7 +49,7 @@ db.serialize(() => {
     )
   `);
 
-  // Leaderboard table (could be a view in real-world case)
+  // Leaderboard table
   db.run(`
     CREATE TABLE IF NOT EXISTS leaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,7 +98,6 @@ db.serialize(() => {
   `);
 });
 
-// Function to insert a new user into the database
 function createUser(email, username, password, callback) {
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return callback(err);
@@ -106,21 +105,30 @@ function createUser(email, username, password, callback) {
       `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
       [email, username, hashedPassword],
       function (err) {
-        callback(err, this.lastID); // Return the new user ID
+        callback(err, this.lastID);
       }
     );
   });
 }
 
-// Function to find a user by username/email and compare the password
 function findUser(usernameOrEmail, callback) {
   db.get(
     `SELECT * FROM users WHERE username = ? OR email = ?`,
     [usernameOrEmail, usernameOrEmail],
     (err, row) => {
-      callback(err, row); // Return the user row
+      callback(err, row);
     }
   );
 }
 
-module.exports = { createUser, findUser };
+function getTasks(userId, callback) {
+  db.all(
+    `SELECT * FROM tasks WHERE userId = ?`,
+    [userId],
+    (err, tasks) => {
+      callback(err, tasks);
+    }
+  );
+}
+
+module.exports = { db, createUser, findUser, getTasks };
