@@ -55,29 +55,32 @@ body, html {
 }
 
 .character {
-            position: absolute;
-            bottom: 100%; /* Position above the block */
-            margin-bottom: -130px; /* Overlap slightly with podium */
-            z-index: 2;
-            display: block;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    margin-bottom: -130px;
+    z-index: 2;
     object-fit: contain;
     pointer-events: auto;
-        }
+    display: block;
+}
 
-        .first .character {
-            width: 450px;
-        }
+.first .character {
+    width: 450px;
+}
 
-        .second .character, .third .character {
-            width: 425px; /* Slightly smaller for 2nd and 3rd */
-        }
+.second .character, .third .character {
+    width: 425px;
+}
 
-        .character:hover {
-            transform: scale(1.05);
-            filter: drop-shadow(0 0 10px #ffffff);
-            transition: transform 0.3s ease, filter 0.3s ease;
-            cursor: pointer;
-        }
+.character:hover {
+    transform: translateX(-50%) scale(1.05);
+    filter: drop-shadow(0 0 10px #ffffff);
+    transition: transform 0.3s ease, filter 0.3s ease;
+    cursor: pointer;
+}
+
 .scroll-box {
     margin-left: auto;
     width: 700px;
@@ -133,7 +136,21 @@ body, html {
     z-index: 3;
     font-size:0.4em;
 }
+/* 
+.character-wrapper {
+    position: absolute;
+    bottom: 135%;
+    margin-bottom: -130px;
+    width: fit-content;
+    height: auto;
+    right: 275px
+}
 
+.character-wrapper:hover .character {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 10px #ffffff);
+    transition: transform 0.3s ease, filter 0.3s ease;
+} */
 
 @media (max-width: 768px) {
     .container {
