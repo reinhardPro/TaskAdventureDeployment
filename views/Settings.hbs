@@ -8,23 +8,32 @@
   
 </head>
 <body>
+    <div class="Titles">
   <h1>Default Settings</h1>
+    </div>
   <ul>
     <li>
       Language
       <div class="details">Choose your preferred language.</div>
     </li>
-    <li>
-      Notifications
-      <div class="details">Enable or disable app notifications.</div>
-    </li>
+   <li>
+  Notifications
+  <div class="details">
+    <p>Enable or disable app notifications.</p>
+    <label class="switch">
+      <input type="checkbox">
+      <span class="slider"></span>
+    </label>
+  </div>
+</li>
     <li>
       Time
       <div class="details">Set your time zone and time format.</div>
     </li>
   </ul>
-
+  <div class="Titles">
   <h1>Account Settings</h1>
+  </div>
   <ul>
     <li>
       Profile data
@@ -40,11 +49,12 @@
     </li>
     <li>
       Remove account
-      <div class="details">Permanently delete your account.</div>
+      <div class="details">permanently delete your account and al of it's data.</div>
     </li>
   </ul>
-
+<div class="Titles">
   <h1>Notifications & Communication</h1>
+  </div>
   <ul>
     <li>
       Email
@@ -52,38 +62,51 @@
     </li>
     <li>
       Push notifications
-      <div class="details">Control push alerts on desktop.</div>
+      <div class="details">Control push alerts on desktop and mobile.</div>
     </li>
   </ul>
-
+<div class="Titles">
   <h1>Privacy & Security</h1>
+  </div>
   <ul>
     <li>
       Access rights and permissions
-      <div class="details">Manage rights.</div>
+      <div class="details">Manage your rights on the site.</div>
     </li>
     <li>
       2FA
-      <div class="details">Enable or disable two-factor authentication.</div>
+      <div class="details"><p>Enable or disable two-factor authentication.</p> 
+         <label class="switch">
+      <input type="checkbox">
+      <span class="slider"></span>
+    </label>
+      </div>
     </li>
   </ul>
-
+ <div class="Titles">
   <h1>Support & Feedback</h1>
+  </div>
   <ul>
     <li>
-      Frequently Asked Questions (FAQ)
+      FAQ
       <div class="details">frequently asked questions.</div>
     </li>
     <li>
       Contact support
-      <div class="details">Reach out to our team.</div>
+      <div class="details">Reach out to our team.
+      <p>email: Task@Adventure.com</p>
+      <p>phone: 32+ 492 23 81 62</p>
+      </div>
+      
     </li>
     <li>
       Report Bug / Give Suggestions
-      <div class="details">Let us know what’s wrong or how we can improve.</div>
+      <div class="details">Let us know what’s wrong or how we can improve your experience.
+      </div> 
+      
     </li>
   </ul>
-<script>    document.querySelectorAll("li").forEach(item => {
+<script> document.querySelectorAll("li").forEach(item => {
       item.addEventListener("click", () => {
         item.classList.toggle("open");
       });
