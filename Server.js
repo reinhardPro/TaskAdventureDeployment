@@ -3,9 +3,19 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./TAdatabase.db');
+
 
 const { db, createUser, findUser, getTasks } = require('./db/database');
 
+=======
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+  }
+  next();
+}
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
@@ -142,7 +152,11 @@ app.post('/task/delete/:id', (req, res) => {
     }
     res.redirect('/Taskmanager');
   });
+=======
+app.get('/Taskmanager', requireLogin, (req, res) => {
+  res.render('Taskmanager');
 });
+
 
 // Login route
 app.get('/Login', (req, res) => {
@@ -155,12 +169,12 @@ app.post('/Login', (req, res) => {
 
   findUser(username, (err, user) => {
     if (err || !user) {
-      return res.status(400).send('User not found');
+      return res.render('Login', { error: 'Gebruiker niet gevonden' });
     }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.status(400).send('Incorrect password');
+        return res.render('Login', { error: 'Wachtwoord incorrect' });
       }
 
       // Store user in session
@@ -189,7 +203,7 @@ app.post('/CreateAccount', (req, res) => {
     }
     req.session.user = { id: userId, username, email };
 
-    res.redirect('/Login');
+    res.redirect('/CharacterCreation');
   });
 });
 
@@ -203,10 +217,24 @@ app.get('/Settings', requireLogin, (req, res) => {
   res.render('Settings');
 });
 
-// Leaderboard route
-app.get('/LeaderBoard', (req, res) => {
-  res.render('Leaderboard');
+app.get('/leaderboard', (req, res) => {
+  db.all('SELECT name, xp FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+      if (err) {
+          console.error("Query error:", err.message);  // Log specific error
+          return res.status(500).send("Database error");
+      }
+
+      const top3 = rows.slice(0, 3);
+      const others = rows.slice(3);
+
+      res.render('LeaderBoard', { top3, others });
+  });
 });
+
+
+
+// Import database functions
+const { createUser, findUser } = require('./db/database');
 
 // Character Creation route
 app.get('/CharacterCreation', requireLogin, (req, res) => {

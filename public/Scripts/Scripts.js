@@ -18,3 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdownMenu.classList.toggle("hidden");
     });
   });
+  
+  // Theme kleuren
+  window.addEventListener('load', function() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.body.classList.add(savedTheme + '-theme');
+    } else {
+        document.body.classList.add('default-theme');
+    }
+});
