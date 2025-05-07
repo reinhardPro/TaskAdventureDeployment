@@ -5,34 +5,24 @@ body {
   color: white;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  position: relative;
-}
-
-.logo img {
-  height: 40px;
-}
-
-.title {
-  margin: 0;
-  font-size: 24px;
-}
-
-
 .container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
   padding: 20px;
 }
 
+.character-section {
+  flex-shrink: 0;
+}
+
 .character-image {
-  max-width: 100px;
-  margin-bottom: 20px;
+  max-width: 150px;
+  height: auto;
 }
 
 .task-section {
+  flex-grow: 1;
   margin-top: 20px;
 }
 
@@ -73,46 +63,49 @@ body {
 
 .task-date {
   font-size: 12px;
-  color: white
+  color: white;
 }
 
 .task-expand {
   font-size: 18px;
   margin-left: 10px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.task-card.open .task-expand {
+  transform: rotate(180deg);
 }
 
 .task-details {
-  background-color: #eee;
-  color: white;
+  background-color: #d9b9ff;
+  color: black;
   padding: 10px;
   margin-top: -10px;
   margin-bottom: 10px;
   border-radius: 5px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
 }
 
-.hidden {
-  display: none;
+.task-details.show {
+  max-height: 500px;
+  opacity: 1;
 }
-.task-section h2 {
-  margin-top: 0;        
-  padding-top: 0;       
+
+.task-details.hidden {
+  display: block;
+  max-height: 0;
+  opacity: 0;
 }
 .container {
-  display: flex;
-  align-items: flex-start; 
-  gap: 20px; 
-  padding: 20px;
-}
-
-.character-section {
-  flex-shrink: 0; 
+  padding-top: 80px;
 }
 
 .character-image {
-  max-width: 150px; 
+  max-width: 250px; 
   height: auto;
 }
 
-.task-section {
-  flex-grow: 1; 
-}
