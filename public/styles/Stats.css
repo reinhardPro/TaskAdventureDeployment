@@ -3,7 +3,7 @@ html {
 }
 body {
   padding-top: 80px;
-  background-color: #540991;
+  background-color:#1e1e1e;
 }
 
 h4 {
@@ -21,7 +21,7 @@ h4 {
 article {
   padding: 10px;
   margin: 10px;
-  flex: 200px;
+  flex: 300px;
   border-radius: 10px;
   transition: all 0.3s ease;
 }
@@ -49,16 +49,28 @@ section {
 .TaskNotCopleted {
   background: red;
 }
-.TaskPaused{
+.TotalXpGained{
   background: orange;
 }
 .Friends{
       background: lightskyblue;
+}
+.timeSpentOnTask{
+  background:#5a2677;
+}
+.MostXpForOneTask{
+  background:#FFD700;
+}
+.MostTaskIn24h{
+  background:#0404d4;
+}
+.DailyStreak{
+  background:#ad57a7;
 }
 .unkown{
   background: grey;
 }
 .UserStats{
   text-align: center;
-  color: whitesmoke;
+  color: white;
 }
