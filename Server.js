@@ -9,7 +9,6 @@ const db = new sqlite3.Database('./TAdatabase.db');
 
 const { db, createUser, findUser, getTasks } = require('./db/database');
 
-=======
 function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
@@ -152,9 +151,10 @@ app.post('/task/delete/:id', (req, res) => {
     }
     res.redirect('/Taskmanager');
   });
-=======
+
 app.get('/Taskmanager', requireLogin, (req, res) => {
   res.render('Taskmanager');
+});
 });
 
 
