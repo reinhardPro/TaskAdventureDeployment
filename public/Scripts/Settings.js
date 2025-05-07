@@ -24,5 +24,3 @@ document.querySelectorAll("li").forEach(item => {
       localStorage.setItem("selectedTheme", selected);
     });
   }
-  
-  
