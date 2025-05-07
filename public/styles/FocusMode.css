@@ -1,7 +1,6 @@
 body, html {
     margin: 0;
     padding: 0;
-    height: 100%;
     background-color: #4b0082; 
     font-family: 'Courier New', Courier, monospace;
 }
@@ -12,20 +11,46 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-top: 150px;
 }
 
-.exit {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    font-size: 24px;
-    color: lightgray;
+.timer-display {
+    font-size: 15vw;
+    color: white;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.timer-controls input,
+.timer-controls button {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #fff;
+    color: #4b0082;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.timer-controls input {
+    width: 100px;
+    text-align: center;
 }
 
-.focus-text {
-    color: #32004d;
-    font-size: 100px;
-    letter-spacing: 10px;
-    text-shadow: 2px 2px #2e003e;
+.timer-controls button:hover {
+    background-color: #e0e0e0;
+}
+
+header {
+    color: white;
+    text-align: center;
 }
