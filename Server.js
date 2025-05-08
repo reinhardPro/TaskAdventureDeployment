@@ -16,13 +16,6 @@ function requireLogin(req, res, next) {
   next();
 }
 
-function requireLogin(req, res, next) {
-  if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
-  }
-  next();
-}
-
 const app = express();
 const port = 3000;
 
@@ -81,10 +74,7 @@ app.get('/Stats', (req, res) => {
 });
 
 // Taskmanager route
-app.get('/Taskmanager', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
-  }
+app.get('/Taskmanager',requireLogin,(req, res) => {
 
   const userId = req.session.user.id;
 
@@ -151,10 +141,6 @@ app.post('/task/delete/:id', (req, res) => {
     }
     res.redirect('/Taskmanager');
   });
-
-app.get('/Taskmanager', requireLogin, (req, res) => {
-  res.render('Taskmanager');
-});
 });
 
 
