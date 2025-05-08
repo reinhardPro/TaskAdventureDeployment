@@ -154,12 +154,12 @@ app.post('/Login', (req, res) => {
 
   findUser(username, (err, user) => {
     if (err || !user) {
-      return res.status(400).send('User not found');
+      return res.render('Login', { error: 'Gebruiker niet gevonden.' });
     }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.status(400).send('Incorrect password');
+        return res.render('Login', { error: 'Wachtwoord incorrect.' });
       }
 
       // Store user in session
