@@ -1,38 +1,6 @@
-{{!-- Home page --}}
 
-<div class="container">
-  <!-- Task Section (Left) -->
-  <div class="task-section">
-    <h2>Active tasks</h2>
-    <div class="task-list">
-      {{#if tasks.length}}
-      {{#each tasks}}
-      <div class="task-card">
-        <div class="task-icon">{{this.initial}}</div>
-        <div class="task-info">
-          <div class="task-title">{{this.title}}</div>
-          <div class="task-date">{{this.dueDate}}</div>
-        </div>
-        <div class="task-expand">&#9660;</div>
-      </div>
-      <div class="task-details hidden">
-        <p>Omschrijving: {{this.description}}
-      </div>
-      {{/each}}
-      {{else}}
-      <p>no active tasks found.</p>
-      {{/if}}
-    </div>
-  </div>
-
-  <!-- Character Section (Right) -->
-  <div class="character-section">
-    <img src="./img/malePixel.png" alt="Character" class="character-image">
-  </div>
-</div>
 
 <link rel="stylesheet" href="/styles/Home.css" />
-
 <script src="/scripts/Home.js"></script>
 
 <div class="container">
