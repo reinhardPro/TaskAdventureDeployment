@@ -283,7 +283,7 @@ app.get('/access-rights', (req, res) => {
 });
 
 app.get('/leaderboard', (req, res) => {
-  db.all('SELECT name, xp FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+  db.all('SELECT name, xp, gender FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
       if (err) {
           console.error("Query error:", err.message);  // Log specific error
           return res.status(500).send("Database error");
