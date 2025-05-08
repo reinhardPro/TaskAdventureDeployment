@@ -35,14 +35,13 @@ db.serialize(() => {
       name TEXT NOT NULL,
       level INTEGER DEFAULT 1,
       xp INTEGER DEFAULT 0,
-      gender TEXT,
+      gender INTEGER DEFAULT 0,
+      imagevalue TEXT,
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
   
   
-
-
   db.run(`
     CREATE TABLE IF NOT EXISTS levelup (
       level INTEGER PRIMARY KEY,

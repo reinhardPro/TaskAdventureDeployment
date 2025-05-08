@@ -3,6 +3,7 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+
 // const sqlite3 = require('sqlite3').verbose();
 // const db = new sqlite3.Database('./TAdatabase.db');
 
@@ -284,6 +285,34 @@ app.get('/leaderboard', (req, res) => {
 app.get('/CharacterCreation',requireLogin, (req, res) => {
   res.render('CharacterCreation');
 });
+
+app.post('/CharacterCreation', (req, res) => {
+  const { name, gender, imagevalue } = req.body;
+  const userId = req.session.user?.id; // Correct session access
+
+  console.log("POST /CharacterCreation:");
+  console.log({ name, gender, imagevalue, userId });
+
+  if (!userId) {
+    console.error("User ID is missing from session.");
+    return res.status(401).send("Unauthorized: You must be logged in.");
+  }
+
+  db.run(
+    'INSERT INTO characters (name, gender, imagevalue, userId) VALUES (?, ?, ?, ?)',
+    [name, gender, imagevalue, userId],
+    function(err) {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).send('Error adding character');
+      }
+      res.redirect('/CharacterCreation');
+    }
+  );
+});
+
+
+
 
 // Logout route
 app.post('/Logout', (req, res) => {
