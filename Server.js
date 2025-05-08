@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 // const sqlite3 = require('sqlite3').verbose();
 // const db = new sqlite3.Database('./TAdatabase.db');
 
-const { db, createUser, findUser, getTasks } = require('./db/database'); // Ensure correct import
+const { db, createUser, findUser, getTasks } = require('./db/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
