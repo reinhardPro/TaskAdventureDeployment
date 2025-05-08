@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="Task%20Adventure_files/styles.css">
+  <link rel="stylesheet" href="Task%20Adventure_files/header.css">
+  <link rel="stylesheet" href="Task%20Adventure_files/footer.css">
+
+  <title>Task Adventure</title>
+</head>
+<body class="everything default-theme">
+  <header class="header">
+    <div class="logoApp">
+      <a href="http://localhost:3000/">
+        <img src="Task%20Adventure_files/image.png" alt="Logo">
+      </a>
+    </div>
+  
+    <h1 class="title">Task Adventure</h1>
+  
+    <div class="right-section">
+      <div class="user-menu">
+          <div class="user-info">
+            <img src="Task%20Adventure_files/UserIcon.jpg" alt="Avatar" class="avatar">
+            <span>Skibidi</span>
+            <form action="/Logout" method="POST">
+              <button type="submit">Logout</button>
+            </form>
+          </div>
+      </div>
+  
+      <div class="burger" id="burger">☰</div>
+  
+      <nav class="dropdown-menu hidden" id="dropdownMenu">
+        <a href="http://localhost:3000/LeaderBoard">Leaderboard</a>
+        <a href="http://localhost:3000/Settings">Settings</a>
+        <a href="http://localhost:3000/CharacterCreation">Character Creation</a>
+        <a href="http://localhost:3000/FocusMode">Focus Mode</a>
+        <a href="http://localhost:3000/Stats">Statistics</a>
+        <a href="http://localhost:3000/TaskManager">Task Manager</a> 
+      </nav>
+    <nav class="dropdown-menu hidden" id="dropdownMenu">
+    <a href="http://localhost:3000/tasks">Tasks</a>
+    <a href="http://localhost:3000/profile">Profile</a>
+    <a href="http://localhost:3000/settings">Settings</a>
+    </nav>
+    </div>
+  </header>
+  <link rel="stylesheet" href="Task%20Adventure_files/create_character.css">
+
+<div class="character-layout">
+  <div class="character-box">
+    <div class="character-frame">
+      <img id="characterImg" src="Task%20Adventure_files/malePixel.png" alt="Character preview">
+    </div>
+  </div>
+
+  <div class="character-info">
+    <div class="input-group">
+      <label class="character-name-label" for="character-name">Character Name:</label>
+      <input type="text" id="character-name" placeholder="Enter the name of your adventurer">
+    </div>
+
+    <div class="bodytype-selection">
+      <label class="bodytype-label">Body Type:</label>
+      <div class="radio-buttons">
+        <label><input type="radio" name="bodytype" value="1"> 0</label>
+        <label><input type="radio" name="bodytype" value="2" checked="checked"> 1</label>
+      </div>
+    </div>
+
+    <button class="confirm-button">Create</button>
+  </div>
+</div>
+
+
+  <footer class="footer">
+    <p>© 2025 Task Adventure</p>
+  </footer>
+  <script src="Task%20Adventure_files/Scripts.js"></script>
+  <script src="Task%20Adventure_files/theme.js"></script>
+
+</body></html>
