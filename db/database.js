@@ -20,8 +20,10 @@ db.serialize(() => {
       userId INTEGER NOT NULL,
       title TEXT NOT NULL,
       description TEXT,
-      dueDate TEXT,
+      dueDate TEXT NOT NULL,
+      Pending INTEGER DEFAULT 0,
       completed INTEGER DEFAULT 0,
+      xp INTEGER DEFAULT 0,
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
@@ -44,6 +46,7 @@ db.serialize(() => {
     )
   `);
 
+  // Leaderboard table
   db.run(`
     CREATE TABLE IF NOT EXISTS leaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -159,4 +162,14 @@ function findUser(usernameOrEmail, callback) {
   );
 }
 
-module.exports = { createUser, findUser };
+function getTasks(userId, callback) {
+  db.all(
+    `SELECT * FROM tasks WHERE userId = ?`,
+    [userId],
+    (err, tasks) => {
+      callback(err, tasks);
+    }
+  );
+}
+
+module.exports = { db, createUser, findUser, getTasks };
