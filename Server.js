@@ -6,9 +6,6 @@ const bcrypt = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./TAdatabase.db');
 
-
-const { db, createUser, findUser, getTasks } = require('./db/database');
-
 function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
@@ -204,9 +201,9 @@ app.get('/Settings', requireLogin, (req, res) => {
 });
 
 app.get('/leaderboard', (req, res) => {
-  db.all('SELECT name, xp FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+  db.all('SELECT name, xp, gender FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
       if (err) {
-          console.error("Query error:", err.message);  // Log specific error
+          console.error("Query error:", err.message);
           return res.status(500).send("Database error");
       }
 
