@@ -1,4 +1,4 @@
-/* Styles */
+
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
@@ -103,13 +103,17 @@ body {
 }
 .container {
   padding-top: 80px;
+  padding-bottom: 80px;
+  
 }
 
 .character-image {
   max-width: 150px; 
   height: auto;
+  
 }
 
 .hidden {
   display: none;
 }
+

@@ -28,33 +28,3 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add('default-theme');
     }
 });
-
-
- // left and right buttons character creation
-
-  const characterImages = [
-    "/img/malePixel.png",
-    "/img/pixelFemale.png",
-    "/img/charlos.png",
-    "/img/torkoal.png",
-    "/img/goku.png"
-    // Add more character image paths here
-  ];
-
-  let currentIndex = 0;
-  const characterImg = document.getElementById("characterImg");
-
-  function updateCharacter() {
-    characterImg.src = characterImages[currentIndex].src;
-    characterImg.style = characterImages[currentIndex].style;
-  }
-
-  document.querySelector(".carousel-btn-left-btn").addEventListener("click", () => {
-    currentIndex = (currentIndex - 1 + characterImages.length) % characterImages.length;
-    characterImg.src = characterImages[currentIndex];
-  });
-
-  document.querySelector(".carousel-btn-right-btn").addEventListener("click", () => {
-    currentIndex = (currentIndex + 1) % characterImages.length;
-    characterImg.src = characterImages[currentIndex];
-  });
