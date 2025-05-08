@@ -31,30 +31,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
  // left and right buttons character creation
+ const characterImg = document.getElementById('characterImg');
+const hiddenImageValue = document.getElementById('imagevalue');
 
-  const characterImages = [
-    "/img/malePixel.png",
-    "/img/pixelFemale.png",
-    "/img/charlos.png",
-    "/img/torkoal.png",
-    "/img/goku.png"
-    // Add more character image paths here
-  ];
+const characterImages = [
+  "/img/malePixel.png",
+  "/img/pixelFemale.png",
+  "/img/charlos.png",
+  "/img/torkoal.png",
+  "/img/goku.png"
+];
 
-  let currentIndex = 0;
-  const characterImg = document.getElementById("characterImg");
+let currentIndex = 0;
 
-  function updateCharacter() {
-    characterImg.src = characterImages[currentIndex].src;
-    characterImg.style = characterImages[currentIndex].style;
-  }
+function changeImage(direction) {
+  characterImg.classList.add('fade-out');
 
-  document.querySelector(".carousel-btn-left-btn").addEventListener("click", () => {
-    currentIndex = (currentIndex - 1 + characterImages.length) % characterImages.length;
+  setTimeout(() => {
+    currentIndex = (currentIndex + direction + characterImages.length) % characterImages.length;
     characterImg.src = characterImages[currentIndex];
-  });
+    hiddenImageValue.value = characterImages[currentIndex];
 
-  document.querySelector(".carousel-btn-right-btn").addEventListener("click", () => {
-    currentIndex = (currentIndex + 1) % characterImages.length;
-    characterImg.src = characterImages[currentIndex];
-  });
+    characterImg.classList.remove('fade-out');
+    characterImg.classList.add('fade-in');
+  }, 200);
+
+  setTimeout(() => {
+    characterImg.classList.remove('fade-in');
+  }, 600);
+}
+
+document.querySelector('.carousel-btn-left-btn').addEventListener('click', () => changeImage(-1));
+document.querySelector('.carousel-btn-right-btn').addEventListener('click', () => changeImage(1));
+
+// Set initial image value on load
+hiddenImageValue.value = characterImages[currentIndex];
