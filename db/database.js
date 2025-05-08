@@ -35,6 +35,7 @@ db.serialize(() => {
       name TEXT NOT NULL,
       level INTEGER DEFAULT 1,
       xp INTEGER DEFAULT 0,
+      gender INTEGER DEFAULT 0,
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
@@ -108,18 +109,27 @@ db.serialize(() => {
   userStmt.finalize();
 
   // Dummy characters
-  const characters = [
-    [1, 'ShadowBlade', 4, 950],
-    [2, 'IronFist', 6, 1400],
-    [3, 'WindRunner', 2, 450],
-    [4, 'FireMage', 7, 1900],
-    [5, 'NightElf', 5, 1200]
-  ];
+const characters = [
+  [1, 'ShadowBlade', 4, 950, 1],
+  [2, 'IronFist', 6, 1400, 0],
+  [3, 'WindRunner', 2, 450, 0],
+  [4, 'FireMage', 7, 1900, 1],
+  [5, 'NightElf', 5, 1200, 1],
+  [6, 'DarkElf', 3, 700, 1],
+  [7, 'SpingBing', 10, 2500, 0],
+  [8, 'Logan', 8, 2000, 0],
+  [9, 'CumMaster', 9, 2300, 1]
+];
+
 
   db.run(`DELETE FROM characters`);
-  const charStmt = db.prepare("INSERT INTO characters (userId, name, level, xp) VALUES (?, ?, ?, ?)");
-  characters.forEach(char => charStmt.run(...char));
-  charStmt.finalize();
+  characters.forEach(([userId, name, level, xp, gender]) => {
+    db.run(
+      "INSERT INTO characters (userId, name, level, xp, gender) VALUES (?, ?, ?, ?, ?)",
+      [userId, name, level, xp, gender]
+    );
+  });
+  // charStmt.finalize();
 
   // Dummy tasks
   const tasks = [

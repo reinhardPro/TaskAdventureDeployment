@@ -72,6 +72,12 @@ body {
     margin: 0.5rem auto;
 }
 
+.character-female{
+    width: 75%;
+    height: auto;
+    margin: 0.5rem auto;
+}
+
 /* Scroll Box Section */
 .scroll-box {
     width: 40%;
