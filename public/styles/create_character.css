@@ -19,14 +19,6 @@ padding-right: 200px;;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
 }
 
-
-.bodytype.active,
-.bodytype:hover {
-  background-color: #6e00ff;
-  color: #ffffff;
-}
-
-
 .character-frame {
   height: 400px;
   width: 288px;
