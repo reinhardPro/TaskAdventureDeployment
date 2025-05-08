@@ -1,0 +1,147 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #2a005f;
+  padding: 10px 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  box-sizing: border-box;
+  color:white;
+}
+
+.burger {
+  font-size: 26px;
+  cursor: pointer;
+  color: white;
+  padding: 10px;
+  display: block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: #2a005f;
+  border: 1px solid #ffffff33;
+  border-radius: 12px;
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  min-width: 180px;
+  box-shadow: 0 0 10px #00000066;
+}
+
+.dropdown-menu a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+
+.footer {
+  background-color: #2a005f;
+  color: #ccc;
+  text-align: center;
+  padding: 10px;
+  margin-top: auto;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none;
+}
+
+
+/* Algemene body thema's */
+body.default-theme {
+  background-color: #63099C;
+  color: white;
+}
+body.lightgray-theme {
+  background-color: #a8a8a8;
+  color: black;
+}
+body.darkgray-theme {
+  background-color: #434343;
+  color: white;
+}
+body.lightblue-theme {
+  background-color: #ADD8E6;
+  color: black;
+}
+
+/* Headers en footers per thema */
+body.default-theme .header,
+body.default-theme .footer {
+  background-color: #2a005f;
+  color: white;
+}
+body.lightgray-theme .header,
+body.lightgray-theme .footer {
+  background-color: #a3a0a0;
+  color: black;
+}
+body.darkgray-theme .header,
+body.darkgray-theme .footer {
+  background-color: #323232;
+  color: white;
+}
+body.lightblue-theme .header,
+body.lightblue-theme .footer {
+  background-color: #9bc2cf;
+  color: black;
+}
+
+/* Hover van LI */
+body.default-theme li:hover {
+  background-color: #230B66;
+}
+body.lightgray-theme li:hover {
+  background-color: #d3d3d3;
+}
+body.darkgray-theme li:hover {
+  background-color: #5c5c5c;
+}
+body.lightblue-theme li:hover {
+  background-color: #cfeefb;
+}
+
+/* Hamburger menu hover */
+body.default-theme .dropdown-menu a:hover {
+  background-color: #3e0080;
+}
+body.lightgray-theme .dropdown-menu a:hover {
+  background-color: #cccccc;
+}
+body.darkgray-theme .dropdown-menu a:hover {
+  background-color: #5c5c5c;
+}
+body.lightblue-theme .dropdown-menu a:hover {
+  background-color: #cfeefb;
+}
+
+body.default-theme .dropdown-menu {
+  background-color: #2a005f;
+}
+body.lightgray-theme .dropdown-menu {
+  background-color: #e0e0e0;
+}
+body.darkgray-theme .dropdown-menu {
+  background-color: #2c2c2c;
+}
+body.lightblue-theme .dropdown-menu {
+  background-color: #d2edf7;
+}

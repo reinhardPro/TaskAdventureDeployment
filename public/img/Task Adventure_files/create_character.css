@@ -19,14 +19,6 @@ padding-right: 200px;;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
 }
 
-
-.bodytype.active,
-.bodytype:hover {
-  background-color: #6e00ff;
-  color: #ffffff;
-}
-
-
 .character-frame {
   height: 400px;
   width: 288px;
@@ -80,7 +72,6 @@ padding-right: 200px;;
   cursor: pointer;
   transition: background-color 0.2s;
   font-size: 2rem;
-  width: 50%;
 }
 
 .character-name-label{
@@ -103,54 +94,4 @@ font-family: 'Segoe UI', sans-serif;
 
 .confirm-button:hover {
   background-color: #b47cff;
-}
-
-.carousel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.carousel-btn-left-btn {
-  padding: 10px;
-  cursor: pointer;
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  left: -5rem; /* Add this */
-  transform: translateY(-50%);
-  width: 35%;
-}
-
-.carousel-btn-right-btn {
-  padding: 10px;
-  cursor: pointer;
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  right:-5rem; /* Add this */
-  transform: translateY(-50%);
-  width: 35%;
-}
-
-.left-btn {
-  left: -40px;
-}
-
-.right-btn {
-  right: -40px;
-}
-
-#characterImg[src$="goku.png"] {
-  transform: scale(0.3);
-}
-
-#characterImg[src$="/img/femalePixel.png"] {
-  height: 90%;
-}
-
-#characterImg[src$="/img/roguePixel.png"] {
-  height: 80%;
 }
