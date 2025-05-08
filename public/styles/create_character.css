@@ -85,12 +85,14 @@ font-family: 'Segoe UI', sans-serif;
   font-size: 2rem;
   font-weight: bold;
   font-family: 'Segoe UI', sans-serif;
+  padding-left: 10%;
 }
 
 .radio-buttons{
   font-size: 2rem;
   font-weight: bold;
-  font-family: 'Segoe UI', sans-serif;  
+  font-family: 'Segoe UI', sans-serif;
+  padding-left:10%;  
 }
 
 .confirm-button:hover {
@@ -113,7 +115,7 @@ font-family: 'Segoe UI', sans-serif;
   top: 50%;
   left: -5rem; /* Add this */
   transform: translateY(-50%);
-  width: 35%;
+  width: 20%;
 }
 
 .carousel-btn-right-btn {
@@ -124,7 +126,7 @@ font-family: 'Segoe UI', sans-serif;
   top: 50%;
   right:-5rem; /* Add this */
   transform: translateY(-50%);
-  width: 35%;
+  width: 20%;
 }
 
 .left-btn {
@@ -145,4 +147,20 @@ font-family: 'Segoe UI', sans-serif;
 
 #characterImg[src$="/img/roguePixel.png"] {
   height: 80%;
+}
+
+#characterImg {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  height: 100%;
+  object-fit: contain;
+}
+
+.character-frame img.fade-out {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.character-frame img.fade-in {
+  opacity: 1;
+  transform: translateX(0);
 }
