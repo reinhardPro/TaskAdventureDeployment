@@ -220,7 +220,66 @@ app.get('/FocusMode', requireLogin, (req, res) => {
 
 // Settings route
 app.get('/Settings', requireLogin, (req, res) => {
-  res.render('Settings');
+  const user = req.session.user;
+  res.render('Settings', { user });
+});
+
+// Handle change password request
+app.post('/Settings/changePassword', requireLogin, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.session.user;
+
+  findUser(user.username, (err, dbUser) => {
+    if (err || !dbUser) {
+      return res.status(500).send('User not found');
+    }
+
+    bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
+      if (err || !isMatch) {
+        return res.render('Settings', { error: 'Incorrect current password' });
+      }
+
+      bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+        if (err) {
+          return res.status(500).send('Error hashing new password');
+        }
+
+        db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
+          if (err) {
+            return res.status(500).send('Error updating password');
+          }
+
+          res.render('Settings', { success: 'Password updated successfully' });
+        });
+      });
+    });
+  });
+});
+
+// Handle account removal
+app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+  const user = req.session.user;
+
+  db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+    if (err) {
+      return res.status(500).send('Error deleting account');
+    }
+
+    db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+      if (err) {
+        return res.status(500).send('Error deleting tasks');
+      }
+
+      req.session.destroy(() => {
+        res.redirect('/');
+      });
+    });
+  });
+});
+
+// Access Rights and Permissions link
+app.get('/access-rights', (req, res) => {
+  res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
 app.get('/leaderboard', (req, res) => {
