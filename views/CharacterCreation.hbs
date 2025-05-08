@@ -1,31 +1,37 @@
 <link rel="stylesheet" href="/styles/create_character.css" />
+
 <body class="everything">
-<div class="character-layout">
-  <div class="character-box">
-  <div class="character-frame">
-    <div class="carousel">
-      <img class="carousel-btn-left-btn" src="/img/arrowleft.png" alt="Left arrow">
-      <img id="characterImg" src="/img/malePixel.png" alt="Character preview" />
-      <img class="carousel-btn-right-btn" src="/img/arrow.png" alt="Right arrow">
-    </div>
-  </div>
-</div>
+  <form action="/CharacterCreation" method="POST">
+    <div class="character-layout">
+      <div class="character-box">
+        <div class="character-frame">
+          <div class="carousel">
+            <img class="carousel-btn-left-btn" src="/img/arrowleft.png" alt="Left arrow">
+            <img id="characterImg" src="/img/malePixel.png" alt="Character preview" />
+            <img class="carousel-btn-right-btn" src="/img/arrow.png" alt="Right arrow">
+          </div>
+        </div>
+      </div>
 
-  <div class="character-info">
-    <div class="input-group">
-      <label class="character-name-label" for="character-name">Character Name:</label>
-      <input type="text" id="character-name" placeholder="Enter the name of your adventurer" />
-    </div>
+      <div class="character-info">
+        <div class="input-group">
+          <label class="character-name-label" name="character-name">Character Name:</label>
+          <input type="text" id="character-name" name="name" placeholder="Enter the name of your adventurer" />
+        </div>
 
-    <div class="bodytype-selection">
-      <label class="bodytype-label">Body Type:</label>
-      <div class="radio-buttons">
-        <label><input type="radio" name="bodytype" value="1" /> 0</label>
-        <label><input type="radio" name="bodytype" value="2" /> 1</label>
+        <div class="bodytype-selection">
+          <label class="bodytype-label">Body Type:</label>
+          <div class="radio-buttons">
+            <label><input type="radio" name="gender" value="0" />male</label>
+            <label><input type="radio" name="gender" value="1" />female</label>
+          </div>
+        </div>
+
+        <button class="confirm-button" type="submit">Create</button>
       </div>
     </div>
 
-    <button class="confirm-button">Create</button>
-  </div>
-</div>
+    <input type="hidden" id="imagevalue" name="imagevalue" value="/img/malePixel.png" />
+
+  </form>
 </body>
