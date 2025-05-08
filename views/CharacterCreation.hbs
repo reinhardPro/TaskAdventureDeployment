@@ -1,40 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Character Creation</title>
-  <link rel="stylesheet" href="/styles/create_character.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Create Your Character</h1>
-
-    <div class="input-group">
-      <label for="character-name">Character Name:</label>
-      <input type="text" id="character-name" name="character-name" placeholder="Enter your character name" />
-    </div>
-
-    <div class="gender-selection">
-      <button class="gender-button" data-gender="male" id="btnMale">Male</button>
-      <button class="gender-button" data-gender="female" id="btnFemale">Female</button>
-    </div>
-
+<link rel="stylesheet" href="/styles/create_character.css" />
+<body class="everything">
+<div class="character-layout">
+  <div class="character-box">
+  <div class="character-frame">
     <div class="carousel">
-      <button class="carousel-btn prev">◀</button>
+      <img class="carousel-btn-left-btn" src="/img/arrowleft.png" alt="Left arrow">
+      <img id="characterImg" src="/img/malePixel.png" alt="Character preview" />
+      <img class="carousel-btn-right-btn" src="/img/arrow.png" alt="Right arrow">
+    </div>
+  </div>
+</div>
 
-      <div class="character-display">
-        <img id="characterImg" src="/img/malePixel.png" alt="Character preview" />
-      </div>
-
-      <button class="carousel-btn next">▶</button>
+  <div class="character-info">
+    <div class="input-group">
+      <label class="character-name-label" for="character-name">Character Name:</label>
+      <input type="text" id="character-name" placeholder="Enter the name of your adventurer" />
     </div>
 
-    <a href="/" class="confirm-button">Create Character</a>
+    <div class="bodytype-selection">
+      <label class="bodytype-label">Body Type:</label>
+      <div class="radio-buttons">
+        <label><input type="radio" name="bodytype" value="1" /> 0</label>
+        <label><input type="radio" name="bodytype" value="2" /> 1</label>
+      </div>
+    </div>
 
-  <script src="/scripts/home.js"></script>
+    <button class="confirm-button">Create</button>
   </div>
+</div>
 </body>
-</html>
- 
-
