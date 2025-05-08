@@ -3,8 +3,8 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./TAdatabase.db');
+// const sqlite3 = require('sqlite3').verbose();
+// const db = new sqlite3.Database('./TAdatabase.db');
 
 const { db, createUser, findUser, getTasks } = require('./db/database');
 
@@ -43,38 +43,37 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
-  res.locals.user = req.session.user;
+  res.locals.user = req.session.user;  // Make user data available in all views
   next();
 });
 
 // Home route (with dynamic user state)
 app.get('/', (req, res) => {
   const user = req.session.user;
-  if (!user) {
-    return res.redirect('/Login'); // Redirect to login if no user is logged in
+  if (user) {
+    // Fetch pending tasks for the logged-in user
+    db.all('SELECT * FROM tasks WHERE userId = ? AND pending = 1', [user.id], (err, tasks) => {
+      if (err) {
+        return res.status(500).send('Error fetching tasks');
+      }
+
+      // Render the home view and pass the tasks
+      res.render('home', { user, tasks });
+    });
+  } else {
+    res.render('home', { user: null, tasks: [] });
   }
-
-  const userId = user.id;
-
-  // Fetch pending tasks for the logged-in user
-  db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).send('Error fetching tasks');
-    }
-
-    // Render the home page with tasks
-    res.render('home', { user, tasks });
-  });
 });
 
+
+
 // Stats route
-app.get('/Stats', (req, res) => {
+app.get('/Stats', requireLogin, (req, res) => {
   res.render('Stats');
 });
 
 // Taskmanager route
-app.get('/Taskmanager',requireLogin,(req, res) => {
-
+app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
   // Fetch tasks for the logged-in user
@@ -82,17 +81,18 @@ app.get('/Taskmanager',requireLogin,(req, res) => {
     if (err) {
       return res.status(500).send('Error fetching tasks');
     }
+
+    // Render the 'Taskmanager' view with tasks
     res.render('Taskmanager', { tasks });
   });
 });
-
-// Handle task creation
-app.post('/Taskmanager', requireLogin, (req, res) => {
+// Handle task creation (POST /Taskmanager)
+app.post('/Taskmanager', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/Login');
   }
 
-  const { taskName, taskValue, taskLevel, taskDeadline, taskDescription } = req.body;
+  const { taskName, taskValue, taskDeadline, taskDescription } = req.body;
   const userId = req.session.user.id;
 
   // Insert new task into the database
@@ -117,11 +117,11 @@ app.post('/task/accept/:id', (req, res) => {
 
   const taskId = req.params.id;
 
-  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ? AND completed = 0', [taskId, req.session.user.id], (err) => {
+  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ?', [taskId, req.session.user.id], (err) => {
     if (err) {
       return res.status(500).send('Error accepting task');
     }
-    res.redirect('/Taskmanager');
+    res.redirect('/Taskmanager'); // Redirect to the task manager page
   });
 });
 
@@ -138,7 +138,7 @@ app.post('/task/delete/:id', (req, res) => {
     if (err) {
       return res.status(500).send('Error deleting task');
     }
-    res.redirect('/Taskmanager');
+    res.redirect('/Taskmanager'); // Redirect to the task manager page
   });
 });
 
@@ -154,12 +154,12 @@ app.post('/Login', (req, res) => {
 
   findUser(username, (err, user) => {
     if (err || !user) {
-      return res.render('Login', { error: 'Gebruiker niet gevonden' });
+      return res.render('Login', { error: 'Gebruiker niet gevonden.' });
     }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.render('Login', { error: 'Wachtwoord incorrect' });
+        return res.render('Login', { error: 'Wachtwoord incorrect.' });
       }
 
       // Store user in session
@@ -181,7 +181,6 @@ app.post('/CreateAccount', (req, res) => {
   if (password !== confirmPassword) {
     return res.status(400).send('Passwords do not match');
   }
-
   createUser(email, username, password, (err, userId) => {
     if (err) {
       return res.status(500).send('Error creating user');
@@ -192,8 +191,9 @@ app.post('/CreateAccount', (req, res) => {
   });
 });
 
+
 // Focus Mode route
-app.get('/FocusMode', requireLogin, (req, res) => {
+app.get('/FocusMode',requireLogin, (req, res) => {
   res.render('FocusMode');
 });
 
@@ -218,11 +218,11 @@ app.get('/leaderboard', (req, res) => {
 
 
 
-// Import database functions
-const { createUser, findUser } = require('./db/database');
+
+
 
 // Character Creation route
-app.get('/CharacterCreation', requireLogin, (req, res) => {
+app.get('/CharacterCreation',requireLogin, (req, res) => {
   res.render('CharacterCreation');
 });
 
