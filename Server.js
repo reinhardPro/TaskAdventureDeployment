@@ -187,7 +187,7 @@ app.post('/CreateAccount', (req, res) => {
     }
     req.session.user = { id: userId, username, email };
 
-    res.redirect('/Login');
+    res.redirect('/CharacterCreation');
   });
 });
 
