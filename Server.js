@@ -77,10 +77,25 @@ app.get('/', (req, res) => {
   });
 });
 
-// Stats route
-app.get('/Stats', (req, res) => {
-  res.render('Stats');
+//Stats route
+app.get('/Stats', requireLogin, (req, res) => {
+  const userId = req.session.user?.id;
+
+  // Fetch stats for the logged-in user
+  db.get('SELECT * FROM stats WHERE userId = ?', [userId], (err, stat) => {
+    if (err) {
+      console.error('Error fetching stats:', err);
+      return res.status(500).send('Error fetching stats');
+    }
+    if (!stat) {
+      return res.status(404).send('No stats found for this user');
+    }
+
+    //Render the "Stats" view with stats 
+    res.render('Stats', { stats: stat });
+  });
 });
+
 //profile route
 app.get('/Profile', (req, res) => {
   res.render('Profile');
