@@ -35,7 +35,6 @@ db.serialize(() => {
       name TEXT NOT NULL,
       level INTEGER DEFAULT 1,
       xp INTEGER DEFAULT 0,
-      gender TEXT,
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
