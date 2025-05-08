@@ -50,6 +50,14 @@ h1 {
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+
+.gender-button.active,
+.gender-button:hover {
+  background-color: #6e00ff;
+  color: #ffffff;
+}
+
+
 /* Gender Buttons */
 .gender-selection {
   margin-bottom: 20px;

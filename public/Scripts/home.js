@@ -1,3 +1,7 @@
+console.log("home.js is loaded");
+
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const taskCards = document.querySelectorAll(".task-card");
 
@@ -26,4 +30,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
   
-  
+  document.addEventListener("DOMContentLoaded", () => {
+    const btnMale = document.getElementById("btnMale");
+    const btnFemale = document.getElementById("btnFemale");
+
+    btnMale.addEventListener("click", () => {
+      btnMale.classList.add("active");
+      btnFemale.classList.remove("active");
+    });
+
+    btnFemale.addEventListener("click", () => {
+      btnFemale.classList.add("active");
+      btnMale.classList.remove("active");
+    });
+  });
