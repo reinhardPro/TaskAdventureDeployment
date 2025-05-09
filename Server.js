@@ -245,6 +245,12 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
     res.redirect('/AdminPanel');
   });
 });
+
+// Focus Mode route
+app.get('/FocusMode', requireLogin, (req, res) => {
+  res.render('FocusMode');
+});
+
 // Settings route
 app.get('/Settings', requireLogin, (req, res) => {
   const user = req.session.user;
