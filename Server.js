@@ -82,6 +82,8 @@
   app.get('/Stats', (req, res) => {
     res.render('Stats');
   });
+
+
   //profile route
   app.get('/Profile', (req, res) => {
     res.render('Profile');

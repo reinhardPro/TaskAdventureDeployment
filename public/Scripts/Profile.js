@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const profileForm = document.getElementById("profileForm");
-
   if (profileForm) {
     profileForm.addEventListener("submit", async (e) => {
       e.preventDefault();
