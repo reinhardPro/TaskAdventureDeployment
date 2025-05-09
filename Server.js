@@ -77,8 +77,25 @@ app.get('/', (req, res) => {
   }
 });
 
-// Stats
-app.get('/Stats', requireLogin, (req, res) => res.render('Stats'));
+//Stats route
+app.get('/Stats', requireLogin, (req, res) => {
+  const userId = req.session.user?.id;
+  const username =req.session.user?.username;
+  // Fetch stats for the logged-in user
+  db.get('SELECT * FROM stats WHERE username = ?', [username], (err, stat) => {
+    if (err) {
+      console.error('Error fetching stats:', err);
+      return res.status(500).send('Error fetching stats');
+    }
+    if (!stat) {
+      return res.status(404).send('No stats found for this user');
+    }
+
+    //Render the "Stats" view with stats 
+    res.render('Stats', { stats: stat });
+  });
+});
+
 
 // Task Manager
 app.get('/Taskmanager', requireLogin, (req, res) => {
