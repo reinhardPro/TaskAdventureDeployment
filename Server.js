@@ -251,25 +251,35 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
-      return res.status(500).send('User not found');
+      return res.render('Settings', { 
+        alert: { type: 'error', message: 'User not found' }
+      });
     }
 
     bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.render('Settings', { error: 'Incorrect current password' });
+        return res.render('Settings', { 
+          alert: { type: 'error', message: 'Incorrect current password' }
+        });
       }
 
       bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
         if (err) {
-          return res.status(500).send('Error hashing new password');
+          return res.render('Settings', { 
+            alert: { type: 'error', message: 'Error hashing new password' }
+          });
         }
 
         db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
           if (err) {
-            return res.status(500).send('Error updating password');
+            return res.render('Settings', { 
+              alert: { type: 'error', message: 'Error updating password' }
+            });
           }
 
-          res.render('Settings', { success: 'Password updated successfully' });
+          res.render('Settings', { 
+            alert: { type: 'success', message: 'Password updated successfully' }
+          });
         });
       });
     });
@@ -282,19 +292,25 @@ app.post('/Settings/removeAccount', requireLogin, (req, res) => {
 
   db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
     if (err) {
-      return res.status(500).send('Error deleting account');
+      return res.render('Settings', { 
+        alert: { type: 'error', message: 'Error deleting account' }
+      });
     }
 
     db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
       if (err) {
-        return res.status(500).send('Error deleting tasks');
+        return res.render('Settings', { 
+          alert: { type: 'error', message: 'Error deleting tasks' }
+        });
       }
 
       req.session.destroy(() => {
-        res.redirect('/');
-      });
+        return res.render('Settings', { 
+          alert: { type: 'success', message: 'Your account has been successfully deleted.' }
+        });
     });
   });
+});
 });
 
 // Access Rights and Permissions link
