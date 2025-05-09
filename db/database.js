@@ -93,6 +93,24 @@ db.serialize(() => {
     )
   `);
 
+//stats table
+db.run(`
+  CREATE TABLE IF NOT EXISTS stats (
+    userId INTEGER NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    taskCompleted INTEGER DEFAULT 0,
+    taskFailed INTEGER DEFAULT 0,
+    totalXpGained INTEGER DEFAULT 0,
+    friends INTEGER DEFAULT 0,
+    mostXpForOneTask INTEGER DEFAULT 0,
+    mostTaskIn24h INTEGER DEFAULT 0,
+    dailyStreak INTEGER DEFAULT 0,
+    timeSpentOnTasks INTERGER DEFAULT 0,
+    FOREIGN KEY(username) REFERENCES users(name)
+  );
+`);
+
+
   // Dummy users (met email, username, password)
   const users = [
     ['alice@example.com', 'alice', 'password123'],
@@ -112,23 +130,76 @@ db.serialize(() => {
 
   // Dummy characters
 const characters = [
-  [1, 'ShadowBlade', 4, 950, 1],
-  [2, 'IronFist', 6, 1400, 0],
-  [3, 'WindRunner', 2, 450, 0],
-  [4, 'FireMage', 7, 1900, 1],
-  [5, 'NightElf', 5, 1200, 1],
-  [6, 'DarkElf', 3, 700, 1],
-  [7, 'SpingBing', 10, 2500, 0],
-  [8, 'Logan', 8, 2000, 0],
-  [9, 'CumMaster', 9, 2300, 1]
+  [1, 'ShadowBlade', 4, 950, 1,'/img/pixelFemale.png'],
+  [2, 'IronFist', 6, 1400, 0,'/img/charlos.png'],
+  [3, 'WindRunner', 2, 450, 0,'/img/torkoal.png'],
+  [4, 'FireMage', 7, 1900, 1,'/img/goku.png'],
+  [5, 'NightElf', 5, 1200, 1,'/img/charlos.png'],
+  [6, 'DarkElf', 3, 700, 1,'/img/malePixel.png'],
+  [7, 'SpingBing', 10, 2500, 0,'/img/charlos.png'],
+  [8, 'Logan', 8, 2000, 0,'/img/charlos.png'],
+  [9, 'CumMaster', 9, 2300, 1,'/img/charlos.png']
 ];
+// --- Create default roles (admin, user, guest) ---
+
+db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
+  const existingRoles = rows.map(r => r.name);
+  if (!existingRoles.includes('admin')) db.run(`INSERT INTO roles (name) VALUES ('admin')`);
+  if (!existingRoles.includes('user')) db.run(`INSERT INTO roles (name) VALUES ('user')`);
+  if (!existingRoles.includes('guest')) db.run(`INSERT INTO roles (name) VALUES ('guest')`);
+});
+
+// --- Create the admin user if it doesn't exist ---
+db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
+  if (err) {
+    console.error("Error checking for admin user:", err);
+    return;
+  }
+  if (!user) {
+    const hashedPassword = bcrypt.hashSync('admin', 10);
+
+    db.run(
+      `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
+      ['admin@example.com', 'admin', hashedPassword],
+      function (err) {
+        if (err) {
+          console.error("Error creating admin user:", err);
+          return;
+        }
+        const userId = this.lastID;
+        console.log("✅ Admin user created!");
+
+        db.get(`SELECT id FROM roles WHERE name = 'admin'`, (err, role) => {
+          if (err || !role) {
+            console.error("Error retrieving admin role:", err);
+            return;
+          }
+
+          db.run(
+            `INSERT OR IGNORE INTO user_roles (userId, roleId) VALUES (?, ?)`,
+            [userId, role.id],
+            (err) => {
+              if (err) {
+                console.error("Error assigning admin role:", err);
+                return;
+              }
+              console.log("✅ Admin role assigned!");
+            }
+          );
+        });
+      }
+    );
+  } else {
+    console.log("✅ Admin user already exists!");
+  }
+});
 
 
   db.run(`DELETE FROM characters`);
-  characters.forEach(([userId, name, level, xp, gender]) => {
+  characters.forEach(([userId, name, level, xp, gender, imagevalue]) => {
     db.run(
-      "INSERT INTO characters (userId, name, level, xp, gender) VALUES (?, ?, ?, ?, ?)",
-      [userId, name, level, xp, gender]
+      "INSERT INTO characters (userId, name, level, xp, gender, imagevalue) VALUES (?, ?, ?, ?, ?, ?)",
+      [userId, name, level, xp, gender, imagevalue]
     );
   });
   // charStmt.finalize();
@@ -149,6 +220,23 @@ const characters = [
 
   console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
 });
+//Dummy stats
+  const stats = [
+    [1, 'alice', 3, 7, 950, 6, 400, 2, 1, 0],
+    [2, 'bob', 6, 4, 1400, 19, 500, 3, 1, 0],
+    [3, 'carol', 1, 9, 450, 9, 55, 1, 4, 0],
+    [4, 'dave', 5, 5, 1900, 5, 500, 2, 3, 0],
+    [5, 'eve', 4, 6, 1200, 14, 650, 3, 2, 0],
+  ];
+  db.run(`DELETE FROM stats`);
+  stats.forEach(([userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]) => {
+    db.run(
+      "INSERT INTO stats (userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]
+    );
+  });
+
+
 
 // Gebruikersfuncties blijven ongewijzigd
 function createUser(email, username, password, callback) {

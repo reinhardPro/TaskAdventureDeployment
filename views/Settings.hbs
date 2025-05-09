@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="/styles/Settings.css">
   <script defer src="/Scripts/Settings.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <title>Settings</title>
 </head>
 <body>
@@ -33,18 +34,18 @@
   </ul>
   
   <div class="Titles">
-    <h1>Kleur Thema</h1>
+    <h1>Color Theme</h1>
   </div>
   <ul>
     <li>
-      Thema selecteren
+      Select Theme
       <div class="details">
-        <p>Kies een kleurenschema voor de interface:</p>
+        <p>Chose a color theme for the interface:</p>
         <select id="themeSelector">
-          <option value="default">Paars (standaard)</option>
-          <option value="lightgray">Lichtgrijs</option>
-          <option value="darkgray">Donkergrijs</option>
-          <option value="lightblue">Lichtblauw</option>
+          <option value="default">Purple (standard)</option>
+          <option value="lightgray">lightgray</option>
+          <option value="darkgray">darkgray</option>
+          <option value="lightblue">lightblue</option>
         </select>
       </div>
     </li>
@@ -54,15 +55,13 @@
     <h1>Account Settings</h1>
   </div>
   <ul>
-    <li>
-      <a href="/profile" style="text-decoration: none; color: inherit;">
-        Profile data
-        <div class="details">Update your name and email</div>
-      </a>
+  <li>
       Profile data
       <div class="details">
         <p><strong>Email:</strong> {{user.email}}</p>
         <p><strong>Username:</strong> {{user.username}}</p>
+        Update your name and email <br>
+    <a href="/profile" style="text-decoration: none; color: inherit;">Click here</a>
       </div>
     </li>
     <li>
@@ -101,5 +100,19 @@
       </div>
     </li>
   </ul>
+  <script>
+  // Check if there's an alert object passed from the server
+  {{#if alert}}
+    const alertType = '{{alert.type}}';
+    const alertMessage = '{{alert.message}}';
+
+    // Display the SweetAlert2 alert
+    Swal.fire({
+      icon: alertType,
+      title: alertType === 'error' ? 'Error' : 'Success',
+      text: alertMessage
+    });
+  {{/if}}
+</script>
 </body>
 </html>
