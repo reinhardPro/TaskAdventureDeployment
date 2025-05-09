@@ -9,12 +9,27 @@ const db = new sqlite3.Database('./TAdatabase.db');
 
 const {createUser, findUser, getTasks } = require('./db/database');
 
-// function requireLogin(req, res, next) {
-//   if (!req.session.user) {
-//     return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
-//   }
-//   next();
-// }
+function UserChecker(email, username, password, callback) {
+  // Controleer of gebruikersnaam of email al bestaat
+  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, row) => {
+    if (err) return callback(err);
+    if (row) return callback(new Error('Gebruikersnaam of e-mail bestaat al.'));
+
+    // Hash en voeg toe
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) return callback(err);
+
+      db.run('INSERT INTO users (email, username, password) VALUES (?, ?, ?)',
+        [email, username, hashedPassword],
+        function(err) {
+          if (err) return callback(err);
+          callback(null, this.lastID);
+        }
+      );
+    });
+  });
+}
+
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
@@ -190,12 +205,12 @@ app.post('/Login', (req, res) => {
 
   findUser(username, (err, user) => {
     if (err || !user) {
-      return res.render('Login', { error: 'Gebruiker niet gevonden' });
+      return res.render('Login', { error: 'Username not found' });
     }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.render('Login', { error: 'Wachtwoord incorrect' });
+        return res.render('Login', { error: 'Password incorrect' });
       }
 
       // Store user in session
@@ -215,18 +230,29 @@ app.post('/CreateAccount', (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
 
   if (password !== confirmPassword) {
-    return res.status(400).send('Passwords do not match');
+    return res.render('CreateAccount', { error: 'Passwords do not match.' });
   }
 
-  createUser(email, username, password, (err, userId) => {
+  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, existingUser) => {
     if (err) {
-      return res.status(500).send('Error creating user');
+      return res.render('CreateAccount', { error: 'An error has occurd. Try again.' });
     }
-    req.session.user = { id: userId, username, email };
 
-    res.redirect('/CharacterCreation');
+    if (existingUser) {
+      return res.render('CreateAccount', { error: 'Username or e-mail already exists.' });
+    }
+
+    // Als uniek, aanmaken
+    UserChecker(email, username, password, (err, userId) => {
+      if (err) {
+        return res.render('CreateAccount', { error: 'An error has occurd while trying to make your account.' });
+      }
+      req.session.user = { id: userId, username, email };
+      res.redirect('/CharacterCreation');
+    });
   });
 });
+
 
 // Focus Mode route
 app.get('/FocusMode', requireLogin, (req, res) => {
