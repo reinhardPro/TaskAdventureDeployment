@@ -1,389 +1,373 @@
-const express = require('express');
-const exphbs = require('express-handlebars');
-const path = require('path');
-const session = require('express-session');
-const bcrypt = require('bcrypt');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./TAdatabase.db');
+  const express = require('express');
+  const exphbs = require('express-handlebars');
+  const path = require('path');
+  const session = require('express-session');
+  const bcrypt = require('bcrypt');
+  const sqlite3 = require('sqlite3').verbose();
+  const db = new sqlite3.Database('./TAdatabase.db');
+  const bodyParser = require("body-parser");
 
 
-const {createUser, findUser, getTasks } = require('./db/database');
+  const {createUser, findUser, getTasks } = require('./db/database');
 
-// function requireLogin(req, res, next) {
-//   if (!req.session.user) {
-//     return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
-//   }
-//   next();
-// }
+  // function requireLogin(req, res, next) {
+  //   if (!req.session.user) {
+  //     return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+  //   }
+  //   next();
+  // }
 
-function requireLogin(req, res, next) {
-  if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
-  }
-  next();
-}
-
-const app = express();
-const port = 3000;
-
-app.engine('hbs', exphbs.engine({
-  extname: 'hbs',
-  defaultLayout: 'main',
-  layoutsDir: path.join(__dirname, 'views/Layouts'),
-  partialsDir: path.join(__dirname, 'views/Partials')
-}));
-app.set('view engine', 'hbs');
-app.set('views', path.join(__dirname, 'views'));
-
-// Middleware
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: 'secretkey',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    httpOnly: true,
-    secure: false,
-    maxAge: 3600000,
-    sameSite: 'lax'
-  }
-}));
-
-app.use((req, res, next) => {
-  res.locals.user = req.session.user;
-  next();
-});
-
-// Home route (with dynamic user state)
-app.get('/', (req, res) => {
-  const user = req.session.user;
-  if (!user) {
-    return res.redirect('/Login'); // Redirect to login if no user is logged in
-}
-
-
-
-  const userId = user.id;
-
-  // Fetch pending tasks for the logged-in user
-  db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).send('Error fetching tasks');
+  function requireLogin(req, res, next) {
+    if (!req.session.user) {
+      return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
     }
-
-    // Render the home page with tasks
-    res.render('home', { user, tasks });
-  });
-});
-
-// Stats route
-app.get('/Stats', (req, res) => {
-  res.render('Stats');
-});
-//profile route
-app.get('/Profile', (req, res) => {
-  res.render('Profile');
-});
-
-// Taskmanager route
-app.get('/Taskmanager', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
+    next();
   }
 
-  const userId = req.session.user.id;
+  const app = express();
+  const port = 3000;
 
-  // Fetch tasks for the logged-in user
-  db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).send('Error fetching tasks');
+  app.engine('hbs', exphbs.engine({
+    extname: 'hbs',
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'views/Layouts'),
+    partialsDir: path.join(__dirname, 'views/Partials')
+  }));
+  app.set('view engine', 'hbs');
+  app.set('views', path.join(__dirname, 'views'));
+
+  // Middleware
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.urlencoded({ extended: true }));
+  app.use(session({
+    secret: 'secretkey',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      maxAge: 3600000,
+      sameSite: 'lax'
     }
-    res.render('Taskmanager', { tasks });
-  });
-});
+  }));
 
-// Handle task creation
-app.post('/Taskmanager', requireLogin, (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
+  app.use((req, res, next) => {
+    res.locals.user = req.session.user;
+    next();
+  });
+
+  // Home route (with dynamic user state)
+  app.get('/', (req, res) => {
+    const user = req.session.user;
+    if (!user) {
+      return res.redirect('/Login'); // Redirect to login if no user is logged in
   }
 
-  const { taskName, taskValue, taskLevel, taskDeadline, taskDescription } = req.body;
-  const userId = req.session.user.id;
 
-  // Insert new task into the database
-  db.run(
-    `INSERT INTO tasks (userId, title, description, dueDate, completed, xp) VALUES (?, ?, ?, ?, 0, ?)`, 
-    [userId, taskName, taskDescription, taskDeadline, taskValue],
-    function(err) {
+
+    const userId = user.id;
+
+    // Fetch pending tasks for the logged-in user
+    db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
       if (err) {
-        return res.status(500).send('Error adding task');
+        return res.status(500).send('Error fetching tasks');
       }
 
-      res.redirect('/Taskmanager');
-    }
-  );
-});
-
-// Accept a task
-app.post('/task/accept/:id', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
-  }
-
-  const taskId = req.params.id;
-
-  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ? AND completed = 0', [taskId, req.session.user.id], (err) => {
-    if (err) {
-      return res.status(500).send('Error accepting task');
-    }
-    res.redirect('/Taskmanager');
-  });
-});
-
-// Delete a task
-app.post('/task/delete/:id', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
-  }
-
-  const taskId = req.params.id;
-
-  // Delete the task from the database
-  db.run('DELETE FROM tasks WHERE id = ? AND userId = ?', [taskId, req.session.user.id], (err) => {
-    if (err) {
-      return res.status(500).send('Error deleting task');
-    }
-    res.redirect('/Taskmanager');
-  });
-
-app.get('/Taskmanager', requireLogin, (req, res) => {
-  res.render('Taskmanager');
-});
-});
-
-
-// Login route
-app.get('/Login', (req, res) => {
-  res.render('Login');
-});
-
-// Handle Login POST request
-app.post('/Login', (req, res) => {
-  const { username, password } = req.body;
-
-  findUser(username, (err, user) => {
-    if (err || !user) {
-      return res.render('Login', { error: 'Gebruiker niet gevonden' });
-    }
-
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err || !isMatch) {
-        return res.render('Login', { error: 'Wachtwoord incorrect' });
-      }
-
-      // Store user in session
-      req.session.user = user;
-      res.redirect('/');
+      // Render the home page with tasks
+      res.render('home', { user, tasks });
     });
   });
-});
 
-// Create Account route
-app.get('/CreateAccount', (req, res) => {
-  res.render('CreateAccount');
-});
-
-// Handle Create Account POST request
-app.post('/CreateAccount', (req, res) => {
-  const { email, username, password, confirmPassword } = req.body;
-
-  if (password !== confirmPassword) {
-    return res.status(400).send('Passwords do not match');
-  }
-
-  createUser(email, username, password, (err, userId) => {
-    if (err) {
-      return res.status(500).send('Error creating user');
-    }
-    req.session.user = { id: userId, username, email };
-
-    res.redirect('/CharacterCreation');
+  // Stats route
+  app.get('/Stats', (req, res) => {
+    res.render('Stats');
   });
-});
+  //profile route
+  app.get('/Profile', (req, res) => {
+    res.render('Profile');
+  });
 
-// Focus Mode route
-app.get('/FocusMode', requireLogin, (req, res) => {
-  res.render('FocusMode');
-});
-
-// Settings route
-app.get('/Settings', requireLogin, (req, res) => {
-  const user = req.session.user;
-  res.render('Settings', { user });
-});
-
-// Handle change password request
-app.post('/Settings/changePassword', requireLogin, (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const user = req.session.user;
-
-  findUser(user.username, (err, dbUser) => {
-    if (err || !dbUser) {
-      return res.status(500).send('User not found');
+  // Taskmanager route
+  app.get('/Taskmanager', (req, res) => {
+    if (!req.session.user) {
+      return res.redirect('/Login');
     }
 
-    bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
-      if (err || !isMatch) {
-        return res.render('Settings', { error: 'Incorrect current password' });
-      }
+    const userId = req.session.user.id;
 
-      bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+    // Fetch tasks for the logged-in user
+    db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
+      if (err) {
+        return res.status(500).send('Error fetching tasks');
+      }
+      res.render('Taskmanager', { tasks });
+    });
+  });
+
+  // Handle task creation
+  app.post('/Taskmanager', requireLogin, (req, res) => {
+    if (!req.session.user) {
+      return res.redirect('/Login');
+    }
+
+    const { taskName, taskValue, taskLevel, taskDeadline, taskDescription } = req.body;
+    const userId = req.session.user.id;
+
+    // Insert new task into the database
+    db.run(
+      `INSERT INTO tasks (userId, title, description, dueDate, completed, xp) VALUES (?, ?, ?, ?, 0, ?)`, 
+      [userId, taskName, taskDescription, taskDeadline, taskValue],
+      function(err) {
         if (err) {
-          return res.status(500).send('Error hashing new password');
+          return res.status(500).send('Error adding task');
         }
 
-        db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
-          if (err) {
-            return res.status(500).send('Error updating password');
-          }
-
-          res.render('Settings', { success: 'Password updated successfully' });
-        });
-      });
-    });
+        res.redirect('/Taskmanager');
+      }
+    );
   });
-});
 
-// Handle account removal
-app.post('/Settings/removeAccount', requireLogin, (req, res) => {
-  const user = req.session.user;
-
-  db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
-    if (err) {
-      return res.status(500).send('Error deleting account');
+  // Accept a task
+  app.post('/task/accept/:id', (req, res) => {
+    if (!req.session.user) {
+      return res.redirect('/Login');
     }
 
-    db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+    const taskId = req.params.id;
+
+    db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ? AND completed = 0', [taskId, req.session.user.id], (err) => {
       if (err) {
-        return res.status(500).send('Error deleting tasks');
+        return res.status(500).send('Error accepting task');
+      }
+      res.redirect('/Taskmanager');
+    });
+  });
+
+  // Delete a task
+  app.post('/task/delete/:id', (req, res) => {
+    if (!req.session.user) {
+      return res.redirect('/Login');
+    }
+
+    const taskId = req.params.id;
+
+    // Delete the task from the database
+    db.run('DELETE FROM tasks WHERE id = ? AND userId = ?', [taskId, req.session.user.id], (err) => {
+      if (err) {
+        return res.status(500).send('Error deleting task');
+      }
+      res.redirect('/Taskmanager');
+    });
+
+  app.get('/Taskmanager', requireLogin, (req, res) => {
+    res.render('Taskmanager');
+  });
+  });
+
+
+  // Login route
+  app.get('/Login', (req, res) => {
+    res.render('Login');
+  });
+
+  // Handle Login POST request
+  app.post('/Login', (req, res) => {
+    const { username, password } = req.body;
+
+    findUser(username, (err, user) => {
+      if (err || !user) {
+        return res.render('Login', { error: 'Gebruiker niet gevonden' });
       }
 
-      req.session.destroy(() => {
+      bcrypt.compare(password, user.password, (err, isMatch) => {
+        if (err || !isMatch) {
+          return res.render('Login', { error: 'Wachtwoord incorrect' });
+        }
+
+        // Store user in session
+        req.session.user = user;
         res.redirect('/');
       });
     });
   });
-});
 
-// Access Rights and Permissions link
-app.get('/access-rights', (req, res) => {
-  res.redirect('https://en.wikipedia.org/wiki/Access_control');
-});
-
-app.get('/leaderboard', (req, res) => {
-  db.all('SELECT name, xp, gender FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
-      if (err) {
-          console.error("Query error:", err.message);  // Log specific error
-          return res.status(500).send("Database error");
-      }
-
-      const top3 = rows.slice(0, 3);
-      const others = rows.slice(3);
-
-      res.render('LeaderBoard', { top3, others });
+  // Create Account route
+  app.get('/CreateAccount', (req, res) => {
+    res.render('CreateAccount');
   });
-});
 
+  // Handle Create Account POST request
+  app.post('/CreateAccount', (req, res) => {
+    const { email, username, password, confirmPassword } = req.body;
 
+    if (password !== confirmPassword) {
+      return res.status(400).send('Passwords do not match');
+    }
 
-
-// Character Creation route
-app.get('/CharacterCreation', requireLogin, (req, res) => {
-  res.render('CharacterCreation');
-});
-
-app.post('/CharacterCreation', (req, res) => {
-  const { name, gender, imagevalue } = req.body;
-  const userId = req.session.user?.id; // Correct session access
-
-  console.log("POST /CharacterCreation:");
-  console.log({ name, gender, imagevalue, userId });
-
-  if (!userId) {
-    console.error("User ID is missing from session.");
-    return res.status(401).send("Unauthorized: You must be logged in.");
-  }
-
-  db.run(
-    'INSERT INTO characters (name, gender, imagevalue, userId) VALUES (?, ?, ?, ?)',
-    [name, gender, imagevalue, userId],
-    function(err) {
+    createUser(email, username, password, (err, userId) => {
       if (err) {
-        console.error("Database Error:", err);
-        return res.status(500).send('Error adding character');
+        return res.status(500).send('Error creating user');
       }
+      req.session.user = { id: userId, username, email };
+
       res.redirect('/CharacterCreation');
-    }
-  );
-});
-
-
-
-
-// Logout route
-app.post('/Logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/');
-  });
-});
-
-// Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
-
-//GET request profile page
-app.get('/api/profile', (req, res) => {
-  const userId = req.session.userId;
-
-  if (!userId) return res.status(401).json({ success: false });
-
-  db.get(`SELECT username, email FROM users WHERE id = ?`, [userId], (err, row) => {
-    if (err) return res.status(500).json({ success: false });
-    res.json({ success: true, data: row });
-  });
-});
-
-document.getElementById("profileForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const username = document.getElementById("username").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try {
-    const response = await fetch("/api/profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, email, password }),
     });
+  });
 
-    const result = await response.json();
+  // Focus Mode route
+  app.get('/FocusMode', requireLogin, (req, res) => {
+    res.render('FocusMode');
+  });
 
-    if (result.success) {
-      alert("✅ Profiel bijgewerkt!");
-    } else {
-      alert("❌ Fout bij bijwerken profiel: " + result.error);
+  // Settings route
+  app.get('/Settings', requireLogin, (req, res) => {
+    const user = req.session.user;
+    res.render('Settings', { user });
+  });
+
+  // Handle change password request
+  app.post('/Settings/changePassword', requireLogin, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.session.user;
+
+    findUser(user.username, (err, dbUser) => {
+      if (err || !dbUser) {
+        return res.status(500).send('User not found');
+      }
+
+      bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
+        if (err || !isMatch) {
+          return res.render('Settings', { error: 'Incorrect current password' });
+        }
+
+        bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+          if (err) {
+            return res.status(500).send('Error hashing new password');
+          }
+
+          db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
+            if (err) {
+              return res.status(500).send('Error updating password');
+            }
+
+            res.render('Settings', { success: 'Password updated successfully' });
+          });
+        });
+      });
+    });
+  });
+
+  // Handle account removal
+  app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+    const user = req.session.user;
+
+    db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+      if (err) {
+        return res.status(500).send('Error deleting account');
+      }
+
+      db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+        if (err) {
+          return res.status(500).send('Error deleting tasks');
+        }
+
+        req.session.destroy(() => {
+          res.redirect('/');
+        });
+      });
+    });
+  });
+
+  // Access Rights and Permissions link
+  app.get('/access-rights', (req, res) => {
+    res.redirect('https://en.wikipedia.org/wiki/Access_control');
+  });
+
+  app.get('/leaderboard', (req, res) => {
+    db.all('SELECT name, xp, gender FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+        if (err) {
+            console.error("Query error:", err.message);  // Log specific error
+            return res.status(500).send("Database error");
+        }
+
+        const top3 = rows.slice(0, 3);
+        const others = rows.slice(3);
+
+        res.render('LeaderBoard', { top3, others });
+    });
+  });
+
+
+
+
+  // Character Creation route
+  app.get('/CharacterCreation', requireLogin, (req, res) => {
+    res.render('CharacterCreation');
+  });
+
+  app.post('/CharacterCreation', (req, res) => {
+    const { name, gender, imagevalue } = req.body;
+    const userId = req.session.user?.id; // Correct session access
+
+    console.log("POST /CharacterCreation:");
+    console.log({ name, gender, imagevalue, userId });
+
+    if (!userId) {
+      console.error("User ID is missing from session.");
+      return res.status(401).send("Unauthorized: You must be logged in.");
     }
-  } catch (err) {
-    console.error(err);
-    alert("❌ Serverfout bij bijwerken profiel");
-  }
-});
+
+    db.run(
+      'INSERT INTO characters (name, gender, imagevalue, userId) VALUES (?, ?, ?, ?)',
+      [name, gender, imagevalue, userId],
+      function(err) {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).send('Error adding character');
+        }
+        res.redirect('/CharacterCreation');
+      }
+    );
+  });
 
 
+
+
+  // Logout route
+  app.post('/Logout', (req, res) => {
+    req.session.destroy(() => {
+      res.redirect('/');
+    });
+  });
+
+  // Start server
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+
+
+  //PUT request profile page
+app.put("/api/profile", (req, res) => {
+    const { username, email } = req.body;
+  
+    db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+      if (err) {
+        console.error("Database fout:", err);
+        return res.status(500).json({ error: "Interne serverfout." });
+      }
+  
+      if (!user) {
+        return res.status(404).json({ error: "Gebruiker niet gevonden." });
+      }
+  
+      db.run('UPDATE users SET email = ? WHERE username = ?', [email, username], function (err) {
+        if (err) {
+          console.error("Fout bij updaten:", err);
+          return res.status(500).json({ error: "Kon e-mailadres niet bijwerken." });
+        }
+  
+        res.json({ message: "Profiel succesvol bijgewerkt." });
+      });
+    });
+  });
+  
