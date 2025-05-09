@@ -1,33 +1,33 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const res = await fetch('/api/profile');
-    const result = await res.json();
+document.addEventListener("DOMContentLoaded", () => {
+    const profileForm = document.getElementById("profileForm");
   
-    if (result.success) {
-      document.getElementById('username').value = result.data.username;
-      document.getElementById('email').value = result.data.email;
-    }
-  });
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
   
-  document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
   
-    const data = {
-      username: document.getElementById('username').value,
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-    };
+      try {
+        const response = await fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, email, password })
+        });
   
-    const res = await fetch('/api/update-profile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+        const result = await response.json();
+  
+        if (response.ok) {
+          alert("✅ Profiel succesvol bijgewerkt!");
+        } else {
+          alert("❌ Fout bij bijwerken profiel: " + result.error);
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("❌ Er is iets misgegaan.");
+      }
     });
-  
-    const result = await res.json();
-    if (result.success) {
-      alert('✅ Profiel geüpdatet!');
-    } else {
-      alert('❌ Update mislukt.');
-    }
   });
   
