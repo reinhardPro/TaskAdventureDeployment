@@ -9,27 +9,6 @@ const db = new sqlite3.Database('./TAdatabase.db');
 
 const {createUser, findUser, getTasks } = require('./db/database');
 
-function UserChecker(email, username, password, callback) {
-  // Controleer of gebruikersnaam of email al bestaat
-  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, row) => {
-    if (err) return callback(err);
-    if (row) return callback(new Error('Gebruikersnaam of e-mail bestaat al.'));
-
-    // Hash en voeg toe
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) return callback(err);
-
-      db.run('INSERT INTO users (email, username, password) VALUES (?, ?, ?)',
-        [email, username, hashedPassword],
-        function(err) {
-          if (err) return callback(err);
-          callback(null, this.lastID);
-        }
-      );
-    });
-  });
-}
-
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
@@ -243,7 +222,7 @@ app.post('/CreateAccount', (req, res) => {
     }
 
     // Als uniek, aanmaken
-    UserChecker(email, username, password, (err, userId) => {
+    createUser(email, username, password, (err, userId) => {
       if (err) {
         return res.render('CreateAccount', { error: 'An error has occurd while trying to make your account.' });
       }
