@@ -92,6 +92,21 @@ db.serialize(() => {
       PRIMARY KEY (userId, roleId)
     )
   `);
+    //stats table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS stats (
+      userId INTEGER NOT NULL,
+      taskCompleted INTEGER DEFAULT 0,
+      taskFailed INTEGER DEFAULT 0,
+      totalXpGained INTEGER DEFAULT 0,
+      friends INTEGER DEFAULT 0,
+      mostXpForOneTask INTEGER DEFAULT 0,
+      mostTaskIn24h INTEGER DEFAULT 0,
+      dailyStreak INTEGER DEFAULT 0,
+      timeSpentOnTasks INTERGER DEFAULT 0,
+      FOREIGN KEY(userId) REFERENCES users(id)
+    );
+  `);
 
   // Dummy users (met email, username, password)
   const users = [
@@ -149,6 +164,21 @@ const characters = [
 
   console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
 });
+  //Dummy stats
+  const stats = [
+    [1, 3, 7, 950, 6, 400, 2, 1, 0],
+    [2, 6, 4, 1400, 19, 500, 3, 1, 0],
+    [3, 1, 9, 450, 9, 55, 1, 4, 0],
+    [4, 5, 5, 1900, 5, 500, 2, 3, 0],
+    [40, 4, 6, 1200, 14, 650, 3, 2, 0],
+  ];
+  db.run(`DELETE FROM stats`);
+  stats.forEach(([userId, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]) => {
+    db.run(
+      "INSERT INTO stats (userId, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [userId, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]
+    );
+  });
 
 // Gebruikersfuncties blijven ongewijzigd
 function createUser(email, username, password, callback) {
