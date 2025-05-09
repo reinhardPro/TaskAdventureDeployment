@@ -208,6 +208,25 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
   });
 });
 
+// Access Rights and Permissions link
+app.get('/access-rights', (req, res) => {
+  res.redirect('https://en.wikipedia.org/wiki/Access_control');
+});
+
+app.get('/leaderboard', (req, res) => {
+  db.all('SELECT name, xp, imagevalue FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+    if (err) {
+      console.error("Query error:", err.message);
+      return res.status(500).send("Database error");
+    }
+
+    const top3 = rows.slice(0, 3);
+    const others = rows.slice(3);
+
+    res.render('LeaderBoard', { top3, others });
+  });
+});
+
 app.post('/admin/delete-user', requireAdmin, (req, res) => {
   const { userId } = req.body;
   db.run(`DELETE FROM users WHERE id = ?`, [userId], err => {

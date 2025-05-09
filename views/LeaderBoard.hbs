@@ -1,50 +1,32 @@
 <link rel="stylesheet" href="/styles/leaderboard.css">
 
 <div class="podium">
-    {{#if top3.[1]}}
     <div class="block second">
         <div class="namexp">
             <p class="top3">{{top3.[1].name}}</p>
             <p class="top3 xp">{{top3.[1].xp}} XP</p>
         </div>
-        {{#if top3.[1].gender}}
-            <img src="/img/pixelFemale.png" class="character-female" alt="2nd place" />
-        {{else}}
-            <img src="/img/malePixel.png" class="character" alt="2nd place" />
-        {{/if}}
+        <img src="{{top3.[1].imagevalue}}" class="character" alt="2nd place" />
         <p class="place">2</p>
     </div>
-    {{/if}}
 
-    {{#if top3.[0]}}
     <div class="block first">
         <div class="namexp">
             <p class="top3">{{top3.[0].name}}</p>
             <p class="top3 xp">{{top3.[0].xp}} XP</p>
         </div>
-        {{#if top3.[0].gender}}
-            <img src="/img/pixelFemale.png" class="character-female" alt="1st place" />
-        {{else}}
-            <img src="/img/malePixel.png" class="character" alt="1st place" />
-        {{/if}}
+        <img src="{{top3.[0].imagevalue}}" class="character" alt="1st place" />
         <p class="place">1</p>
     </div>
-    {{/if}}
 
-    {{#if top3.[2]}}
     <div class="block third">
         <div class="namexp">
             <p class="top3">{{top3.[2].name}}</p>
             <p class="top3 xp">{{top3.[2].xp}} XP</p>
         </div>
-        {{#if top3.[2].gender}}
-            <img src="/img/pixelFemale.png" class="character-female" alt="3rd place" />
-        {{else}}
-            <img src="/img/malePixel.png" class="character" alt="3rd place" />
-        {{/if}}
+        <img src="{{top3.[2].imagevalue}}" class="character" alt="3rd place" />
         <p class="place">3</p>
     </div>
-    {{/if}}
 </div>
 
 <div class="container">
@@ -52,11 +34,7 @@
         <div class="scroll-content">
             {{#each others}}
             <div class="item">
-                {{#if gender}}
-                    <img src="/img/headshotfemale.png" class="head" />
-                {{else}}
-                    <img src="/img/headshotmale.png" class="head" />
-                {{/if}}
+                <img src="{{this.imagevalue}}" class="head" />
                 <p class="name">{{this.name}}</p>
                 <p class="experience">XP: {{this.xp}}</p>
             </div>
