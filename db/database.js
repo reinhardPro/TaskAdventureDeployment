@@ -123,6 +123,59 @@ const characters = [
   [8, 'Logan', 8, 2000, 0],
   [9, 'CumMaster', 9, 2300, 1]
 ];
+// --- Create default roles (admin, user, guest) ---
+
+db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
+  const existingRoles = rows.map(r => r.name);
+  if (!existingRoles.includes('admin')) db.run(`INSERT INTO roles (name) VALUES ('admin')`);
+  if (!existingRoles.includes('user')) db.run(`INSERT INTO roles (name) VALUES ('user')`);
+  if (!existingRoles.includes('guest')) db.run(`INSERT INTO roles (name) VALUES ('guest')`);
+});
+
+// --- Create the admin user if it doesn't exist ---
+db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
+  if (err) {
+    console.error("Error checking for admin user:", err);
+    return;
+  }
+  if (!user) {
+    const hashedPassword = bcrypt.hashSync('admin', 10);
+
+    db.run(
+      `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
+      ['admin@example.com', 'admin', hashedPassword],
+      function (err) {
+        if (err) {
+          console.error("Error creating admin user:", err);
+          return;
+        }
+        const userId = this.lastID;
+        console.log("✅ Admin user created!");
+
+        db.get(`SELECT id FROM roles WHERE name = 'admin'`, (err, role) => {
+          if (err || !role) {
+            console.error("Error retrieving admin role:", err);
+            return;
+          }
+
+          db.run(
+            `INSERT OR IGNORE INTO user_roles (userId, roleId) VALUES (?, ?)`,
+            [userId, role.id],
+            (err) => {
+              if (err) {
+                console.error("Error assigning admin role:", err);
+                return;
+              }
+              console.log("✅ Admin role assigned!");
+            }
+          );
+        });
+      }
+    );
+  } else {
+    console.log("✅ Admin user already exists!");
+  }
+});
 
 
   db.run(`DELETE FROM characters`);
@@ -150,6 +203,7 @@ const characters = [
 
   console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
 });
+
 
 // Gebruikersfuncties blijven ongewijzigd
 function createUser(email, username, password, callback) {
