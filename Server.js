@@ -167,13 +167,34 @@ app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
 
 app.post('/CreateAccount', (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
-  if (password !== confirmPassword) return res.status(400).send('Passwords do not match');
+
+  if (password !== confirmPassword) {
+    return res.render('CreateAccount', { error: 'Passwords do not match.' });
+  }
 
   createUser(email, username, password, (err, userId) => {
     if (err) return res.status(500).send('Error creating user');
     req.session.user = { id: userId, username, email };
     res.redirect('/CharacterCreation');
+  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, existingUser) => {
+    if (err) {
+      return res.render('CreateAccount', { error: 'An error has occurd. Try again.' });
+    }
+
+    if (existingUser) {
+      return res.render('CreateAccount', { error: 'Username or e-mail already exists.' });
+    }
+
+    // Als uniek, aanmaken
+    createUser(email, username, password, (err, userId) => {
+      if (err) {
+        return res.render('CreateAccount', { error: 'An error has occurd while trying to make your account.' });
+      }
+      req.session.user = { id: userId, username, email };
+      res.redirect('/CharacterCreation');
+    });
   });
+});
 });
 
 // Logout
@@ -224,7 +245,80 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
     res.redirect('/AdminPanel');
   });
 });
+// Settings route
+app.get('/Settings', requireLogin, (req, res) => {
+  const user = req.session.user;
+  res.render('Settings', { user });
+});
 
+// Handle change password request
+app.post('/Settings/changePassword', requireLogin, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.session.user;
+
+  findUser(user.username, (err, dbUser) => {
+    if (err || !dbUser) {
+      return res.render('Settings', { 
+        alert: { type: 'error', message: 'User not found' }
+      });
+    }
+
+    bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
+      if (err || !isMatch) {
+        return res.render('Settings', { 
+          alert: { type: 'error', message: 'Incorrect current password' }
+        });
+      }
+
+      bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+        if (err) {
+          return res.render('Settings', { 
+            alert: { type: 'error', message: 'Error hashing new password' }
+          });
+        }
+
+        db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
+          if (err) {
+            return res.render('Settings', { 
+              alert: { type: 'error', message: 'Error updating password' }
+            });
+          }
+
+          res.render('Settings', { 
+            alert: { type: 'success', message: 'Password updated successfully' }
+          });
+        });
+      });
+    });
+  });
+});
+
+// Handle account removal
+app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+  const user = req.session.user;
+
+  db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+    if (err) {
+      return res.render('Settings', { 
+        alert: { type: 'error', message: 'Error deleting account' }
+      });
+    }
+
+    db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+      if (err) {
+        return res.render('Settings', { 
+          alert: { type: 'error', message: 'Error deleting tasks' }
+        });
+      }
+
+      req.session.destroy(() => {
+        return res.render('Settings', { 
+          alert: { type: 'success', message: 'Your account has been successfully deleted.' }
+        });
+    });
+  });
+});
+});
 // Access Rights and Permissions link
 app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
