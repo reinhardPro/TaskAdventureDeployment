@@ -183,10 +183,6 @@ app.get('/Stats', requireLogin, (req, res) => {
       console.error('Error fetching stats:', err);
       return res.status(500).send('Error fetching stats');
     }
-    if (!stat) {
-      return res.status(404).send('No stats found for this user');
-    }
-
     //Render the "Stats" view with stats 
     res.render('Stats', { stats: stat });
   });
