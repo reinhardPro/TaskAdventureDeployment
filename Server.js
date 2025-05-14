@@ -30,17 +30,20 @@ function requireAdmin(req, res, next) {
     }
     next();
   });
-} 
-const app = express();
-const port = 3000;
-app.engine('hbs', exphbs.engine({
-  extname: 'hbs',
-  defaultLayout: 'main',
-  layoutsDir: path.join(__dirname, 'views/Layouts'),
-  partialsDir: path.join(__dirname, 'views/Partials')
-}));
-app.set('view engine', 'hbs');
-app.set('views', path.join(__dirname, 'views'));
+}
+
+  const app = express();
+  const port = 3000;
+
+  app.engine('hbs', exphbs.engine({
+    extname: 'hbs',
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'views/Layouts'),
+    partialsDir: path.join(__dirname, 'views/Partials')
+  }));
+  app.set('view engine', 'hbs');
+  app.set('views', path.join(__dirname, 'views'));
+
 
 // Middleware
 app.use(express.json());
@@ -59,10 +62,10 @@ app.use(session({
   }
 }));
 
-app.use((req, res, next) => {
-  res.locals.user = req.session.user;
-  next();
-});
+  app.use((req, res, next) => {
+    res.locals.user = req.session.user;
+    next();
+  });
 
 // Home
 app.get('/', (req, res) => {
@@ -196,16 +199,16 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
     return res.redirect('/Login');
   }
 
-  const userId = req.session.user.id;
+    const userId = req.session.user.id;
 
-  // Fetch tasks for the logged-in user
-  db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).send('Error fetching tasks');
-    }
-    res.render('Taskmanager', { tasks });
+    // Fetch tasks for the logged-in user
+    db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
+      if (err) {
+        return res.status(500).send('Error fetching tasks');
+      }
+      res.render('Taskmanager', { tasks });
+    });
   });
-});
 
 // Handle task creation
 app.post('/Taskmanager', requireLogin, (req, res) => {
@@ -339,21 +342,21 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
   });
 });
 
-// Focus Mode route
-app.get('/FocusMode', requireLogin, (req, res) => {
-  res.render('FocusMode');
-});
+  // Focus Mode route
+  app.get('/FocusMode', requireLogin, (req, res) => {
+    res.render('FocusMode');
+  });
 
-// Settings route
-app.get('/Settings', requireLogin, (req, res) => {
-  const user = req.session.user;
-  res.render('Settings', { user });
-});
+  // Settings route
+  app.get('/Settings', requireLogin, (req, res) => {
+    const user = req.session.user;
+    res.render('Settings', { user });
+  });
 
-// Handle change password request
-app.post('/Settings/changePassword', requireLogin, (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const user = req.session.user;
+  // Handle change password request
+  app.post('/Settings/changePassword', requireLogin, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.session.user;
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
@@ -392,9 +395,9 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
   });
 });
 
-// Handle account removal
-app.post('/Settings/removeAccount', requireLogin, (req, res) => {
-  const user = req.session.user;
+  // Handle account removal
+  app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+    const user = req.session.user;
 
   db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
     if (err) {

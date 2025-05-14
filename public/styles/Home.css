@@ -15,6 +15,7 @@ body {
 
 .character-section {
   flex-shrink: 0;
+  scroll-margin-top: 120px;
 }
 
 .character-image {
@@ -102,7 +103,7 @@ body {
   opacity: 0;
 }
 .container {
-  padding-top: 80px;
+  padding-top: 120px;
   padding-bottom: 80px;
   
 }
@@ -183,6 +184,84 @@ body {
 .xp-text {
   font-size: 14px;
   color: #333;
+}
+
+
+/*media query's / responsivenes*/
+@media (max-width: 1024px) {
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 10px;
+    padding-top: 120px;
+  }
+
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .xp-bar-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .task-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-icon {
+    margin-bottom: 8px;
+  }
+
+  .task-expand {
+    align-self: flex-end;
+    margin-top: 10px;
+  }
+
+  .xp-bar-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .xp-text {
+    color: white;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .character-image {
+    max-width: 100px;
+  }
+
+  .xp-bar-container {
+    width: 100%;
+  }
+
+  .create-task-btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .complete-btn {
+    padding: 5px 8px;
+    font-size: 14px;
+  }
+
+  .task-title {
+    font-size: 14px;
+  }
+
+  .task-date {
+    font-size: 11px;
+  }
 }
 
 
