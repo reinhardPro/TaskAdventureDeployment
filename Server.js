@@ -528,6 +528,27 @@ app.post('/profile/update', requireLogin, (req, res) => {
   });
 });
 
+app.get('/reset-password', (req, res) => {
+  res.render('reset-password');
+});
+app.post('/reset-password', (req, res) => {
+  const { username, newPassword } = req.body;
+
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) return res.render('reset-password', { error: 'Databasefout' });
+    if (!user) return res.render('reset-password', { error: 'Gebruiker niet gevonden' });
+
+    const hashed = bcrypt.hashSync(newPassword, 10);
+
+    db.run('UPDATE users SET password = ? WHERE id = ?', [hashed, user.id], (err2) => {
+      if (err2) {
+        return res.render('reset-password', { error: 'Kon wachtwoord niet updaten' });
+      }
+      res.render('reset-password', { success: 'Wachtwoord succesvol aangepast' });
+      res.redirect('/Login?reset=success');
+    });
+  });
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
