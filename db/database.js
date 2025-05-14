@@ -131,14 +131,14 @@ db.run(`
   // Dummy characters
 const characters = [
   [1, 'ShadowBlade', 4, 950, 1,'/img/pixelFemale.png'],
-  [2, 'IronFist', 6, 1400, 0,'/img/charlos.png'],
+  [2, 'IronFist', 6, 1400, 0,'/img/purpleguy.png'],
   [3, 'WindRunner', 2, 450, 0,'/img/torkoal.png'],
   [4, 'FireMage', 7, 1900, 1,'/img/goku.png'],
-  [5, 'NightElf', 5, 1200, 1,'/img/charlos.png'],
+  [5, 'NightElf', 5, 1200, 1,'/img/purpleguy.png'],
   [6, 'DarkElf', 3, 700, 1,'/img/malePixel.png'],
-  [7, 'SpingBing', 10, 2500, 0,'/img/charlos.png'],
-  [8, 'Logan', 8, 2000, 0,'/img/charlos.png'],
-  [9, 'CumMaster', 9, 2300, 1,'/img/charlos.png']
+  [7, 'SpingBing', 10, 2500, 0,'/img/purpleguy.png'],
+  [8, 'Logan', 8, 2000, 0,'/img/purpleguy.png'],
+  [9, 'CumMaster', 9, 2300, 1,'/img/purpleguy.png']
 ];
 // --- Create default roles (admin, user, guest) ---
 
