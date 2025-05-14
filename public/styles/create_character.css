@@ -164,3 +164,41 @@ font-family: 'Segoe UI', sans-serif;
   opacity: 1;
   transform: translateX(0);
 }
+/*responsiveness*/
+@media screen and (max-width: 900px) {
+  .character-layout {
+    flex-direction: column;
+    padding: 20px;
+    gap: 30px;
+  }
+
+  .everything {
+    padding-right: 0;
+  }
+
+  .character-frame {
+    height: auto;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .input-group input {
+    width: 100%;
+    font-size: 2rem;
+  }
+
+  .confirm-button {
+    width: 100%;
+    font-size: 1.5rem;
+  }
+
+  .carousel-btn-left-btn,
+  .carousel-btn-right-btn {
+    display: none;
+  }
+
+  .bodytype-label,
+  .radio-buttons {
+    padding-left: 0;
+  }
+}
