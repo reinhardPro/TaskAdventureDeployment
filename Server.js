@@ -30,11 +30,9 @@ function requireAdmin(req, res, next) {
     }
     next();
   });
-}
-
+} 
 const app = express();
 const port = 3000;
-
 app.engine('hbs', exphbs.engine({
   extname: 'hbs',
   defaultLayout: 'main',
@@ -45,6 +43,8 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -462,6 +462,67 @@ app.post('/CharacterCreation', (req, res) => {
       res.redirect('/CharacterCreation');
     }
   );
+});
+
+app.get('/profile', requireLogin, (req, res) => {
+  const user = req.session.user;
+
+  db.get(`SELECT username, email FROM users WHERE id = ?`, [user.id], (err, row) => {
+    if (err) {
+      return res.status(500).send('Fout bij ophalen profiel.');
+    }
+
+    res.render('Profile', { user: row });
+  });
+});
+
+
+app.post('/profile/update', requireLogin, (req, res) => {
+  const { username, email } = req.body;
+  const userId = req.session.user.id;
+
+  if (!username || !email) {
+    return res.status(400).json({ success: false, message: 'Alle velden zijn verplicht!' });
+  }
+
+  const checkSql = `SELECT id FROM users WHERE username = ? AND id != ?`;
+  db.get(checkSql, [username, userId], (err, row) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Databasefout.' });
+    }
+
+    if (row) {
+      return res.status(400).json({ success: false, message: 'Gebruikersnaam al in gebruik.' });
+    }
+
+    const getOldUsernameSql = `SELECT username FROM users WHERE id = ?`;
+    db.get(getOldUsernameSql, [userId], (err, user) => {
+      if (err || !user) {
+        return res.status(500).json({ success: false, message: 'Gebruiker niet gevonden.' });
+      }
+
+      const oldUsername = user.username;
+
+      const updateUserSql = `UPDATE users SET username = ?, email = ? WHERE id = ?`;
+      db.run(updateUserSql, [username, email, userId], function (err) {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Fout bij gebruikersupdate.' });
+        }
+
+        const updateStatsSql = `UPDATE stats SET username = ? WHERE username = ?`;
+        db.run(updateStatsSql, [username, oldUsername], function (err) {
+          if (err) {
+            return res.status(500).json({ success: false, message: 'Fout bij stats-update.' });
+          }
+
+          req.session.user.username = username;
+          req.session.user.email = email;
+
+          return res.json({ success: true, message: 'Profiel succesvol bijgewerkt.' });
+        });
+      });
+    });
+  });
 });
 
 app.listen(port, () => {

@@ -1,33 +1,28 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const res = await fetch('/api/profile');
-    const result = await res.json();
-  
-    if (result.success) {
-      document.getElementById('username').value = result.data.username;
-      document.getElementById('email').value = result.data.email;
-    }
-  });
-  
-  document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-  
-    const data = {
-      username: document.getElementById('username').value,
-      email: document.getElementById('email').value,
-      password: document.getElementById('password').value,
-    };
-  
-    const res = await fetch('/api/update-profile', {
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value;
+  const email = document.getElementById('email').value;
+
+  try {
+    const response = await fetch('/profile/update', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, email })
     });
-  
-    const result = await res.json();
+
+    const result = await response.json();
+
     if (result.success) {
-      alert('✅ Profiel geüpdatet!');
+      Swal.fire('Profiel bijgewerkt!', '', 'success').then(() => {
+    window.location.href = '/profile';
+      });
     } else {
-      alert('❌ Update mislukt.');
+      Swal.fire('Fout', result.message, 'error');
     }
-  });
-  
+  } catch (err) {
+    Swal.fire('Fout bij verbinding met server.', '', 'error');
+  }
+});
