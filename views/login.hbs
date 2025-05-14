@@ -36,9 +36,20 @@
   });
 </script>
 {{/if}}
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("reset") === "success") {
+    Swal.fire({
+      icon: 'success',
+      title: 'Wachtwoord gewijzigd',
+      text: 'Je kunt nu inloggen met je nieuwe wachtwoord.',
+      confirmButtonColor: '#3085d6'
+    });
+  }
+</script>
     <div class="links">
       <a href="/CreateAccount">Create Account</a>
-      <a href="#">Forgot your Password</a>
+      <a href="/reset-password">Forgot your Password</a>
     </div>
   </div>
 </body>
