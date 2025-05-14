@@ -151,8 +151,10 @@ font-family: 'Segoe UI', sans-serif;
 
 #characterImg {
   transition: opacity 0.4s ease, transform 0.4s ease;
-  height: 100%;
-  object-fit: contain;
+}
+
+#characterImg[src$="purpleguy.png"] {
+  transform: scale(1.7); /* 1.7 = 170% */
 }
 
 .character-frame img.fade-out {

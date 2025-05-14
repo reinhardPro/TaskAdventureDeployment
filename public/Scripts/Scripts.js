@@ -37,7 +37,7 @@ const hiddenImageValue = document.getElementById('imagevalue');
 const characterImages = [
   "/img/malePixel.png",
   "/img/pixelFemale.png",
-  "/img/charlos.png",
+  "/img/purpleguy.png",
   "/img/torkoal.png",
   "/img/goku.png"
 ];
