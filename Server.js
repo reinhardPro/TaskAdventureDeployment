@@ -81,15 +81,108 @@ app.use(session({
 // Home
 app.get('/', (req, res) => {
   const user = req.session.user;
-  if (user) {
-    db.all('SELECT * FROM tasks WHERE userId = ? AND pending = 1', [user.id], (err, tasks) => {
-      if (err) return res.status(500).send('Error fetching tasks');
-      res.render('home', { user, tasks });
-    });
-  } else {
-    res.render('home', { user: null, tasks: [] });
+
+  if (!user) {
+    return res.render('home', { user: null, tasks: [] });
   }
+
+  const userId = user.id;
+
+  db.get(`SELECT name, level, xp FROM characters WHERE userId = ?`, [userId], (err, character) => {
+    if (err) return res.status(500).send("DB Error bij ophalen karakter");
+
+    db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
+      if (err) return res.status(500).send("DB Error bij ophalen taken");
+
+      res.render('home', {
+        user: {
+          id: userId,
+          charactername: character?.name,
+          level: character?.level,
+          xp: character?.xp
+        },
+        tasks
+      });
+    });
+  });
 });
+
+// XP gain route
+app.post('/api/gain-xp', (req, res) => {
+  const userId = req.session.user.id;
+  const xpGained = req.body.xpGained;
+
+  db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
+    if (err || !character) return res.status(500).json({ error: 'User not found' });
+
+    let newXP = character.xp + xpGained;
+    let newLevel = character.level;
+    let leveledUp = false;
+
+    const xpThreshold = 100;
+
+    if (newXP >= xpThreshold) {
+      newLevel += 1;
+      newXP = newXP - xpThreshold;
+      leveledUp = true;
+    }
+
+    db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
+      if (err) return res.status(500).json({ error: 'Update failed' });
+
+      res.json({
+        xp: newXP,
+        level: newLevel,
+        leveledUp
+      });
+    });
+  });
+});
+
+// Taak voltooien + XP toekennen
+app.post('/api/complete-task', (req, res) => {
+  const userId = req.session.user?.id;
+  const taskId = req.body.taskId;
+
+  if (!userId || !taskId) {
+    return res.status(400).json({ error: 'Ongeldige aanvraag' });
+  }
+
+  db.get('SELECT xp FROM tasks WHERE id = ? AND userId = ?', [taskId, userId], (err, task) => {
+    if (err || !task) return res.status(404).json({ error: 'Taak niet gevonden' });
+
+    const xpGained = task.xp;
+
+    db.run('UPDATE tasks SET pending = 0 WHERE id = ? AND userId = ?', [taskId, userId], function (err) {
+      if (err) return res.status(500).json({ error: 'Taak kon niet worden voltooid' });
+
+      db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
+        if (err || !character) return res.status(500).json({ error: 'Karakter niet gevonden' });
+
+        let newXP = character.xp + xpGained;
+        let newLevel = character.level;
+        let leveledUp = false;
+
+        if (newXP >= 100) {
+          newLevel += 1;
+          newXP -= 100;
+          leveledUp = true;
+        }
+
+        db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
+          if (err) return res.status(500).json({ error: 'XP kon niet worden opgeslagen' });
+
+          res.json({
+            xp: newXP,
+            level: newLevel,
+            leveledUp
+          });
+        });
+      });
+    });
+  });
+});
+
 
 //Stats route
 app.get('/Stats', requireLogin, (req, res) => {
