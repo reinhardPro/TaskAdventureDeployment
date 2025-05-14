@@ -1,65 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Task Manager</title>
-  <link rel="stylesheet" href="/styles/taskmanager.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taakbeheer</title>
+    <link rel="stylesheet" href="/styles/taskmanager.css">  
+
 </head>
 <body>
-  <div class="container">
-    <div class="task-list-container">
-      <h2 class="task-list-header">Your Tasks</h2>
-      <div class="task-list">
-        {{#each tasks}}
-          <div class="task-item">
-            <div class="task-info">
-              <span>{{this.title}}</span>
-              <span>Due Date: {{this.dueDate}}</span>
-              <span>Status: {{#if this.completed}} Completed {{else}} Pending {{/if}}</span>
-              <span>XP: {{this.xp}}</span>
+    <div class="container">
+        <div class="task-list-container">
+            <h2 class="task-list-header">Taken</h2>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 1</span>
+                        <span>Tijd besteed: 2 uur</span>
+                        <span>Datum: 2024-07-28</span>
+                        <span>Level: 1</span>
+                        <span>XP: 100</span>
+                    </div>
+                </div>
+                <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 2</span>
+                        <span>Tijd besteed: 1 uur</span>
+                        <span>Datum: 2024-07-29</span>
+                        <span>Level: 2</span>
+                        <span>XP: 150</span>
+                    </div>
+                </div>
+                <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 3</span>
+                        <span>Tijd besteed: 3 uur</span>
+                        <span>Datum: 2024-07-30</span>
+                        <span>Level: 3</span>
+                        <span>XP: 200</span>
+                    </div>
+                </div>
+                <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 4</span>
+                        <span>Tijd besteed: 1 uur</span>
+                        <span>Datum: 2024-07-31</span>
+                         <span>Level: 1</span>
+                        <span>XP: 100</span>
+                    </div>
+                </div>
+                 <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 5</span>
+                        <span>Tijd besteed: 2 uur</span>
+                        <span>Datum: 2024-08-01</span>
+                         <span>Level: 2</span>
+                        <span>XP: 150</span>
+                    </div>
+                </div>
+                 <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 6</span>
+                        <span>Tijd besteed: 3 uur</span>
+                        <span>Datum: 2024-08-02</span>
+                         <span>Level: 3</span>
+                        <span>XP: 200</span>
+                    </div>
+                </div>
+                 <div class="task-item">
+                    <div class="task-info">
+                        <span>Taak 7</span>
+                        <span>Tijd besteed: 1 uur</span>
+                        <span>Datum: 2024-08-03</span>
+                         <span>Level: 1</span>
+                        <span>XP: 100</span>
+                    </div>
+                </div>
             </div>
-
-            {{!-- Show Accept button only if task is not yet accepted (pending = 0) --}}
-            {{#unless this.pending}}
-              <form action="/task/accept/{{this.id}}" method="POST" style="display: inline;">
-                <button type="submit">Accept</button>
-              </form>
-            {{/unless}}
-
-            {{!-- Delete button always shown --}}
-            <form action="/task/delete/{{this.id}}" method="POST" style="display: inline;">
-              <button type="submit">Delete</button>
+        </div>
+        <div class="add-task-form-container">
+            <h2 class="add-task-form-header">Taak toevoegen</h2>
+            <form class="add-task-form">
+                <div class="form-group">
+                    <label for="task-name">Taak</label>
+                    <input type="text" id="task-name" name="task-name" placeholder="Naam van de taak">
+                </div>
+                <div class="form-group">
+                    <label for="task-value">Waarde</label>
+                    <input type="text" id="task-value" name="task-value" placeholder="Waarde van de taak">
+                </div>
+                <div class="form-group">
+                    <label for="task-level">Level</label>
+                    <input type="text" id="task-level" name="task-level" placeholder="Level van de taak">
+                </div>
+                <div class="form-group">
+                    <label for="task-deadline">Deadline</label>
+                    <input type="text" id="task-deadline" name="task-deadline" placeholder="Deadline van de taak">
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Beschrijving</label>
+                    <textarea id="task-description" name="task-description" placeholder="Beschrijving van de taak"></textarea>
+                </div>
+                <button type="submit" class="add-task-button">Taak toevoegen</button>
             </form>
-          </div>
-        {{else}}
-          <p>No tasks available. Add a new task!</p>
-        {{/each}}
-      </div>
+        </div>
     </div>
-
-    <div class="add-task-form-container">
-      <h2 class="add-task-form-header">Add New Task</h2>
-      <form action="/Taskmanager" method="POST" class="add-task-form">
-        <div class="form-group">
-          <label for="task-name">Task</label>
-          <input type="text" id="task-name" name="taskName" placeholder="Task Name" required>
-        </div>
-        <div class="form-group">
-          <label for="task-value">XP Value</label>
-          <input type="number" id="task-value" name="taskValue" placeholder="XP Value" required>
-        </div>
-        <div class="form-group">
-          <label for="task-deadline">Due Date</label>
-          <input type="text" id="task-deadline" name="taskDeadline" placeholder="Task Due Date" required>
-        </div>
-        <div class="form-group">
-          <label for="task-description">Description</label>
-          <textarea id="task-description" name="taskDescription" placeholder="Task Description" required></textarea>
-        </div>
-        <button type="submit">Add Task</button>
-      </form>
-    </div>
-  </div>
+    <script src="/scripts/TaskManger.js"></script>
 </body>
 </html>
