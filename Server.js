@@ -32,18 +32,32 @@ function requireAdmin(req, res, next) {
   });
 }
 
-const app = express();
-const port = 3000;
+  const app = express();
+  const port = 3000;
 
-app.engine('hbs', exphbs.engine({
-  extname: 'hbs',
-  defaultLayout: 'main',
-  layoutsDir: path.join(__dirname, 'views/Layouts'),
-  partialsDir: path.join(__dirname, 'views/Partials')
-}));
-app.set('view engine', 'hbs');
-app.set('views', path.join(__dirname, 'views'));
+  app.engine('hbs', exphbs.engine({
+    extname: 'hbs',
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'views/Layouts'),
+    partialsDir: path.join(__dirname, 'views/Partials')
+  }));
+  app.set('view engine', 'hbs');
+  app.set('views', path.join(__dirname, 'views'));
 
+  // Middleware
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.urlencoded({ extended: true }));
+  app.use(session({
+    secret: 'secretkey',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      maxAge: 3600000,
+      sameSite: 'lax'
+    }
+  }));
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -59,23 +73,116 @@ app.use(session({
   }
 }));
 
-app.use((req, res, next) => {
-  res.locals.user = req.session.user;
-  next();
-});
+  app.use((req, res, next) => {
+    res.locals.user = req.session.user;
+    next();
+  });
 
 // Home
 app.get('/', (req, res) => {
   const user = req.session.user;
-  if (user) {
-    db.all('SELECT * FROM tasks WHERE userId = ? AND pending = 1', [user.id], (err, tasks) => {
-      if (err) return res.status(500).send('Error fetching tasks');
-      res.render('home', { user, tasks });
-    });
-  } else {
-    res.render('home', { user: null, tasks: [] });
+
+  if (!user) {
+    return res.render('home', { user: null, tasks: [] });
   }
+
+  const userId = user.id;
+
+  db.get(`SELECT name, level, xp FROM characters WHERE userId = ?`, [userId], (err, character) => {
+    if (err) return res.status(500).send("DB Error bij ophalen karakter");
+
+    db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
+      if (err) return res.status(500).send("DB Error bij ophalen taken");
+
+      res.render('home', {
+        user: {
+          id: userId,
+          charactername: character?.name,
+          level: character?.level,
+          xp: character?.xp
+        },
+        tasks
+      });
+    });
+  });
 });
+
+// XP gain route
+app.post('/api/gain-xp', (req, res) => {
+  const userId = req.session.user.id;
+  const xpGained = req.body.xpGained;
+
+  db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
+    if (err || !character) return res.status(500).json({ error: 'User not found' });
+
+    let newXP = character.xp + xpGained;
+    let newLevel = character.level;
+    let leveledUp = false;
+
+    const xpThreshold = 100;
+
+    if (newXP >= xpThreshold) {
+      newLevel += 1;
+      newXP = newXP - xpThreshold;
+      leveledUp = true;
+    }
+
+    db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
+      if (err) return res.status(500).json({ error: 'Update failed' });
+
+      res.json({
+        xp: newXP,
+        level: newLevel,
+        leveledUp
+      });
+    });
+  });
+});
+
+// Taak voltooien + XP toekennen
+app.post('/api/complete-task', (req, res) => {
+  const userId = req.session.user?.id;
+  const taskId = req.body.taskId;
+
+  if (!userId || !taskId) {
+    return res.status(400).json({ error: 'Ongeldige aanvraag' });
+  }
+
+  db.get('SELECT xp FROM tasks WHERE id = ? AND userId = ?', [taskId, userId], (err, task) => {
+    if (err || !task) return res.status(404).json({ error: 'Taak niet gevonden' });
+
+    const xpGained = task.xp;
+
+    db.run('UPDATE tasks SET pending = 0 WHERE id = ? AND userId = ?', [taskId, userId], function (err) {
+      if (err) return res.status(500).json({ error: 'Taak kon niet worden voltooid' });
+
+      db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
+        if (err || !character) return res.status(500).json({ error: 'Karakter niet gevonden' });
+
+        let newXP = character.xp + xpGained;
+        let newLevel = character.level;
+        let leveledUp = false;
+
+        if (newXP >= 100) {
+          newLevel += 1;
+          newXP -= 100;
+          leveledUp = true;
+        }
+
+        db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
+          if (err) return res.status(500).json({ error: 'XP kon niet worden opgeslagen' });
+
+          res.json({
+            xp: newXP,
+            level: newLevel,
+            leveledUp
+          });
+        });
+      });
+    });
+  });
+});
+
 
 //Stats route
 app.get('/Stats', requireLogin, (req, res) => {
@@ -103,16 +210,16 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
     return res.redirect('/Login');
   }
 
-  const userId = req.session.user.id;
+    const userId = req.session.user.id;
 
-  // Fetch tasks for the logged-in user
-  db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).send('Error fetching tasks');
-    }
-    res.render('Taskmanager', { tasks });
+    // Fetch tasks for the logged-in user
+    db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
+      if (err) {
+        return res.status(500).send('Error fetching tasks');
+      }
+      res.render('Taskmanager', { tasks });
+    });
   });
-});
 
 // Handle task creation
 app.post('/Taskmanager', requireLogin, (req, res) => {
@@ -246,21 +353,21 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
   });
 });
 
-// Focus Mode route
-app.get('/FocusMode', requireLogin, (req, res) => {
-  res.render('FocusMode');
-});
+  // Focus Mode route
+  app.get('/FocusMode', requireLogin, (req, res) => {
+    res.render('FocusMode');
+  });
 
-// Settings route
-app.get('/Settings', requireLogin, (req, res) => {
-  const user = req.session.user;
-  res.render('Settings', { user });
-});
+  // Settings route
+  app.get('/Settings', requireLogin, (req, res) => {
+    const user = req.session.user;
+    res.render('Settings', { user });
+  });
 
-// Handle change password request
-app.post('/Settings/changePassword', requireLogin, (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const user = req.session.user;
+  // Handle change password request
+  app.post('/Settings/changePassword', requireLogin, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.session.user;
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
@@ -299,9 +406,9 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
   });
 });
 
-// Handle account removal
-app.post('/Settings/removeAccount', requireLogin, (req, res) => {
-  const user = req.session.user;
+  // Handle account removal
+  app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+    const user = req.session.user;
 
   db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
     if (err) {
