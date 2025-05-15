@@ -137,24 +137,28 @@ font-family: 'Segoe UI', sans-serif;
   right: -40px;
 }
 
-#characterImg[src$="goku.png"] {
-  transform: scale(0.3);
-}
-
-#characterImg[src$="/img/femalePixel.png"] {
-  height: 90%;
-}
-
-#characterImg[src$="/img/roguePixel.png"] {
-  height: 80%;
-}
-
 #characterImg {
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 #characterImg[src$="purpleguy.png"] {
-  transform: scale(1.7); /* 1.7 = 170% */
+  transform: scale(2.2);
+}
+
+#characterImg[src$="pixelFemale.png"] {
+  transform: scale(1.1);
+}
+
+#characterImg[src$="Hermit.png"] {
+  transform: scale(2.1);
+}
+
+#characterImg[src$="FeyereJoe.png"] {
+  transform: scale(0.06);
+}
+
+#characterImg[src$="samurai.png"] {
+  transform: scale(0.5);
 }
 
 .character-frame img.fade-out {
