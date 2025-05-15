@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Task Manager</title>
   <link rel="stylesheet" href="/styles/taskmanager.css">
 </head>
+
 <body>
   <div class="container">
     <div class="task-list-container">
       <h2 class="task-list-header">Your Tasks</h2>
       <div class="task-list">
+        {{#if tasks.length}}
         {{#each tasks}}
-          <div class="task-item">
-            <div class="task-info">
-              <span>{{this.title}}</span>
-              <span>Due Date: {{this.dueDate}}</span>
-              <span>Status: {{#if this.completed}} Completed {{else}} Pending {{/if}}</span>
-              <span>XP: {{this.xp}}</span>
-            </div>
-
-            {{!-- Show Accept button only if task is not yet accepted (pending = 0) --}}
-            {{#unless this.pending}}
-              <form action="/task/accept/{{this.id}}" method="POST" style="display: inline;">
-                <button type="submit">Accept</button>
-              </form>
-            {{/unless}}
-
-            {{!-- Delete button always shown --}}
-            <form action="/task/delete/{{this.id}}" method="POST" style="display: inline;">
-              <button type="submit">Delete</button>
-            </form>
+        <div class="task-item">
+          <div class="task-info">
+            <span><strong>{{title}}</strong> (Character: {{characterName}})</span>
+            <span>Due Date: {{dueDate}}</span>
+            <span>Status: {{#if completed}} Completed {{else}} Pending {{/if}}</span>
+            <span>XP: {{xp}}</span>
           </div>
-        {{else}}
-          <p>No tasks available. Add a new task!</p>
+
+          {{!-- Show Accept button only if task is not accepted (pending = 0) --}}
+          {{#unless pending}}
+          <form action="/task/accept/{{id}}" method="POST" style="display: inline;">
+            <button type="submit">Accept</button>
+          </form>
+          {{/unless}}
+
+          {{!-- Always show delete --}}
+          <form action="/task/delete/{{id}}" method="POST" style="display: inline;">
+            <button type="submit">Delete</button>
+          </form>
+        </div>
         {{/each}}
+        {{else}}
+        <p>No tasks available. Add a new task!</p>
+        {{/if}}
       </div>
     </div>
 
@@ -46,10 +50,6 @@
           <input type="text" id="task-name" name="taskName" placeholder="Task Name" required>
         </div>
         <div class="form-group">
-          <label for="task-value">XP Value</label>
-          <input type="number" id="task-value" name="taskValue" placeholder="XP Value" required>
-        </div>
-        <div class="form-group">
           <label for="task-deadline">Due Date</label>
           <input type="text" id="task-deadline" name="taskDeadline" placeholder="Task Due Date" required>
         </div>
@@ -57,9 +57,22 @@
           <label for="task-description">Description</label>
           <textarea id="task-description" name="taskDescription" placeholder="Task Description" required></textarea>
         </div>
+        <div class="form-group">
+          <label for="task-xp">XP</label>
+          <input type="number" id="task-xp" name="taskXp" placeholder="XP Reward" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="character-select">Select Character</label>
+          <select id="character-select" name="characterId" required>
+            {{#each characters}}
+            <option value="{{id}}">{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
         <button type="submit">Add Task</button>
       </form>
     </div>
   </div>
 </body>
+
 </html>

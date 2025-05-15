@@ -35,14 +35,28 @@ function requireAdmin(req, res, next) {
   const app = express();
   const port = 3000;
 
-  app.engine('hbs', exphbs.engine({
-    extname: 'hbs',
-    defaultLayout: 'main',
-    layoutsDir: path.join(__dirname, 'views/Layouts'),
-    partialsDir: path.join(__dirname, 'views/Partials')
-  }));
-  app.set('view engine', 'hbs');
-  app.set('views', path.join(__dirname, 'views'));
+app.engine('hbs', exphbs.engine({
+  extname: 'hbs',
+  defaultLayout: 'main',
+  layoutsDir: path.join(__dirname, 'views/Layouts'),
+  partialsDir: path.join(__dirname, 'views/Partials'),
+  helpers: {
+    eq: (a, b) => a == b,
+    ifEquals: (a, b, options) => {
+      if (a == b) {
+        return options.fn(this);  // Render the block if the values are equal
+      }
+      return options.inverse(this);  // Otherwise, render the inverse block
+    },
+    lookupCharacter: (characters, id) => {
+      // Find the character by the given ID
+      return characters.find(character => character.id == id);
+    }
+  }
+}));
+
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 
 
 // Middleware
@@ -68,29 +82,35 @@ app.use(session({
   });
 
 // Home
-app.get('/', (req, res) => {
-  const user = req.session.user;
+app.get('/', requireLogin, (req, res) => {
+  const userId = req.session.user.id;
 
-  if (!user) {
-    return res.render('home', { user: null, tasks: [] });
-  }
+  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
+    if (err) return res.status(500).send('Error fetching characters');
 
-  const userId = user.id;
+    if (!characters || characters.length === 0) {
+      return res.render('Home', { 
+        user: req.session.user,
+        characters: [],
+        tasks: [],
+        noCharacter: true
+      });
+    }
 
-  db.get(`SELECT name, level, xp FROM characters WHERE userId = ?`, [userId], (err, character) => {
-    if (err) return res.status(500).send("DB Error bij ophalen karakter");
+    const characterId = req.query.characterId || null;
 
-    db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
-      if (err) return res.status(500).send("DB Error bij ophalen taken");
+    db.all(`
+      SELECT * FROM tasks
+      WHERE characterId = ? AND pending = 1
+    `, [characterId], (err, tasks) => {
+      if (err) return res.status(500).send('Error fetching tasks');
 
-      res.render('home', {
-        user: {
-          id: userId,
-          charactername: character?.name,
-          level: character?.level,
-          xp: character?.xp
-        },
-        tasks
+      res.render('Home', {
+        user: req.session.user,
+        characters,  
+        tasks,  
+        noCharacter: false,
+        selectedCharacterId: characterId
       });
     });
   });
@@ -190,54 +210,95 @@ app.get('/Stats', requireLogin, (req, res) => {
 
 
 // Task Manager
+// Task Manager
 app.get('/Taskmanager', requireLogin, (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
-  }
+  const userId = req.session.user.id;
 
-    const userId = req.session.user.id;
+  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
+    if (err) return res.status(500).send('Error loading characters');
+    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [] });
 
-    // Fetch tasks for the logged-in user
-    db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
-      if (err) {
-        return res.status(500).send('Error fetching tasks');
+    const characterIds = characters.map(c => c.id);
+    const placeholders = characterIds.map(() => '?').join(',');
+
+    db.all(
+      `
+      SELECT tasks.*, characters.name AS characterName 
+      FROM tasks 
+      JOIN characters ON tasks.characterId = characters.id 
+      WHERE tasks.characterId IN (${placeholders})
+      `,
+      characterIds,
+      (err, tasks) => {
+        if (err) return res.status(500).send('Error loading tasks');
+        res.render('Taskmanager', { characters, tasks });
       }
-      res.render('Taskmanager', { tasks });
-    });
+    );
   });
+});
 
 // Handle task creation
 app.post('/Taskmanager', requireLogin, (req, res) => {
-  const { taskName, taskValue, taskDeadline, taskDescription } = req.body;
-  const userId = req.session.user.id;
+  const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-  db.run(
-    `INSERT INTO tasks (userId, title, description, dueDate, completed, xp) VALUES (?, ?, ?, ?, 0, ?)`,
-    [userId, taskName, taskDescription, taskDeadline, taskValue],
-    err => {
-      if (err) return res.status(500).send('Error adding task');
-      res.redirect('/Taskmanager');
-    }
-  );
+db.run(
+  `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
+  [taskName, taskDescription, taskDeadline, characterId, taskXp],
+  err => {
+    if (err) return res.status(500).send('Error adding task');
+    res.redirect('/Taskmanager');
+  }
+);
 });
 
 // Handle task accept
 app.post('/task/accept/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
-  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ?', [taskId, req.session.user.id], err => {
+  const userId = req.session.user.id;
+
+  db.run(`
+    UPDATE tasks
+    SET pending = 1
+    WHERE id = ?
+      AND characterId IN (
+        SELECT id FROM characters WHERE userId = ?
+      )
+  `, [taskId, userId], err => {
     if (err) return res.status(500).send('Error accepting task');
     res.redirect('/Taskmanager');
   });
 });
 
+app.post('/task/complete/:id', requireLogin, (req, res) => {
+  const taskId = req.params.id;
+
+  db.run(
+    `UPDATE tasks SET completed = 1, pending  = 0 WHERE id = ?`,
+    [taskId],
+    function (err) {
+      if (err) return res.status(500).send('Error completing task');
+      res.redirect('/');
+    }
+  );
+});
+
 // Handle task delete
 app.post('/task/delete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
-  db.run('DELETE FROM tasks WHERE id = ? AND userId = ?', [taskId, req.session.user.id], err => {
+  const userId = req.session.user.id;
+
+  db.run(`
+    DELETE FROM tasks
+    WHERE id = ?
+      AND characterId IN (
+        SELECT id FROM characters WHERE userId = ?
+      )
+  `, [taskId, userId], err => {
     if (err) return res.status(500).send('Error deleting task');
     res.redirect('/Taskmanager');
   });
 });
+
 
 // Login
 app.get('/Login', (req, res) => res.render('Login'));
