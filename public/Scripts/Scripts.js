@@ -38,8 +38,9 @@ const characterImages = [
   "/img/malePixel.png",
   "/img/pixelFemale.png",
   "/img/purpleguy.png",
-  "/img/torkoal.png",
-  "/img/goku.png"
+  "/img/Hermit.png",
+  "/img/FeyereJoe.png",
+  "/img/samurai.png"
 ];
 
 let currentIndex = 0;

@@ -137,8 +137,8 @@ const characters = [
   [4, 'FireMage', 7, 1900, 1,'/img/goku.png'],
   [5, 'NightElf', 5, 1200, 1,'/img/purpleguy.png'],
   [6, 'DarkElf', 3, 700, 1,'/img/malePixel.png'],
-  [7, 'SpingBing', 10, 2500, 0,'/img/purpleguy.png'],
-  [8, 'Logan', 8, 2000, 0,'/img/purpleguy.png'],
+  [7, 'SpingBing', 10, 2500, 0,'/img/Hermit.png'],
+  [8, 'Logan', 8, 2000, 0,'/img/FeyereJoe.png'],
   [9, 'CumMaster', 9, 2300, 1,'/img/purpleguy.png']
 ];
 // --- Create default roles (admin, user, guest) ---
