@@ -145,3 +145,158 @@ body.darkgray-theme .dropdown-menu {
 body.lightblue-theme .dropdown-menu {
   background-color: #d2edf7;
 }
+
+/* Character Creation */
+
+/* === Character Box Theme Colors === */
+body.default-theme .character-box {
+  background-color: #2a2a2a;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  color: white;
+}
+body.lightgray-theme .character-box {
+  background-color: #d9d9d9;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  color: black;
+}
+body.darkgray-theme .character-box {
+  background-color: #3a3a3a;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  color: white;
+}
+body.lightblue-theme .character-box {
+  background-color: #e6f4f9;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  color: black;
+}
+
+/* === Character Frame Border Colors === */
+body.default-theme .character-frame {
+  background-color: #1e1e1e;
+  border-color: #6e00ff;
+}
+body.lightgray-theme .character-frame {
+  background-color: #f2f2f2;
+  border-color: #888;
+}
+body.darkgray-theme .character-frame {
+  background-color: #1f1f1f;
+  border-color: #999;
+}
+body.lightblue-theme .character-frame {
+  background-color: #d4f1fb;
+  border-color: #66c;
+}
+
+/* === Confirm Button Colors === */
+body.default-theme .confirm-button {
+  background-color: #d9b9ff;
+  color: #1e1e1e;
+}
+body.default-theme .confirm-button:hover {
+  background-color: #b47cff;
+}
+
+body.lightgray-theme .confirm-button {
+  background-color: #ccc;
+  color: #000;
+}
+body.lightgray-theme .confirm-button:hover {
+  background-color: #aaa;
+}
+
+body.darkgray-theme .confirm-button {
+  background-color: #555;
+  color: white;
+}
+body.darkgray-theme .confirm-button:hover {
+  background-color: #777;
+}
+
+body.lightblue-theme .confirm-button {
+  background-color: #bce6ff;
+  color: #000;
+}
+body.lightblue-theme .confirm-button:hover {
+  background-color: #a0d8f0;
+}
+
+/* Leaderboard */
+
+/* === Text (Name, XP) === */
+body.default-theme .top3 {
+  color: #fff;
+}
+body.lightgray-theme .top3 {
+  color: #000;
+}
+body.darkgray-theme .top3 {
+  color: #fff;
+}
+body.lightblue-theme .top3 {
+  color: #000;
+}
+
+/* === Podium Position Number === */
+body.default-theme .place {
+  color: #f0f0f0;
+}
+body.lightgray-theme .place {
+  color: #1a1a1a;
+}
+body.darkgray-theme .place {
+  color: #ddd;
+}
+body.lightblue-theme .place {
+  color: #1a1a1a;
+}
+
+/* === Scroll Box Container === */
+body.default-theme .scroll-box {
+  background-color: #2a005f;
+}
+body.lightgray-theme .scroll-box {
+  background-color: #eaeaea;
+}
+body.darkgray-theme .scroll-box {
+  background-color: #2a2a2a;
+}
+body.lightblue-theme .scroll-box {
+  background-color: #e2f5fc;
+}
+
+/* === Scroll Content Items === */
+body.default-theme .item {
+  background-color: #510097;
+  color: white;
+}
+body.lightgray-theme .item {
+  background-color: #e0e0e0;
+  color: black;
+}
+body.darkgray-theme .item {
+  background-color: #444;
+  color: white;
+}
+body.lightblue-theme .item {
+  background-color: #d7f0fb;
+  color: black;
+}
+
+/* === Name & XP in Scroll === */
+body.default-theme .name,
+body.default-theme .experience {
+  color: white;
+}
+body.lightgray-theme .name,
+body.lightgray-theme .experience {
+  color: black;
+}
+body.darkgray-theme .name,
+body.darkgray-theme .experience {
+  color: white;
+}
+body.lightblue-theme .name,
+body.lightblue-theme .experience {
+  color: black;
+}
