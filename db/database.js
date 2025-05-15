@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const db = new sqlite3.Database('./TAdatabase.db');
 
 db.serialize(() => {
+  
   // Create tables
   db.run(`
     CREATE TABLE IF NOT EXISTS users (

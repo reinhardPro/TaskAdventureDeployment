@@ -183,10 +183,6 @@ app.get('/Stats', requireLogin, (req, res) => {
       console.error('Error fetching stats:', err);
       return res.status(500).send('Error fetching stats');
     }
-    if (!stat) {
-      return res.status(404).send('No stats found for this user');
-    }
-
     //Render the "Stats" view with stats 
     res.render('Stats', { stats: stat });
   });
@@ -455,14 +451,22 @@ app.post('/CharacterCreation', (req, res) => {
   const { name, gender, imagevalue } = req.body;
   const userId = req.session.user?.id;
 
-  if (!userId) return res.status(401).send("Unauthorized: You must be logged in.");
+  if (!userId) {
+    return res.status(401).send("Unauthorized: You must be logged in.");
+  }
 
+  // Insert into the database
   db.run(
-    'INSERT INTO characters (name, gender, imagevalue, userId) VALUES (?, ?, ?, ?)',
-    [name, gender, imagevalue, userId],
-    function(err) {
-      if (err) return res.status(500).send('Error adding character');
-      res.redirect('/CharacterCreation');
+    'INSERT INTO characters (userId, name, gender, imagevalue) VALUES (?, ?, ?, ?)',
+    [userId, name, gender, imagevalue],
+    function (err) {
+      if (err) {
+        console.error('Error during DB insert:', err.message);
+        return res.status(500).send('Error adding character to the database');
+      }
+
+      // Return success message as JSON
+      return res.json({ success: true, message: 'Character created successfully!' });
     }
   );
 });
