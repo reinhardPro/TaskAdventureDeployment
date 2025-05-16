@@ -379,6 +379,21 @@ body.lightblue-theme .profile-container h1
 {
   color: white;
 }
+body.lightblue-theme form input,
+body.lightblue-theme .admin-user-card h2,
+body.lightblue-theme .admin-user-card h3,
+body.lightblue-theme .admin-user-card p
+{
+  color: white;
+}
+body.lightblue-theme .change-username-btn
+{
+  background-color: #296b79;
+}
+body.lightblue-theme .admin-user-card
+{
+  background-color: #1e4d57;
+}
 /*Default color theme*/
 body.default-theme .add-task-form,
 body.default-theme .task-list,
@@ -395,6 +410,20 @@ body.default-theme .task-list-header,
 body.default-theme .add-task-form-header
 {
   color: white;
+}
+body.default-theme form input,
+body.default-theme .admin-user-card h3,
+body.default-theme .admin-user-card p
+{
+  color: white;
+}
+body.default-theme .change-username-btn
+{
+  background-color: #5a2677;
+}
+body.default-theme .admin-user-card
+{
+  background-color: #3e008d;
 }
 /*lightgray color theme*/
 body.lightgray-theme .add-task-form,
@@ -443,6 +472,21 @@ body.lightgray-theme .profile-container form label,
 body.lightgray-theme .profile-container h1
 {
   color: white;
+}
+body.lightgray-theme .timer-controls input,
+body.lightgray-theme form input,
+body.lightgray-theme .admin-user-card h3,
+body.lightgray-theme .admin-user-card p
+{
+  color: white;
+}
+body.lightgray-theme .change-username-btn
+{
+  background-color: #58555a;
+}
+body.lightgray-theme .admin-user-card
+{
+  background-color: #333135;
 }
 /*Darkgray theme color*/
 body.darkgray-theme .add-task-form,
@@ -495,4 +539,12 @@ body.darkgray-theme .profile-container h1
 body.darkgray-theme .timer-controls input
 {
   color: white;
+}
+body.darkgray-theme form input
+{
+  color: white;
+}
+body.darkgray-theme .change-username-btn
+{
+  background-color: #58555a;
 }
