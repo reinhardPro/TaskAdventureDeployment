@@ -304,7 +304,7 @@ body.lightblue-theme .experience {
   color: black;
 }
 
-/*bodsy styles*/
+/*body styles*/
 body.lightgray-theme .Titles h1,
 body.lightblue-theme .Titles h1 {
   color: #000;
@@ -379,4 +379,120 @@ body.lightblue-theme .profile-container h1
 {
   color: white;
 }
-
+/*Default color theme*/
+body.default-theme .add-task-form,
+body.default-theme .task-list,
+body.default-theme .task-item{
+    background-color: #5a2677;
+    color: white;
+}
+body.default-theme .form-group input,
+body.default-theme .form-group textarea
+{
+  background-color: #3e008d;
+}
+body.default-theme .task-list-header,
+body.default-theme .add-task-form-header
+{
+  color: white;
+}
+/*lightgray color theme*/
+body.lightgray-theme .add-task-form,
+body.lightgray-theme .task-list,
+body.lightgray-theme .task-item{
+    background-color: #58555a;
+    color: white;
+}
+body.lightgray-theme .form-group input,
+body.lightgray-theme .form-group textarea
+{
+  background-color: #333135;
+}
+body.lightgray-theme .task-list-header,
+body.lightgray-theme .add-task-form-header
+{
+  color: white;
+}
+body.lightgray-theme span{
+  color: white;
+}
+body.lightgray-theme .login-link a
+{
+  background-color: #323536;
+}
+body.lightgray-theme .user-info form button{
+  background-color: #323536;
+}
+body.lightgray-theme input{
+  background-color: #333135;
+}
+body.lightgray-theme .login-container{
+  background-color: #58555a;
+}
+body.lightgray-theme .input-group label,
+body.lightgray-theme .links a,
+body.lightgray-theme .login-container h2
+{
+  color: white;
+}
+body.lightgray-theme .profile-container
+{
+  background-color: #58555a;
+}
+body.lightgray-theme .profile-container form label,
+body.lightgray-theme .profile-container h1
+{
+  color: white;
+}
+/*Darkgray theme color*/
+body.darkgray-theme .add-task-form,
+body.darkgray-theme .task-list,
+body.darkgray-theme .task-item{
+    background-color: #58555a;
+    color: white;
+}
+body.darkgray-theme .form-group input,
+body.darkgray-theme .form-group textarea
+{
+  background-color: #333135;
+}
+body.darkgray-theme .task-list-header,
+body.darkgray-theme .add-task-form-header
+{
+  color: white;
+}
+body.darkgray-theme span{
+  color: white;
+}
+body.darkgray-theme .login-link a
+{
+  background-color: #58555a;
+}
+body.darkgray-theme .user-info form button{
+  background-color: #58555a;
+}
+body.darkgray-theme input{
+  background-color: #333135;
+}
+body.darkgray-theme .login-container{
+  background-color: #58555a;
+}
+body.darkgray-theme .input-group label,
+body.darkgray-theme .links a,
+body.darkgray-theme .login-container h2
+{
+  color: white;
+}
+body.darkgray-theme .profile-container
+{
+  background-color: #58555a;
+}
+body.darkgray-theme .profile-container form label,
+body.darkgray-theme .profile-container h1
+{
+  color: white;
+}
+body.darkgray-theme .timer-controls input
+{
+  color: white;
+}
