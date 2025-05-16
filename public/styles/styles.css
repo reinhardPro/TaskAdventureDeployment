@@ -145,6 +145,9 @@ body.darkgray-theme .dropdown-menu {
 body.lightblue-theme .dropdown-menu {
   background-color: #d2edf7;
 }
+body.lightblue-theme .dropdown-menu a {
+  color: #486975;
+}
 
 /* Character Creation */
 
@@ -300,3 +303,80 @@ body.lightblue-theme .name,
 body.lightblue-theme .experience {
   color: black;
 }
+
+/*bodsy styles*/
+body.lightgray-theme .Titles h1,
+body.lightblue-theme .Titles h1 {
+  color: #000;
+}
+body.darkgray-theme .Titles h1 {
+  color: #FFF;
+}
+
+body.lightgray-theme li,
+body.lightblue-theme li {
+  color: #000;
+}
+
+body.lightgray-theme div,
+body.lightblue-theme div {
+  color: #000;
+}
+
+body.lightblue-theme label
+{
+  color: #000;
+}
+body.lightblue-theme h3
+{
+  color: #000;
+}
+body.lightblue-theme h2
+{
+  color: #000;
+}
+body.lightblue-theme .form-group label,
+body.lightblue-theme span
+{
+  color: white;
+}
+body.lightblue-theme .add-task-form,
+body.lightblue-theme .task-list,
+body.lightblue-theme .task-item{
+    background-color: #296b79;
+    color: white;
+}
+body.lightblue-theme .form-group input,
+body.lightblue-theme .form-group textarea
+{
+  background-color: #1e4d57;
+}
+body.lightblue-theme .user-info form button{
+  background-color: #1e4d57;
+}
+body.lightblue-theme .login-link a
+{
+  background-color: #1e4d57;
+}
+body.lightblue-theme input{
+  background-color: #1e4d57;
+}
+body.lightblue-theme .login-container{
+  background-color: #296b79;
+}
+body.lightblue-theme .input-group label,
+body.lightblue-theme .links a,
+body.lightblue-theme .login-container h2
+{
+  color: white;
+}
+body.lightblue-theme .profile-container
+{
+  background-color: #296b79;
+}
+body.lightblue-theme .profile-container form label,
+body.lightblue-theme .profile-container h1
+{
+  color: white;
+}
+
