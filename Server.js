@@ -80,8 +80,19 @@ app.use(session({
     next();
   });
 
+  // Landing Page Route
+app.get('/', (req, res) => {
+  if (req.session && req.session.userId) {
+    return res.redirect('/home');
+  }
+
+  res.render('LandingPage', { layout: 'landing' });
+});
+
+
+
 // Home
-app.get('/', requireLogin, (req, res) => {
+app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
@@ -112,7 +123,7 @@ app.get('/', requireLogin, (req, res) => {
         
 
         const xp = row.xp ?? 0;
-        const level = row.level ?? 1;  // fallback naar 1 als level null/undefined is
+        const level = row.level ?? 1;
 
         res.render('Home', {
           user: req.session.user,
@@ -222,7 +233,6 @@ app.get('/Stats', requireLogin, (req, res) => {
 
 
 // Task Manager
-// Task Manager
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
@@ -289,7 +299,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
     [taskId],
     function (err) {
       if (err) return res.status(500).send('Error completing task');
-      res.redirect('/');
+      res.redirect('/home');
     }
   );
 });
@@ -322,7 +332,7 @@ app.post('/Login', (req, res) => {
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
-      res.redirect('/');
+      res.redirect('/home');
     });
   });
 });
@@ -367,18 +377,22 @@ app.post('/Logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
-// Admin Panel
+// Admin Panel Route
 app.get('/AdminPanel', requireAdmin, (req, res) => {
   db.all(`
-    SELECT u.id AS userId, u.username, u.email,
-           c.id AS characterId, c.name AS characterName,
-           t.id AS taskId, t.title AS taskTitle, t.pending
+    SELECT 
+      u.id AS userId, u.username, u.email,
+      c.id AS characterId, c.name AS characterName,
+      t.id AS taskId, t.title AS taskTitle, t.description AS taskDescription,
+      t.xp AS taskXP, t.dueDate AS taskDueDate,
+      t.pending, t.characterId AS taskCharacterId
     FROM users u
-    LEFT JOIN characters c ON u.id = c.userId
-    LEFT JOIN tasks t ON u.id = t.userId AND t.pending = 1
+    LEFT JOIN characters c ON c.userId = u.id
+    LEFT JOIN tasks t ON t.characterId = c.id AND t.pending = 1
     ORDER BY u.id
   `, [], (err, rows) => {
     if (err) return res.status(500).send('Failed to load admin panel');
+
     const usersMap = {};
     rows.forEach(row => {
       if (!usersMap[row.userId]) {
@@ -390,11 +404,23 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
           tasks: []
         };
       }
+
       if (row.characterId && !usersMap[row.userId].characters.find(c => c.id === row.characterId)) {
-        usersMap[row.userId].characters.push({ id: row.characterId, name: row.characterName });
+        usersMap[row.userId].characters.push({
+          id: row.characterId,
+          name: row.characterName
+        });
       }
+
       if (row.taskId && !usersMap[row.userId].tasks.find(t => t.id === row.taskId)) {
-        usersMap[row.userId].tasks.push({ id: row.taskId, title: row.taskTitle });
+        usersMap[row.userId].tasks.push({
+          id: row.taskId,
+          title: row.taskTitle,
+          description: row.taskDescription,
+          xp: row.taskXP,
+          dueDate: row.taskDueDate,
+          characterName: row.characterName
+        });
       }
     });
 
@@ -402,7 +428,8 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
   });
 });
 
-// Admin actions
+
+// Change Username
 app.post('/admin/change-username', requireAdmin, (req, res) => {
   const { userId, newUsername } = req.body;
   db.run(`UPDATE users SET username = ? WHERE id = ?`, [newUsername, userId], err => {
@@ -410,6 +437,43 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
     res.redirect('/AdminPanel');
   });
 });
+
+// Delete User
+app.post('/admin/delete-user', requireAdmin, (req, res) => {
+  const { userId } = req.body;
+  db.run(`DELETE FROM users WHERE id = ?`, [userId], err => {
+    if (err) return res.status(500).send('Error deleting user');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Delete Character
+app.post('/admin/delete-character', requireAdmin, (req, res) => {
+  const { characterId } = req.body;
+  db.run(`DELETE FROM characters WHERE id = ?`, [characterId], err => {
+    if (err) return res.status(500).send('Error deleting character');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Finish Task (mark as completed)
+app.post('/admin/finish-task', requireAdmin, (req, res) => {
+  const { taskId } = req.body;
+db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
+    if (err) return res.status(500).send('Error finishing task');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Delete Task
+app.post('/admin/delete-task', requireAdmin, (req, res) => {
+  const { taskId } = req.body;
+  db.run(`DELETE FROM tasks WHERE id = ?`, [taskId], err => {
+    if (err) return res.status(500).send('Error deleting task');
+    res.redirect('/AdminPanel');
+  });
+});
+
 
   // Focus Mode route
   app.get('/FocusMode', requireLogin, (req, res) => {
