@@ -58,7 +58,6 @@ app.engine('hbs', exphbs.engine({
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -89,7 +88,7 @@ app.get('/', requireLogin, (req, res) => {
     if (err) return res.status(500).send('Error fetching characters');
 
     if (!characters || characters.length === 0) {
-      return res.render('Home', { 
+      return res.render('Home', {
         user: req.session.user,
         characters: [],
         tasks: [],
@@ -97,20 +96,33 @@ app.get('/', requireLogin, (req, res) => {
       });
     }
 
-    const characterId = req.query.characterId || null;
+    const characterId = req.query.characterId || characters[0].id;
 
-    db.all(`
-      SELECT * FROM tasks
-      WHERE characterId = ? AND pending = 1
-    `, [characterId], (err, tasks) => {
+    db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
-      res.render('Home', {
-        user: req.session.user,
-        characters,  
-        tasks,  
-        noCharacter: false,
-        selectedCharacterId: characterId
+      db.get('SELECT xp, level FROM characters WHERE id = ?', [characterId], (err, row) => {
+        if (err) return res.status(500).send('Error fetching character data');
+
+        if (!row) {
+          console.error('No character found with id:', characterId);
+          return res.status(404).send('Character not found');
+        }
+
+        
+
+        const xp = row.xp ?? 0;
+        const level = row.level ?? 1;  // fallback naar 1 als level null/undefined is
+
+        res.render('Home', {
+          user: req.session.user,
+          characters,
+          tasks,
+          noCharacter: false,
+          selectedCharacterId: characterId,
+          xp,
+          level
+        });
       });
     });
   });
