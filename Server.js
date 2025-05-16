@@ -80,8 +80,19 @@ app.use(session({
     next();
   });
 
+  // Landing Page Route
+app.get('/', (req, res) => {
+  if (req.session && req.session.userId) {
+    return res.redirect('/home');
+  }
+
+  res.render('LandingPage', { layout: 'landing' });
+});
+
+
+
 // Home
-app.get('/', requireLogin, (req, res) => {
+app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
@@ -288,7 +299,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
     [taskId],
     function (err) {
       if (err) return res.status(500).send('Error completing task');
-      res.redirect('/');
+      res.redirect('/home');
     }
   );
 });
@@ -321,7 +332,7 @@ app.post('/Login', (req, res) => {
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
-      res.redirect('/');
+      res.redirect('/home');
     });
   });
 });
