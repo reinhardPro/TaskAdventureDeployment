@@ -38,10 +38,10 @@
 
       <div class="character-info">
         {{#if selectedCharacterId}}
-        {{#with (lookup characters selectedCharacterId)}}
+        {{#with (lookupCharacter characters selectedCharacterId)}}
         <div class="character-card">
-          <h2>{{this.name}}</h2>
-          <img src="/img/malePixel.png" alt="{{this.name}}" class="character-image">
+          <h2>{{name}}</h2>
+          <img src="{{imagevalue}}" alt="{{name}}" class="character-image">
         </div>
         {{/with}}
         {{else}}
