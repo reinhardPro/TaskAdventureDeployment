@@ -35,15 +35,28 @@ function requireAdmin(req, res, next) {
   const app = express();
   const port = 3000;
 
-  app.engine('hbs', exphbs.engine({
-    extname: 'hbs',
-    defaultLayout: 'main',
-    layoutsDir: path.join(__dirname, 'views/Layouts'),
-    partialsDir: path.join(__dirname, 'views/Partials')
-  }));
-  app.set('view engine', 'hbs');
-  app.set('views', path.join(__dirname, 'views'));
+app.engine('hbs', exphbs.engine({
+  extname: 'hbs',
+  defaultLayout: 'main',
+  layoutsDir: path.join(__dirname, 'views/Layouts'),
+  partialsDir: path.join(__dirname, 'views/Partials'),
+  helpers: {
+    eq: (a, b) => a == b,
+    ifEquals: (a, b, options) => {
+      if (a == b) {
+        return options.fn(this);  // Render the block if the values are equal
+      }
+      return options.inverse(this);  // Otherwise, render the inverse block
+    },
+    lookupCharacter: (characters, id) => {
+      // Find the character by the given ID
+      return characters.find(character => character.id == id);
+    }
+  }
+}));
 
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(express.json());
@@ -67,30 +80,60 @@ app.use(session({
     next();
   });
 
-// Home
+  // Landing Page Route
 app.get('/', (req, res) => {
-  const user = req.session.user;
-
-  if (!user) {
-    return res.render('home', { user: null, tasks: [] });
+  if (req.session && req.session.userId) {
+    return res.redirect('/home');
   }
 
-  const userId = user.id;
+  res.render('LandingPage', { layout: 'landing' });
+});
 
-  db.get(`SELECT name, level, xp FROM characters WHERE userId = ?`, [userId], (err, character) => {
-    if (err) return res.status(500).send("DB Error bij ophalen karakter");
 
-    db.all(`SELECT * FROM tasks WHERE userId = ? AND pending = 1`, [userId], (err, tasks) => {
-      if (err) return res.status(500).send("DB Error bij ophalen taken");
 
-      res.render('home', {
-        user: {
-          id: userId,
-          charactername: character?.name,
-          level: character?.level,
-          xp: character?.xp
-        },
-        tasks
+// Home
+app.get('/home', requireLogin, (req, res) => {
+  const userId = req.session.user.id;
+
+  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
+    if (err) return res.status(500).send('Error fetching characters');
+
+    if (!characters || characters.length === 0) {
+      return res.render('Home', {
+        user: req.session.user,
+        characters: [],
+        tasks: [],
+        noCharacter: true
+      });
+    }
+
+    const characterId = req.query.characterId || characters[0].id;
+
+    db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
+      if (err) return res.status(500).send('Error fetching tasks');
+
+      db.get('SELECT xp, level FROM characters WHERE id = ?', [characterId], (err, row) => {
+        if (err) return res.status(500).send('Error fetching character data');
+
+        if (!row) {
+          console.error('No character found with id:', characterId);
+          return res.status(404).send('Character not found');
+        }
+
+        
+
+        const xp = row.xp ?? 0;
+        const level = row.level ?? 1;
+
+        res.render('Home', {
+          user: req.session.user,
+          characters,
+          tasks,
+          noCharacter: false,
+          selectedCharacterId: characterId,
+          xp,
+          level
+        });
       });
     });
   });
@@ -183,10 +226,6 @@ app.get('/Stats', requireLogin, (req, res) => {
       console.error('Error fetching stats:', err);
       return res.status(500).send('Error fetching stats');
     }
-    if (!stat) {
-      return res.status(404).send('No stats found for this user');
-    }
-
     //Render the "Stats" view with stats 
     res.render('Stats', { stats: stat });
   });
@@ -195,53 +234,93 @@ app.get('/Stats', requireLogin, (req, res) => {
 
 // Task Manager
 app.get('/Taskmanager', requireLogin, (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/Login');
-  }
+  const userId = req.session.user.id;
 
-    const userId = req.session.user.id;
+  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
+    if (err) return res.status(500).send('Error loading characters');
+    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [] });
 
-    // Fetch tasks for the logged-in user
-    db.all(`SELECT * FROM tasks WHERE userId = ?`, [userId], (err, tasks) => {
-      if (err) {
-        return res.status(500).send('Error fetching tasks');
+    const characterIds = characters.map(c => c.id);
+    const placeholders = characterIds.map(() => '?').join(',');
+
+    db.all(
+      `
+      SELECT tasks.*, characters.name AS characterName 
+      FROM tasks 
+      JOIN characters ON tasks.characterId = characters.id 
+      WHERE tasks.characterId IN (${placeholders})
+      `,
+      characterIds,
+      (err, tasks) => {
+        if (err) return res.status(500).send('Error loading tasks');
+        res.render('Taskmanager', { characters, tasks });
       }
-      res.render('Taskmanager', { tasks });
-    });
+    );
   });
+});
 
 // Handle task creation
 app.post('/Taskmanager', requireLogin, (req, res) => {
-  const { taskName, taskValue, taskDeadline, taskDescription } = req.body;
-  const userId = req.session.user.id;
+  const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-  db.run(
-    `INSERT INTO tasks (userId, title, description, dueDate, completed, xp) VALUES (?, ?, ?, ?, 0, ?)`,
-    [userId, taskName, taskDescription, taskDeadline, taskValue],
-    err => {
-      if (err) return res.status(500).send('Error adding task');
-      res.redirect('/Taskmanager');
-    }
-  );
+db.run(
+  `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
+  [taskName, taskDescription, taskDeadline, characterId, taskXp],
+  err => {
+    if (err) return res.status(500).send('Error adding task');
+    res.redirect('/Taskmanager');
+  }
+);
 });
 
 // Handle task accept
 app.post('/task/accept/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
-  db.run('UPDATE tasks SET pending = 1 WHERE id = ? AND userId = ?', [taskId, req.session.user.id], err => {
+  const userId = req.session.user.id;
+
+  db.run(`
+    UPDATE tasks
+    SET pending = 1
+    WHERE id = ?
+      AND characterId IN (
+        SELECT id FROM characters WHERE userId = ?
+      )
+  `, [taskId, userId], err => {
     if (err) return res.status(500).send('Error accepting task');
     res.redirect('/Taskmanager');
   });
 });
 
+app.post('/task/complete/:id', requireLogin, (req, res) => {
+  const taskId = req.params.id;
+
+  db.run(
+    `UPDATE tasks SET completed = 1, pending  = 0 WHERE id = ?`,
+    [taskId],
+    function (err) {
+      if (err) return res.status(500).send('Error completing task');
+      res.redirect('/home');
+    }
+  );
+});
+
 // Handle task delete
 app.post('/task/delete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
-  db.run('DELETE FROM tasks WHERE id = ? AND userId = ?', [taskId, req.session.user.id], err => {
+  const userId = req.session.user.id;
+
+  db.run(`
+    DELETE FROM tasks
+    WHERE id = ?
+      AND characterId IN (
+        SELECT id FROM characters WHERE userId = ?
+      )
+  `, [taskId, userId], err => {
     if (err) return res.status(500).send('Error deleting task');
     res.redirect('/Taskmanager');
   });
 });
+
 
 // Login
 app.get('/Login', (req, res) => res.render('Login'));
@@ -253,7 +332,7 @@ app.post('/Login', (req, res) => {
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
-      res.redirect('/');
+      res.redirect('/home');
     });
   });
 });
@@ -298,18 +377,22 @@ app.post('/Logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
-// Admin Panel
+// Admin Panel Route
 app.get('/AdminPanel', requireAdmin, (req, res) => {
   db.all(`
-    SELECT u.id AS userId, u.username, u.email,
-           c.id AS characterId, c.name AS characterName,
-           t.id AS taskId, t.title AS taskTitle, t.pending
+    SELECT 
+      u.id AS userId, u.username, u.email,
+      c.id AS characterId, c.name AS characterName,
+      t.id AS taskId, t.title AS taskTitle, t.description AS taskDescription,
+      t.xp AS taskXP, t.dueDate AS taskDueDate,
+      t.pending, t.characterId AS taskCharacterId
     FROM users u
-    LEFT JOIN characters c ON u.id = c.userId
-    LEFT JOIN tasks t ON u.id = t.userId AND t.pending = 1
+    LEFT JOIN characters c ON c.userId = u.id
+    LEFT JOIN tasks t ON t.characterId = c.id AND t.pending = 1
     ORDER BY u.id
   `, [], (err, rows) => {
     if (err) return res.status(500).send('Failed to load admin panel');
+
     const usersMap = {};
     rows.forEach(row => {
       if (!usersMap[row.userId]) {
@@ -321,11 +404,23 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
           tasks: []
         };
       }
+
       if (row.characterId && !usersMap[row.userId].characters.find(c => c.id === row.characterId)) {
-        usersMap[row.userId].characters.push({ id: row.characterId, name: row.characterName });
+        usersMap[row.userId].characters.push({
+          id: row.characterId,
+          name: row.characterName
+        });
       }
+
       if (row.taskId && !usersMap[row.userId].tasks.find(t => t.id === row.taskId)) {
-        usersMap[row.userId].tasks.push({ id: row.taskId, title: row.taskTitle });
+        usersMap[row.userId].tasks.push({
+          id: row.taskId,
+          title: row.taskTitle,
+          description: row.taskDescription,
+          xp: row.taskXP,
+          dueDate: row.taskDueDate,
+          characterName: row.characterName
+        });
       }
     });
 
@@ -333,7 +428,8 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
   });
 });
 
-// Admin actions
+
+// Change Username
 app.post('/admin/change-username', requireAdmin, (req, res) => {
   const { userId, newUsername } = req.body;
   db.run(`UPDATE users SET username = ? WHERE id = ?`, [newUsername, userId], err => {
@@ -341,6 +437,43 @@ app.post('/admin/change-username', requireAdmin, (req, res) => {
     res.redirect('/AdminPanel');
   });
 });
+
+// Delete User
+app.post('/admin/delete-user', requireAdmin, (req, res) => {
+  const { userId } = req.body;
+  db.run(`DELETE FROM users WHERE id = ?`, [userId], err => {
+    if (err) return res.status(500).send('Error deleting user');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Delete Character
+app.post('/admin/delete-character', requireAdmin, (req, res) => {
+  const { characterId } = req.body;
+  db.run(`DELETE FROM characters WHERE id = ?`, [characterId], err => {
+    if (err) return res.status(500).send('Error deleting character');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Finish Task (mark as completed)
+app.post('/admin/finish-task', requireAdmin, (req, res) => {
+  const { taskId } = req.body;
+db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
+    if (err) return res.status(500).send('Error finishing task');
+    res.redirect('/AdminPanel');
+  });
+});
+
+// Delete Task
+app.post('/admin/delete-task', requireAdmin, (req, res) => {
+  const { taskId } = req.body;
+  db.run(`DELETE FROM tasks WHERE id = ?`, [taskId], err => {
+    if (err) return res.status(500).send('Error deleting task');
+    res.redirect('/AdminPanel');
+  });
+});
+
 
   // Focus Mode route
   app.get('/FocusMode', requireLogin, (req, res) => {
@@ -455,14 +588,22 @@ app.post('/CharacterCreation', (req, res) => {
   const { name, gender, imagevalue } = req.body;
   const userId = req.session.user?.id;
 
-  if (!userId) return res.status(401).send("Unauthorized: You must be logged in.");
+  if (!userId) {
+    return res.status(401).send("Unauthorized: You must be logged in.");
+  }
 
+  // Insert into the database
   db.run(
-    'INSERT INTO characters (name, gender, imagevalue, userId) VALUES (?, ?, ?, ?)',
-    [name, gender, imagevalue, userId],
-    function(err) {
-      if (err) return res.status(500).send('Error adding character');
-      res.redirect('/CharacterCreation');
+    'INSERT INTO characters (userId, name, gender, imagevalue) VALUES (?, ?, ?, ?)',
+    [userId, name, gender, imagevalue],
+    function (err) {
+      if (err) {
+        console.error('Error during DB insert:', err.message);
+        return res.status(500).send('Error adding character to the database');
+      }
+
+      // Return success message as JSON
+      return res.json({ success: true, message: 'Character created successfully!' });
     }
   );
 });

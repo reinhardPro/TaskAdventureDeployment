@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const db = new sqlite3.Database('./TAdatabase.db');
 
 db.serialize(() => {
+  
   // Create tables
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -17,14 +18,15 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS tasks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER NOT NULL,
+      characterId INTEGER NOT NULL,
       title TEXT NOT NULL,
       description TEXT,
       dueDate TEXT NOT NULL,
       Pending INTEGER DEFAULT 0,
       completed INTEGER DEFAULT 0,
       xp INTEGER DEFAULT 0,
-      FOREIGN KEY(userId) REFERENCES users(id)
+      FOREIGN KEY (characterId) REFERENCES characters(id)
+
     )
   `);
 
@@ -136,8 +138,8 @@ const characters = [
   [4, 'FireMage', 7, 1900, 1,'/img/goku.png'],
   [5, 'NightElf', 5, 1200, 1,'/img/purpleguy.png'],
   [6, 'DarkElf', 3, 700, 1,'/img/malePixel.png'],
-  [7, 'SpingBing', 10, 2500, 0,'/img/purpleguy.png'],
-  [8, 'Logan', 8, 2000, 0,'/img/purpleguy.png'],
+  [7, 'SpingBing', 10, 2500, 0,'/img/Hermit.png'],
+  [8, 'Logan', 8, 2000, 0,'/img/FeyereJoe.png'],
   [9, 'CumMaster', 9, 2300, 1,'/img/purpleguy.png']
 ];
 // --- Create default roles (admin, user, guest) ---
@@ -205,20 +207,20 @@ db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
   // charStmt.finalize();
 
   // Dummy tasks
-  const tasks = [
-    [1, 'Craft a Sword', 'Gather iron and craft a new sword.', '2025-05-10', 0],
-    [2, 'Scout the Area', 'Explore the nearby forest for enemies.', '2025-05-12', 1],
-    [3, 'Deliver Message', 'Take the letter to the capital.', '2025-05-15', 0],
-    [4, 'Defend the Wall', 'Hold the wall from invading forces.', '2025-05-20', 0],
-    [5, 'Collect Taxes', 'Visit villagers and collect taxes.', '2025-05-18', 1]
-  ];
+  // const tasks = [
+  //   [1, 'Craft a Sword', 'Gather iron and craft a new sword.', '2025-05-10', 0],
+  //   [2, 'Scout the Area', 'Explore the nearby forest for enemies.', '2025-05-12', 1],
+  //   [3, 'Deliver Message', 'Take the letter to the capital.', '2025-05-15', 0],
+  //   [4, 'Defend the Wall', 'Hold the wall from invading forces.', '2025-05-20', 0],
+  //   [5, 'Collect Taxes', 'Visit villagers and collect taxes.', '2025-05-18', 1]
+  // ];
 
-  db.run(`DELETE FROM tasks`);
-  const taskStmt = db.prepare("INSERT INTO tasks (userId, title, description, dueDate, completed) VALUES (?, ?, ?, ?, ?)");
-  tasks.forEach(task => taskStmt.run(...task));
-  taskStmt.finalize();
+  // db.run(`DELETE FROM tasks`);
+  // const taskStmt = db.prepare("INSERT INTO tasks (userId, title, description, dueDate, completed) VALUES (?, ?, ?, ?, ?)");
+  // tasks.forEach(task => taskStmt.run(...task));
+  // taskStmt.finalize();
 
-  console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
+  // console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
 });
 //Dummy stats
   const stats = [
