@@ -9,15 +9,19 @@
 </head>
 <body>
   <div class="profile-container">
-    <h1>Profile Settings</h1>
+    <h1>Profile settings</h1>
     <form id="profileForm">
+      <label for="username">Username</label>
       <label for="username">Username</label>
       <input type="text" id="username" name="username" value="{{user.username}}" required>
 
-      <label for="email">E-mail</label>
+      <label for="email">Email address</label>
       <input type="email" id="email" name="email" value="{{user.email}}" required>
 
-      <button type="submit">Update Profile</button>
+ <div class="profile-button-group">
+  <button type="submit" class="profile-update-btn">Update Profile</button>
+  <a href="/settings" class="profile-back-btn">Back to settings</a>
+</div>
     </form>
   </div>
 
