@@ -411,11 +411,15 @@ body.default-theme .add-task-form-header
 {
   color: white;
 }
-body.default-theme form input,
 body.default-theme .admin-user-card h3,
 body.default-theme .admin-user-card p
 {
   color: white;
+}
+body.default-theme form input
+{
+  color: #000;
+  background-color: white;
 }
 body.default-theme .change-username-btn
 {
