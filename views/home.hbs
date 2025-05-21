@@ -71,9 +71,10 @@
         <div class="task-details hidden">
           <p><strong>Description:</strong> {{description}}</p>
           <p><strong>XP:</strong> {{xp}}</p>
-<form action="/task/complete/{{id}}" method="POST" style="display: inline;">
+<form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
   <button type="submit">Complete</button>
-</form>        </div>
+</form>
+      </div>
         {{/each}}
       </div>
       {{else}}

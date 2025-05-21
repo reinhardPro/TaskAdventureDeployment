@@ -186,7 +186,9 @@ body {
   color: #333;
 }
 
-
+.no-character-message p a{
+  color: #fd0000;
+}
 /*media query's / responsivenes*/
 @media (max-width: 1024px) {
   .container {

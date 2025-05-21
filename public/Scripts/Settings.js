@@ -2,7 +2,7 @@ document.querySelectorAll("li").forEach(item => {
     item.addEventListener("click", (event) => {
       if (
         event.target.closest(".details") &&
-        (event.target.tagName === "SELECT" || event.target.tagName === "INPUT" || event.target.tagName === "LABEL")
+        ["SELECT", "INPUT", "LABEL", "SPAN"].includes(event.target.tagName)
       ) {
         return;
       }

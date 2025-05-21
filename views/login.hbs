@@ -30,7 +30,7 @@
 <script>
   Swal.fire({
     icon: 'error',
-    title: 'Toegang geweigerd',
+    title: 'Access denied',
     text: '{{error}}',
     confirmButtonColor: '#d33'
   });
@@ -41,8 +41,8 @@
   if (params.get("reset") === "success") {
     Swal.fire({
       icon: 'success',
-      title: 'Wachtwoord gewijzigd',
-      text: 'Je kunt nu inloggen met je nieuwe wachtwoord.',
+      title: 'Password changed',
+      text: 'You can now login with your new password.',
       confirmButtonColor: '#3085d6'
     });
   }
