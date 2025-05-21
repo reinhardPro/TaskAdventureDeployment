@@ -3,18 +3,23 @@
 <footer id="footer" class="footer">
   <p>&copy; 2025 Task Adventure</p>
 </footer>
-<script>
-window.addEventListener('scroll', function() {
-  const footer = document.getElementById('footer');
-  const scrollY = window.scrollY;
-  const windowHeight = window.innerHeight;
-  const documentHeight = document.documentElement.scrollHeight;
 
-  // Als je helemaal beneden bent
-  if (scrollY + windowHeight >= documentHeight) {
-    footer.style.display = 'block';
-  } else {
-    footer.style.display = 'none';
+<script>
+  function toggleFooter() {
+    const footer = document.getElementById('footer');
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Toon de footer als we helemaal onderaan zijn of als de pagina korter is dan het scherm
+    if (scrollY + windowHeight >= documentHeight - 5 || documentHeight <= windowHeight) {
+      footer.classList.add('visible');
+    } else {
+      footer.classList.remove('visible');
+    }
   }
-});
+
+  window.addEventListener('scroll', toggleFooter);
+  window.addEventListener('load', toggleFooter);
+  window.addEventListener('resize', toggleFooter);
 </script>

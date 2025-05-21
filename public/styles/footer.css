@@ -1,4 +1,3 @@
-/* Footer css */
 .footer {
   background-color: #2a005f;
   color: #ccc;
@@ -6,13 +5,25 @@
   padding: 10px;
   width: 100%;
   box-sizing: border-box;
-  position: static;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 10; /* lager dan menu */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* footer niet interactief, dus prima */
+}
 
+.footer.visible {
+  visibility: visible;
+  opacity: 1;
 }
 
 .footer.fixed {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  z-index: 10;
+  pointer-events: none;
 }
