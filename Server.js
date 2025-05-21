@@ -393,8 +393,17 @@ app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
 app.post('/CreateAccount', (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
 
+  // Basic password confirmation check
   if (password !== confirmPassword) {
     return res.render('CreateAccount', { error: 'Passwords do not match.' });
+  }
+
+  // Password strength check
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.render('CreateAccount', {
+      error: 'Password must be at least 6 characters long and include one uppercase letter, one lowercase letter, and one special character.',
+    });
   }
 
   // Check if username or email already exists
@@ -416,7 +425,6 @@ app.post('/CreateAccount', (req, res) => {
       // Get role ID for "user"
       db.get('SELECT id FROM roles WHERE name = ?', ['user'], (err, roleRow) => {
         if (err || !roleRow) {
-          // Could not find role, but user was created, so just continue without role assignment
           req.session.user = { id: userId, username, email };
           return res.redirect('/CharacterCreation');
         }
@@ -426,11 +434,9 @@ app.post('/CreateAccount', (req, res) => {
         // Assign the "user" role to the new user
         db.run('INSERT INTO user_roles (userId, roleId) VALUES (?, ?)', [userId, roleId], (err) => {
           if (err) {
-            // Role assignment failed, but user is created — still proceed
             console.error('Failed to assign role:', err);
           }
 
-          // Set session and redirect
           req.session.user = { id: userId, username, email };
           res.redirect('/CharacterCreation');
         });
@@ -438,6 +444,7 @@ app.post('/CreateAccount', (req, res) => {
     });
   });
 });
+
 
 // Logout
 app.post('/Logout', (req, res) => {
