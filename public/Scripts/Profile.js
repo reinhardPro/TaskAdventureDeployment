@@ -8,7 +8,7 @@ const originalUsername = document.getElementById('username').defaultValue;
 const originalEmail = document.getElementById('email').defaultValue;
 
 if (username === originalUsername && email === originalEmail) {
-  Swal.fire('Geen wijzigingen gedetecteerd.', 'Pas je gegevens aan om op te slaan.', 'warning');
+  Swal.fire('No changes detected.', 'Please adjust your details to save.', 'warning');
   return;
 }
 
@@ -24,7 +24,7 @@ if (username === originalUsername && email === originalEmail) {
     const result = await response.json();
 
     if (result.success) {
-      Swal.fire('Profiel bijgewerkt!', '', 'success').then(() => {
+      Swal.fire('Profile updated!', '', 'success').then(() => {
     window.location.href = '/home';
       });
     } else {
