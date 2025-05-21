@@ -14,4 +14,22 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+
+
+  function toggleFooterPosition() {
+  const footer = document.querySelector('.footer');
+  const bodyHeight = document.body.scrollHeight;
+  const windowHeight = window.innerHeight;
+
+  if (bodyHeight <= windowHeight) {
+    footer.classList.add('fixed');
+  } else {
+    footer.classList.remove('fixed');
+  }
+}
+
+window.addEventListener('load', toggleFooterPosition);
+window.addEventListener('resize', toggleFooterPosition);
+
   
