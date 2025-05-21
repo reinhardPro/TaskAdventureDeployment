@@ -24,7 +24,7 @@
           </div>
 
           {{!-- Show Accept button only if task is not accepted (pending = 0) --}}
-          {{#unless pending}}
+          {{#unless Pending}}
           <form action="/task/accept/{{id}}" method="POST" style="display: inline;">
             <button type="submit">Accept</button>
           </form>
@@ -74,5 +74,10 @@
     </div>
     <script src="/scripts/TaskManger.js"></script>
 </body>
+<script>
+function verbergKnop(button) {
+  button.style.display = 'none';
+}
+</script>
 
 </html>
