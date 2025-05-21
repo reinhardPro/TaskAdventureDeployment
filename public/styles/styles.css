@@ -394,6 +394,29 @@ body.lightblue-theme .admin-user-card
 {
   background-color: #1e4d57;
 }
+body.lightblue-theme .admin-user-card ul li
+{
+  background-color: #ADD8E6;
+}
+body.lightblue-theme .task-card
+{
+  background-color: #1e4d57;
+}
+body.lightblue-theme .task-title,
+body.lightblue-theme .task-date
+{
+  color: white;
+}
+body.lightblue-theme .task-icon
+{
+  background-color: #35707d;
+  color: white;
+}
+body.lightblue-theme .task-details.show
+{
+  background-color: #85b4bf;
+  color: white;
+}
 /*Default color theme*/
 body.default-theme .add-task-form,
 body.default-theme .task-list,
@@ -428,6 +451,14 @@ body.default-theme .change-username-btn
 body.default-theme .admin-user-card
 {
   background-color: #3e008d;
+}
+body.default-theme .admin-user-card ul li
+{
+  background-color: #5a2677;
+}
+body.default-theme .task-details.show
+{
+  background-color: #d9b9ff;
 }
 /*lightgray color theme*/
 body.lightgray-theme .add-task-form,
@@ -492,6 +523,29 @@ body.lightgray-theme .admin-user-card
 {
   background-color: #333135;
 }
+body.lightgray-theme .admin-user-card ul li
+{
+  background-color: #58555a;
+  color: white;
+}
+body.lightgray-theme .task-card
+{
+  background-color: #58555a;
+}
+body.lightgray-theme .task-title,
+body.lightgray-theme .task-date
+{
+  color: white;
+}
+body.lightgray-theme .task-icon
+{
+  background-color: #79777a;
+  color: white;
+}
+body.lightgray-theme .task-details.show
+{
+  background-color: #cfcecf;
+}
 /*Darkgray theme color*/
 body.darkgray-theme .add-task-form,
 body.darkgray-theme .task-list,
@@ -551,4 +605,23 @@ body.darkgray-theme form input
 body.darkgray-theme .change-username-btn
 {
   background-color: #58555a;
+}
+body.darkgray-theme .admin-user-card ul li
+{
+  background-color: #58555a;
+  color: white;
+}
+body.darkgray-theme .task-card
+{
+  background-color: #58555a;
+  color: white;
+}
+body.darkgray-theme .task-icon
+{
+  background-color: #79777a;
+}
+body.darkgray-theme .task-details.show
+{
+  background-color: #79777a;
+  color: white;
 }
