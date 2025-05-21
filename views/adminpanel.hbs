@@ -11,17 +11,17 @@
     <form action="/admin/change-username" method="POST" class="form-change-username">
       <input type="hidden" name="userId" value="{{this.id}}">
       <input type="text" name="newUsername" placeholder="Nieuwe gebruikersnaam" required>
-      <button type="submit" class="btn change-username-btn">Wijzig naam</button>
+      <button type="submit" class="btn change-username-btn">Change name</button>
     </form>
 
     <!-- Delete User Form -->
     <form action="/admin/delete-user" method="POST" class="form-delete-user" onsubmit="return confirm('Verwijder deze gebruiker?');">
       <input type="hidden" name="userId" value="{{this.id}}">
-      <button type="submit" class="btn delete-user-btn">Verwijder gebruiker</button>
+      <button type="submit" class="btn delete-user-btn">Delete User</button>
     </form>
 
     <!-- Characters -->
-    <h3>Karakters</h3>
+    <h3>Characters</h3>
     {{#if this.characters.length}}
       <ul>
         {{#each this.characters}}
@@ -35,11 +35,11 @@
         {{/each}}
       </ul>
     {{else}}
-      <p>Geen karakters</p>
+      <p>No Characters</p>
     {{/if}}
 
     <!-- Pending Tasks -->
-    <h3>Pending Taken</h3>
+    <h3>Pending Tasks</h3>
     {{#if this.tasks.length}}
       <ul>
         {{#each this.tasks}}
@@ -65,7 +65,7 @@
         {{/each}}
       </ul>
     {{else}}
-      <p>Geen pending taken</p>
+      <p>No pending Tasks</p>
     {{/if}}
   </div>
 {{/each}}

@@ -75,10 +75,30 @@ app.use(session({
   }
 }));
 
-  app.use((req, res, next) => {
-    res.locals.user = req.session.user;
-    next();
-  });
+app.use((req, res, next) => {
+  const user = req.session.user;
+
+  if (!user) {
+    res.locals.user = null;
+    return next();
+  }
+
+  db.get(
+    `SELECT 1 FROM user_roles ur
+     JOIN roles r ON ur.roleId = r.id
+     WHERE ur.userId = ? AND r.name = 'admin'`,
+    [user.id],
+    (err, row) => {
+      if (err) {
+        console.error('Admin role check failed:', err);
+      }
+
+      user.isAdmin = !!row;
+      res.locals.user = user;
+      next();
+    }
+  );
+});
 
   // Landing Page Route
 app.get('/', (req, res) => {
@@ -377,29 +397,46 @@ app.post('/CreateAccount', (req, res) => {
     return res.render('CreateAccount', { error: 'Passwords do not match.' });
   }
 
-  createUser(email, username, password, (err, userId) => {
-    if (err) return res.status(500).send('Error creating user');
-    req.session.user = { id: userId, username, email };
-    res.redirect('/CharacterCreation');
+  // Check if username or email already exists
   db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, existingUser) => {
     if (err) {
-      return res.render('CreateAccount', { error: 'An error has occurd. Try again.' });
+      return res.render('CreateAccount', { error: 'An error has occurred. Please try again.' });
     }
 
     if (existingUser) {
       return res.render('CreateAccount', { error: 'Username or e-mail already exists.' });
     }
 
-    // Als uniek, aanmaken
+    // Create user
     createUser(email, username, password, (err, userId) => {
       if (err) {
-        return res.render('CreateAccount', { error: 'An error has occurd while trying to make your account.' });
+        return res.render('CreateAccount', { error: 'An error occurred while trying to create your account.' });
       }
-      req.session.user = { id: userId, username, email };
-      res.redirect('/CharacterCreation');
+
+      // Get role ID for "user"
+      db.get('SELECT id FROM roles WHERE name = ?', ['user'], (err, roleRow) => {
+        if (err || !roleRow) {
+          // Could not find role, but user was created, so just continue without role assignment
+          req.session.user = { id: userId, username, email };
+          return res.redirect('/CharacterCreation');
+        }
+
+        const roleId = roleRow.id;
+
+        // Assign the "user" role to the new user
+        db.run('INSERT INTO user_roles (userId, roleId) VALUES (?, ?)', [userId, roleId], (err) => {
+          if (err) {
+            // Role assignment failed, but user is created — still proceed
+            console.error('Failed to assign role:', err);
+          }
+
+          // Set session and redirect
+          req.session.user = { id: userId, username, email };
+          res.redirect('/CharacterCreation');
+        });
+      });
     });
   });
-});
 });
 
 // Logout
