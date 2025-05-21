@@ -94,3 +94,27 @@ li {
 .switch input:checked + .slider::before {
   transform: translateX(22px);
 }
+
+
+.settings-link-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #120320;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.settings-link-button:hover {
+  background-color: #0e0118;
+  transform: scale(1.03);
+  cursor: pointer;
+}
+
+.settings-link-button:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 5px #000 inset;
+}
