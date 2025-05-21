@@ -17,7 +17,7 @@ document.getElementById('profileForm').addEventListener('submit', async function
 
     if (result.success) {
       Swal.fire('Profiel bijgewerkt!', '', 'success').then(() => {
-    window.location.href = '/profile';
+    window.location.href = '/home';
       });
     } else {
       Swal.fire('Fout', result.message, 'error');

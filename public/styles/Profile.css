@@ -1,72 +1,68 @@
 body {
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-    background-color: #4a0080;
-    color: white;
-  }
-  
-  .profile-container {
-    background-color: #5e2d91;
-    width: 400px;
-    margin: 80px auto;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 0 10px black;
-    text-align: center;
-  }
-  
-  h1 {
-    margin-bottom: 30px;
-  }
-  
-  form label {
-    display: block;
-    margin: 15px 0 5px;
-    text-align: left;
-  }
-  
-  form input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    background-color: #360066;
-    color: white;
-    margin-bottom: 15px;
-  }
-  
-  form input::placeholder {
-    color: #d1b3ff;
-  }
-  
-  button[type="submit"] {
-    padding: 12px 25px;
-    border: none;
-    background-color: black;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 10px;
-  }
-  
-  button[type="submit"]:hover {
-    background-color: #222;
-  }
-.button-group {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #4a0080;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.profile-container {
+  background-color: #5e2d91;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 30px; /* Iets meer zijdelingse padding */
+  border-radius: 20px;
+  box-shadow: 0 0 10px black;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 30px;
+}
+
+form {
+  padding: 0 10px;
+}
+
+form label {
+  display: block;
+  margin: 15px 0 5px;
+  text-align: left;
+}
+
+form input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #360066;
+  color: white;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+form input::placeholder {
+  color: #d1b3ff;
+}
+
+.profile-button-group {
   display: flex;
   justify-content: center;
   gap: 10px;
   margin-top: 10px;
 }
 
-.button-group button[type="submit"],
-.button-group .button-secondary {
-  width: 170px; /* of een andere gewenste vaste breedte */
-  padding: 12px 0;
+/* Update Profile knop */
+.profile-update-btn {
+  width: 200px;
+  padding: 16px 0;
+  font-size: 16px;
   background-color: black;
   color: white;
-  text-decoration: none;
   border-radius: 8px;
   font-weight: bold;
   text-align: center;
@@ -74,7 +70,26 @@ body {
   cursor: pointer;
 }
 
-.button-group .button-secondary:hover,
-.button-group button[type="submit"]:hover {
+.profile-update-btn:hover {
+  background-color: #222;
+}
+
+/* Back to settings knop */
+.profile-back-btn {
+  width: 200px;
+  padding: 16px 0;
+  font-size: 16px;
+  background-color: black;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-back-btn:hover {
   background-color: #222;
 }
