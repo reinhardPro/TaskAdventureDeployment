@@ -411,7 +411,7 @@ app.post('/CreateAccount', (req, res) => {
 
 // Logout
 app.post('/Logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+  req.session.destroy(() => res.redirect('/home'));
 });
 
 // Admin Panel Route
