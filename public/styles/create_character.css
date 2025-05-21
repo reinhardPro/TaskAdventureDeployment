@@ -154,7 +154,7 @@ font-family: 'Segoe UI', sans-serif;
 }
 
 #characterImg[src$="FeyereJoe.png"] {
-  transform: scale(0.06);
+  transform: scale(2.9);
 }
 
 #characterImg[src$="samurai.png"] {
