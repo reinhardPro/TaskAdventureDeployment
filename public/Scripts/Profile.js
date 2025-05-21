@@ -4,6 +4,14 @@ document.getElementById('profileForm').addEventListener('submit', async function
   const username = document.getElementById('username').value;
   const email = document.getElementById('email').value;
 
+const originalUsername = document.getElementById('username').defaultValue;
+const originalEmail = document.getElementById('email').defaultValue;
+
+if (username === originalUsername && email === originalEmail) {
+  Swal.fire('Geen wijzigingen gedetecteerd.', 'Pas je gegevens aan om op te slaan.', 'warning');
+  return;
+}
+
   try {
     const response = await fetch('/profile/update', {
       method: 'POST',
