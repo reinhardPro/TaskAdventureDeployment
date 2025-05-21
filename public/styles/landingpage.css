@@ -1,7 +1,12 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to bottom, #330066, #1e0033);
+  /* background: linear-gradient(to bottom, #330066, #1e0033); */
+  background-image: url('/img/landingimg.png');
+  background-size: cover; /* Makes it cover the entire screen */
+  background-repeat: no-repeat; /* Prevents tiling */
+  /* background-position: center center; /* Centers the image */
+  /* background-attachment: fixed; */
   color: white;
   min-height: 100vh;
   display: flex;
@@ -10,13 +15,15 @@ body {
   padding-top: 120px;
   padding-bottom: 80px;
   text-align: center;
+  height: 100%;
 }
 
 /* Logo Section */
 .logo-section img.logo {
-  width: 150px;
+  width: 500px;
   height: auto;
-  margin-bottom: 20px;
+  margin-top: -5px;
+  /* margin-bottom: 20px; */
 }
 
 /* Info Section */
@@ -52,6 +59,7 @@ body {
 .btn:hover {
   background-color: #b98cff;
 }
+
 
 /* Responsive Enhancements */
 @media (max-width: 768px) {
