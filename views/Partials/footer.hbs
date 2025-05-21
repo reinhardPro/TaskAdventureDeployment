@@ -1,4 +1,20 @@
 {{!-- footer handlebar --}}
-<footer class="footer">
+
+<footer id="footer" class="footer">
   <p>&copy; 2025 Task Adventure</p>
 </footer>
+<script>
+window.addEventListener('scroll', function() {
+  const footer = document.getElementById('footer');
+  const scrollY = window.scrollY;
+  const windowHeight = window.innerHeight;
+  const documentHeight = document.documentElement.scrollHeight;
+
+  // Als je helemaal beneden bent
+  if (scrollY + windowHeight >= documentHeight) {
+    footer.style.display = 'block';
+  } else {
+    footer.style.display = 'none';
+  }
+});
+</script>
