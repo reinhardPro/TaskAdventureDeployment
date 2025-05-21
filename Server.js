@@ -90,8 +90,7 @@ app.get('/', (req, res) => {
 });
 
 
-
-// Home
+//Home
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
@@ -107,113 +106,144 @@ app.get('/home', requireLogin, (req, res) => {
       });
     }
 
-    const characterId = req.query.characterId || characters[0].id;
+    // Make sure characterId is valid
+    const characterId = parseInt(req.query.characterId) || characters[0].id;
+    const selectedCharacter = characters.find(c => c.id === characterId);
+
+    if (!selectedCharacter) {
+      return res.status(404).send('Character not found');
+    }
 
     db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
-      db.get('SELECT xp, level FROM characters WHERE id = ?', [characterId], (err, row) => {
-        if (err) return res.status(500).send('Error fetching character data');
-
-        if (!row) {
-          console.error('No character found with id:', characterId);
-          return res.status(404).send('Character not found');
-        }
-
-        
-
-        const xp = row.xp ?? 0;
-        const level = row.level ?? 1;
-
-        res.render('Home', {
-          user: req.session.user,
-          characters,
-          tasks,
-          noCharacter: false,
-          selectedCharacterId: characterId,
-          xp,
-          level
-        });
+      res.render('Home', {
+        user: req.session.user,
+        characters,
+        tasks,
+        noCharacter: false,
+        selectedCharacterId: characterId,
+        xp: selectedCharacter.xp,
+        level: selectedCharacter.level
       });
     });
   });
 });
+
 
 // XP gain route
 app.post('/api/gain-xp', (req, res) => {
-  const userId = req.session.user.id;
-  const xpGained = req.body.xpGained;
-
-  db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
-    if (err || !character) return res.status(500).json({ error: 'User not found' });
-
-    let newXP = character.xp + xpGained;
-    let newLevel = character.level;
-    let leveledUp = false;
-
-    const xpThreshold = 100;
-
-    if (newXP >= xpThreshold) {
-      newLevel += 1;
-      newXP = newXP - xpThreshold;
-      leveledUp = true;
-    }
-
-    db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
-      if (err) return res.status(500).json({ error: 'Update failed' });
-
-      res.json({
-        xp: newXP,
-        level: newLevel,
-        leveledUp
-      });
-    });
-  });
-});
-
-// Taak voltooien + XP toekennen
-app.post('/api/complete-task', (req, res) => {
   const userId = req.session.user?.id;
-  const taskId = req.body.taskId;
+  const characterId = parseInt(req.body.characterId);
+  const xpGained = parseInt(req.body.xpGained);
 
-  if (!userId || !taskId) {
-    return res.status(400).json({ error: 'Ongeldige aanvraag' });
+  if (!userId || isNaN(characterId) || isNaN(xpGained)) {
+    console.log("Invalid input", { userId, characterId, xpGained });
+    return res.status(400).json({ error: 'Invalid input' });
   }
 
-  db.get('SELECT xp FROM tasks WHERE id = ? AND userId = ?', [taskId, userId], (err, task) => {
-    if (err || !task) return res.status(404).json({ error: 'Taak niet gevonden' });
+  console.log(`User ${userId} gaining ${xpGained} XP for character ${characterId}`);
 
-    const xpGained = task.xp;
+  db.get(
+    'SELECT xp, level FROM characters WHERE id = ? AND userId = ?',
+    [characterId, userId],
+    (err, character) => {
+      if (err) {
+        console.error("DB SELECT error:", err);
+        return res.status(500).json({ error: 'Database error' });
+      }
 
-    db.run('UPDATE tasks SET pending = 0 WHERE id = ? AND userId = ?', [taskId, userId], function (err) {
-      if (err) return res.status(500).json({ error: 'Taak kon niet worden voltooid' });
+      if (!character) {
+        console.warn("Character not found:", characterId);
+        return res.status(404).json({ error: 'Character not found' });
+      }
 
-      db.get('SELECT xp, level FROM characters WHERE userId = ?', [userId], (err, character) => {
-        if (err || !character) return res.status(500).json({ error: 'Karakter niet gevonden' });
+      let newXP = character.xp + xpGained;
+      let newLevel = character.level;
+      let leveledUp = false;
 
-        let newXP = character.xp + xpGained;
-        let newLevel = character.level;
-        let leveledUp = false;
+      const xpThreshold = 100;
 
-        if (newXP >= 100) {
-          newLevel += 1;
-          newXP -= 100;
-          leveledUp = true;
+      while (newXP >= xpThreshold) {
+        newLevel++;
+        newXP -= xpThreshold;
+        leveledUp = true;
+      }
+
+      console.log(`Updating character ${characterId} — New XP: ${newXP}, Level: ${newLevel}`);
+
+      db.run(
+        'UPDATE characters SET xp = ?, level = ? WHERE id = ? AND userId = ?',
+        [newXP, newLevel, characterId, userId],
+        function (updateErr) {
+          if (updateErr) {
+            console.error("DB UPDATE error:", updateErr);
+            return res.status(500).json({ error: 'Failed to update XP' });
+          }
+
+          console.log(`Rows updated: ${this.changes}`);
+
+          if (this.changes === 0) {
+            return res.status(404).json({ error: 'Character not updated (not found?)' });
+          }
+
+          res.json({ xp: newXP, level: newLevel, leveledUp });
         }
+      );
+    }
+  );
+});
 
-        db.run('UPDATE characters SET xp = ?, level = ? WHERE userId = ?', [newXP, newLevel, userId], (err) => {
-          if (err) return res.status(500).json({ error: 'XP kon niet worden opgeslagen' });
 
-          res.json({
-            xp: newXP,
-            level: newLevel,
-            leveledUp
-          });
-        });
-      });
+
+
+// Taak voltooien + XP toekennen
+app.post('/task/complete/:id', requireLogin, (req, res) => {
+  const taskId = req.params.id;
+  const characterId = req.query.characterId;
+
+  if (!characterId) return res.status(400).send('characterId ontbreekt');
+
+  db.get('SELECT * FROM tasks WHERE id = ?', [taskId], (err, task) => {
+    if (err || !task) return res.status(500).send('Taak niet gevonden');
+
+    const taskXp = Number(task.xp) || 0;
+
+    db.get('SELECT * FROM characters WHERE id = ?', [characterId], (err, character) => {
+      if (err || !character) return res.status(500).send('Character niet gevonden');
+
+      const newXp = (character.xp || 0) + taskXp;
+      let newLevel = character.level || 1;
+      const requiredXp = 100;
+
+      while (newXp >= newLevel * requiredXp) {
+        newLevel++;
+      }
+
+      db.run(
+        'UPDATE characters SET xp = ?, level = ? WHERE id = ?',
+        [newXp, newLevel, characterId],
+        function (err) {
+          if (err) return res.status(500).send('Update character faalde');
+
+          db.run(
+            'UPDATE tasks SET completed = 1 WHERE id = ?',
+            [taskId],
+            function (err) {
+              if (err) return res.status(500).send('Taak voltooien faalde');
+
+              res.redirect('/home?characterId=' + characterId); // Redirect naar de home pagina
+
+            }
+          );
+        }
+      );
     });
   });
 });
+
+
+
 
 
 //Stats route
