@@ -11,7 +11,7 @@
     <div class="user-menu">
       {{#if user}}
         <div class="user-info">
-          <img src="./img/UserIcon.jpg" alt="Avatar" class="avatar">
+          <img src="/img/UserIcon.jpg" alt="Avatar" class="avatar" />
           <span>{{user.username}}</span>
           <form action="/Logout" method="POST">
             <button type="submit">Logout</button>
@@ -26,18 +26,19 @@
 
     <div class="burger" id="burger">&#9776;</div>
 
-    <nav class="dropdown-menu hidden" id="dropdownMenu">
-      <a href="/LeaderBoard">Leaderboard</a>
-      <a href="/Settings">Settings</a>
-      <a href="/CharacterCreation">Character Creation</a>
-      <a href="/FocusMode">Focus Mode</a>
-      <a href="/Stats">Statistics</a>
-      <a href="/TaskManager">Task Manager</a> 
-    </nav>
-  <nav class="dropdown-menu hidden" id="dropdownMenu">
-  <a href="/tasks">Tasks</a>
-  <a href="/profile">Profile</a>
-  <a href="/settings">Settings</a>
-  </nav>
+    {{#if user}}
+      <nav class="dropdown-menu hidden" id="dropdownMenu">
+        <a href="/LeaderBoard">Leaderboard</a>
+        <a href="/Settings">Settings</a>
+        <a href="/CharacterCreation">Character Creation</a>
+        <a href="/FocusMode">Focus Mode</a>
+        <a href="/Stats">Statistics</a>
+        <a href="/TaskManager">Task Manager</a>
+
+        {{#if user.isAdmin}}
+          <a href="/AdminPanel">Admin Panel</a>
+        {{/if}}
+      </nav>
+    {{/if}}
   </div>
 </header>
