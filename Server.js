@@ -635,32 +635,60 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 });
 
-  // Handle account removal
-  app.post('/Settings/removeAccount', requireLogin, (req, res) => {
-    const user = req.session.user;
+// Handle account removal
+app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+  const user = req.session.user;
 
-  db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+  db.run(`
+  DELETE FROM tasks 
+  WHERE characterId IN (
+    SELECT id FROM characters WHERE userId = ?
+  )
+`, [user.id], (err) => {
+  if (err) {
+    return res.render('Settings', { 
+      alert: { type: 'error', message: 'Error deleting tasks' }
+    });
+  }
+
+  db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
     if (err) {
       return res.render('Settings', { 
-        alert: { type: 'error', message: 'Error deleting account' }
+        alert: { type: 'error', message: 'Error deleting characters' }
       });
     }
 
-    db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+    db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
       if (err) {
         return res.render('Settings', { 
-          alert: { type: 'error', message: 'Error deleting tasks' }
+          alert: { type: 'error', message: 'Error deleting user roles' }
         });
       }
 
-      req.session.destroy(() => {
-        return res.render('Settings', { 
-          alert: { type: 'success', message: 'Your account has been successfully deleted.' }
+      db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
+        if (err) {
+          return res.render('Settings', { 
+            alert: { type: 'error', message: 'Error deleting stats' }
+          });
+        }
+
+        db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+          if (err) {
+            return res.render('Settings', { 
+              alert: { type: 'error', message: 'Error deleting account' }
+            });
+          }
+
+          req.session.destroy(() => {
+            res.redirect('/Login');
+          });
         });
+      });
     });
   });
 });
 });
+
 // Access Rights and Permissions link
 app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
