@@ -150,7 +150,7 @@ font-family: 'Segoe UI', sans-serif;
 }
 
 #characterImg[src$="pixelFemale.png"] {
-  transform: scale(1.0);
+  transform: scale(0.8);
 }
 
 #characterImg[src$="Hermit.png"] {
