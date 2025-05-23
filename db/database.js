@@ -170,6 +170,18 @@ db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
         }
         const userId = this.lastID;
         console.log("✅ Admin user created!");
+                db.run(
+          `INSERT INTO stats (userId, username, taskCompleted, totalXpGained, mostXpForOneTask)
+           VALUES (?, ?, 0, 0, 0)`,
+          [userId, 'admin'],
+          (err) => {
+            if (err) {
+              console.error("❌ Kon stats niet aanmaken voor admin:", err);
+            } else {
+              console.log("✅ Stats voor admin aangemaakt!");
+            }
+          }
+        );
 
         db.get(`SELECT id FROM roles WHERE name = 'admin'`, (err, role) => {
           if (err || !role) {
