@@ -1,5 +1,5 @@
-.everything{
-padding-right: 200px;
+.everything {
+  padding-right: 200px;
 }
 
 .character-layout {
@@ -7,9 +7,9 @@ padding-right: 200px;
   justify-content: center;
   align-items: center;
   gap: 40px;
-  min-height: calc(100vh - 150px); /* adjusts for header/footer */
+  min-height: calc(100vh - 150px);
   padding: 40px 20px;
-  left:20%
+  left: 20%;
 }
 
 .character-box {
@@ -28,11 +28,67 @@ padding-right: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.character-frame img {
+.carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.arrow-container {
+  width: 75px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  z-index: 2;
+}
+
+.arrow-container.left {
+  left: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.arrow-container.right {
+  right: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.carousel-btn-left-btn,
+.carousel-btn-right-btn {
+  width: 100%;
   height: 100%;
   object-fit: contain;
+  cursor: pointer;
+}
+
+#characterImg {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 1;
+}
+
+#characterImg[src$="malePixel.png"] { transform: scale(0.7); }
+#characterImg[src$="purpleguy.png"] { transform: scale(1.5); }
+#characterImg[src$="pixelFemale.png"] { transform: scale(0.8); }
+#characterImg[src$="Hermit.png"] { transform: scale(1.6); }
+#characterImg[src$="FeyereJoe.png"] { transform: scale(1.4); }
+#characterImg[src$="samurai.png"] { transform: scale(1.3); }
+
+.character-frame img.fade-out {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.character-frame img.fade-in {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .character-info {
@@ -75,106 +131,31 @@ padding-right: 200px;
   width: 50%;
 }
 
-.character-name-label{
-font-size: 2rem;
-font-weight: bold;
-font-family: 'Segoe UI', sans-serif;
+.character-name-label {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.bodytype-label{
+.bodytype-label {
   font-size: 2rem;
   font-weight: bold;
   font-family: 'Segoe UI', sans-serif;
   padding-left: 10%;
 }
 
-.radio-buttons{
+.radio-buttons {
   font-size: 2rem;
   font-weight: bold;
   font-family: 'Segoe UI', sans-serif;
-  padding-left:10%;  
+  padding-left: 10%;
 }
 
 .confirm-button:hover {
   background-color: #b47cff;
 }
 
-.carousel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.carousel-btn-left-btn {
-  padding: 10px;
-  cursor: pointer;
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  left: -5rem; /* Add this */
-  transform: translateY(-50%);
-  width: 20%;
-}
-
-.carousel-btn-right-btn {
-  padding: 10px;
-  cursor: pointer;
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  right:-5rem; /* Add this */
-  transform: translateY(-50%);
-  width: 20%;
-}
-
-.left-btn {
-  left: -40px;
-}
-
-.right-btn {
-  right: -40px;
-}
-
-#characterImg {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-#characterImg[src$="malePixel.png"] {
-  transform: scale(0.7);
-}
-
-#characterImg[src$="purpleguy.png"] {
-  transform: scale(1.9);
-}
-
-#characterImg[src$="pixelFemale.png"] {
-  transform: scale(0.8);
-}
-
-#characterImg[src$="Hermit.png"] {
-  transform: scale(2.1);
-}
-
-#characterImg[src$="FeyereJoe.png"] {
-  transform: scale(0.1);
-}
-
-#characterImg[src$="samurai.png"] {
-  transform: scale(0.4);
-}
-
-.character-frame img.fade-out {
-  opacity: 0;
-  transform: translateX(-30px);
-}
-
-.character-frame img.fade-in {
-  opacity: 1;
-  transform: translateX(0);
-}
-/*responsiveness*/
+/* Responsiveness */
 @media screen and (max-width: 900px) {
   .character-layout {
     flex-direction: column;
@@ -202,8 +183,8 @@ font-family: 'Segoe UI', sans-serif;
     font-size: 1.5rem;
   }
 
-  .carousel-btn-left-btn,
-  .carousel-btn-right-btn {
+  .arrow-container.left,
+  .arrow-container.right {
     display: none;
   }
 
@@ -211,4 +192,9 @@ font-family: 'Segoe UI', sans-serif;
   .radio-buttons {
     padding-left: 0;
   }
+}
+
+.character-frame img {
+  height: 100%;
+  object-fit: contain;
 }

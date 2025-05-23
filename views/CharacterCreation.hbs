@@ -1,14 +1,21 @@
 <link rel="stylesheet" href="/styles/create_character.css" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <body class="everything">
   <form id="characterForm">
     <div class="character-layout">
       <div class="character-box">
         <div class="character-frame">
           <div class="carousel">
-            <img class="carousel-btn-left-btn" src="/img/arrowleft.png" alt="Left arrow">
+            <div class="arrow-container left">
+              <img class="carousel-btn-left-btn" src="/img/arrowleft.png" alt="Left arrow">
+            </div>
+
             <img id="characterImg" src="/img/malePixel.png" alt="Character preview" class="character-img" />
-            <img class="carousel-btn-right-btn" src="/img/arrow.png" alt="Right arrow">
+
+            <div class="arrow-container right">
+              <img class="carousel-btn-right-btn" src="/img/arrow.png" alt="Right arrow">
+            </div>
           </div>
         </div>
       </div>
@@ -22,7 +29,7 @@
         <div class="bodytype-selection">
           <label class="bodytype-label">Body Type:</label>
           <div class="radio-buttons">
-            <label><input type="radio" name="gender" value="0" required/>male</label>
+            <label><input type="radio" name="gender" value="0" required />male</label>
             <label><input type="radio" name="gender" value="1" />female</label>
           </div>
         </div>
@@ -32,44 +39,41 @@
     </div>
 
     <input type="hidden" id="imagevalue" name="imagevalue" value="/img/malePixel.png" />
-
   </form>
+
   <script>
-  document.getElementById('characterForm').addEventListener('submit', async function (e) {
-    e.preventDefault(); // Voorkom standaard submit
+    document.getElementById('characterForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-    const name = document.getElementById('character-name').value;
-    const gender = document.querySelector('input[name="gender"]:checked')?.value;
-    const imagevalue = document.getElementById('imagevalue').value;
+      const name = document.getElementById('character-name').value;
+      const gender = document.querySelector('input[name="gender"]:checked')?.value;
+      const imagevalue = document.getElementById('imagevalue').value;
 
-    // Basisvalidatie
-    if (!name || gender === undefined) {
-      Swal.fire('Fout', 'Gelieve alle velden correct in te vullen.', 'error');
-      return;
-    }
+      if (!name || gender === undefined) {
+        Swal.fire('Fout', 'Gelieve alle velden correct in te vullen.', 'error');
+        return;
+      }
 
-    try {
-      const response = await fetch('/CharacterCreation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, gender, imagevalue })
-      });
+      try {
+        const response = await fetch('/CharacterCreation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, gender, imagevalue })
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-if (result.success) {
-  Swal.fire('Gelukt!', result.message, 'success').then(() => {
-    window.location.href = 'http://localhost:3000/home';  // Vooruit naar profielpagina
-  });
-} else {
-  Swal.fire('Mislukt', result.message || 'Er is iets misgegaan.', 'error');
-}
-    } catch (error) {
-      console.error('Fout:', error);
-      Swal.fire('Fout', 'Serverfout bij het aanmaken van karakter.', 'error');
-    }
-  });
-</script>
+        if (result.success) {
+          Swal.fire('Gelukt!', result.message, 'success').then(() => {
+            window.location.href = 'http://localhost:3000/home';
+          });
+        } else {
+          Swal.fire('Mislukt', result.message || 'Er is iets misgegaan.', 'error');
+        }
+      } catch (error) {
+        console.error('Fout:', error);
+        Swal.fire('Fout', 'Serverfout bij het aanmaken van karakter.', 'error');
+      }
+    });
+  </script>
 </body>
