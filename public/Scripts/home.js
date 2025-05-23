@@ -44,13 +44,27 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const maxXP = 100;
+  let currentXp = parseInt(document.getElementById("xpInfo").dataset.xp, 10);
+  let currentLevel = parseInt(document.getElementById("level")?.dataset.level, 10);
+  let xpNeeded = calculateXpNeeded(currentLevel);
+
+  const xpFill = document.getElementById("xpFill");
+  const xpInfo = document.getElementById("xpInfo");
+  const levelInfo = document.querySelector(".level-info");
+
+  function calculateXpNeeded(level) {
+    return 100 + Math.floor((level - 1) / 5) * 50;
+  }
 
   function updateXPBar(xp, level) {
-    const percent = (xp / maxXP) * 100;
-    document.getElementById('xpFill').style.width = `${percent}%`;
-    document.getElementById('xpInfo').textContent = `XP: ${xp} / ${maxXP}`;
-    document.getElementById('level').textContent = `Level: ${level}`;
+    currentXp = xp;
+    currentLevel = level;
+    xpNeeded = calculateXpNeeded(currentLevel);
+
+    const percent = (currentXp / xpNeeded) * 100;
+    xpFill.style.width = `${percent}%`;
+    xpInfo.textContent = `XP: ${currentXp} / ${xpNeeded}`;
+    levelInfo.textContent = `Level: ${currentLevel}`;
   }
 
   function gainXP(amount) {
@@ -70,37 +84,17 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  // XP BAR
-  // let currentXp = parseInt(document.getElementById("xpInfo").dataset.xp, 10);
-  // let currentLevel = parseInt(document.getElementById("level")?.dataset.level, 10);
-  // let xpNeeded = calculateXpNeeded(currentLevel);
+  function addXP(amount) {
+    currentXp += amount;
 
-  // const xpFill = document.getElementById("xpFill");
-  // const xpInfo = document.getElementById("xpInfo");
-  // const levelInfo = document.querySelector(".level-info");
+    while (currentXp >= xpNeeded) {
+      currentXp -= xpNeeded;
+      currentLevel++;
+      xpNeeded = calculateXpNeeded(currentLevel);
+    }
 
-  // function calculateXpNeeded(level) {
-  //   return 100 + Math.floor((level - 1) / 5) * 50;
-  // }
-
-  // function updateXPBar() {
-  //   const percent = (currentXp / xpNeeded) * 100;
-  //   xpFill.style.width = percent + "%";
-  //   xpInfo.textContent = `XP: ${currentXp} / ${xpNeeded}`;
-  //   levelInfo.textContent = `Level: ${currentLevel}`;
-  // }
-
-  // function addXP(amount) {
-  //   currentXp += amount;
-
-  //   while (currentXp >= xpNeeded) {
-  //     currentXp -= xpNeeded;
-  //     currentLevel++;
-  //     xpNeeded = calculateXpNeeded(currentLevel);
-  //   }
-
-  //   updateXPBar();
-  // }
+    updateXPBar(currentXp, currentLevel);
+  }
 
   // complete btn
   const completeButtons = document.querySelectorAll(".complete-btn");
@@ -128,5 +122,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  updateXPBar();
+  updateXPBar(currentXp, currentLevel);
 });
