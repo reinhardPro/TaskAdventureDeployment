@@ -113,6 +113,51 @@ db.run(`
 `);
 
 
+
+
+  // Klassen-tabel: Elke klas heeft een naam, code, leraar en max aantal leerlingen
+  db.run(`
+    CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT UNIQUE NOT NULL,
+      teacherId INTEGER NOT NULL,
+      maxStudents INTEGER DEFAULT 40,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (teacherId) REFERENCES users(id)
+    )
+  `);
+
+  // Klassen-gebruikers-tabel: Welke users zitten in welke klassen
+  db.run(`
+    CREATE TABLE IF NOT EXISTS class_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      classId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (classId) REFERENCES classes(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (classId, userId)
+    )
+  `);
+
+
+
+  // Dummy users (met email, username, password)
+  const users = [
+    ['alice@example.com', 'alice', 'password123'],
+    ['bob@example.com', 'bob', 'password123'],
+    ['carol@example.com', 'carol', 'password123'],
+    ['dave@example.com', 'dave', 'password123'],
+    ['eve@example.com', 'eve', 'password123']
+  ];
+
+  db.run(`DELETE FROM users`);
+  const userStmt = db.prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
+  users.forEach(([email, username, password]) => {
+    const hashed = bcrypt.hashSync(password, 10);
+    userStmt.run(email, username, hashed);
+
   // Standaardrollen toevoegen indien nodig
   db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
     const existingRoles = rows.map(r => r.name);
