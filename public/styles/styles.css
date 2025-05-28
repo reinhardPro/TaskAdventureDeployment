@@ -91,7 +91,7 @@ body.default-theme .footer {
 }
 body.lightgray-theme .header,
 body.lightgray-theme .footer {
-  background-color: #a3a0a0;
+  background-color: #929191;
   color: black;
 }
 body.darkgray-theme .header,
@@ -124,7 +124,7 @@ body.default-theme .dropdown-menu a:hover {
   background-color: #3e0080;
 }
 body.lightgray-theme .dropdown-menu a:hover {
-  background-color: #cccccc;
+  background-color: #ababab;
 }
 body.darkgray-theme .dropdown-menu a:hover {
   background-color: #5c5c5c;
@@ -137,7 +137,7 @@ body.default-theme .dropdown-menu {
   background-color: #2a005f;
 }
 body.lightgray-theme .dropdown-menu {
-  background-color: #e0e0e0;
+  background-color: #929191;
 }
 body.darkgray-theme .dropdown-menu {
   background-color: #2c2c2c;
@@ -347,9 +347,14 @@ body.lightblue-theme .task-item{
     color: white;
 }
 body.lightblue-theme .form-group input,
-body.lightblue-theme .form-group textarea
+body.lightblue-theme .form-group textarea,
+body.lightblue-theme .form-group select
 {
   background-color: #1e4d57;
+}
+body.lightblue-theme .add-task-button
+{
+  background-color: #018786;
 }
 body.lightblue-theme .user-info form button{
   background-color: #1e4d57;
@@ -359,7 +364,10 @@ body.lightblue-theme .login-link a
   background-color: #1e4d57;
 }
 body.lightblue-theme input{
-  background-color: #1e4d57;
+  background-color: #316671;
+}
+body.lightblue-theme ::placeholder{
+  color: white;
 }
 body.lightblue-theme .login-container{
   background-color: #296b79;
@@ -388,19 +396,20 @@ body.lightblue-theme .admin-user-card p
 }
 body.lightblue-theme .change-username-btn
 {
-  background-color: #296b79;
+  background-color: #1e4d57;
 }
 body.lightblue-theme .admin-user-card
 {
-  background-color: #1e4d57;
+  background-color: #357381;
 }
 body.lightblue-theme .admin-user-card ul li
 {
-  background-color: #ADD8E6;
+  background-color: #3a97ac;
+  color: white;
 }
 body.lightblue-theme .task-card
 {
-  background-color: #1e4d57;
+  background-color: #2a6876;
 }
 body.lightblue-theme .task-title,
 body.lightblue-theme .task-date
@@ -425,9 +434,20 @@ body.default-theme .task-item{
     color: white;
 }
 body.default-theme .form-group input,
-body.default-theme .form-group textarea
+body.default-theme .form-group textarea,
+body.default-theme .form-group select
 {
   background-color: #3e008d;
+  color: white;
+}
+body.default-theme button.accept-button
+{
+  background-color: #6200ea;
+}
+body.default-theme .form-group label,
+body.default-theme span
+{
+  color: white;
 }
 body.default-theme .task-list-header,
 body.default-theme .add-task-form-header
@@ -454,7 +474,7 @@ body.default-theme .admin-user-card
 }
 body.default-theme .admin-user-card ul li
 {
-  background-color: #5a2677;
+  background-color: #502268;
 }
 body.default-theme .task-details.show
 {
@@ -477,7 +497,14 @@ body.lightgray-theme .add-task-form-header
 {
   color: white;
 }
-body.lightgray-theme span{
+body.lightgray-theme button.accept-button,
+body.lightgray-theme .add-task-button
+{
+  background-color: #333135;
+}
+body.lightgray-theme .form-group label,
+body.lightgray-theme span
+{
   color: white;
 }
 body.lightgray-theme .login-link a
@@ -488,7 +515,7 @@ body.lightgray-theme .user-info form button{
   background-color: #323536;
 }
 body.lightgray-theme input{
-  background-color: #333135;
+  background-color: #49484a;
 }
 body.lightgray-theme .login-container{
   background-color: #58555a;
@@ -517,15 +544,15 @@ body.lightgray-theme .admin-user-card p
 }
 body.lightgray-theme .change-username-btn
 {
-  background-color: #58555a;
+  background-color: #363537;
 }
 body.lightgray-theme .admin-user-card
 {
-  background-color: #333135;
+  background-color: #545356;
 }
 body.lightgray-theme .admin-user-card ul li
 {
-  background-color: #58555a;
+  background-color: #454545;
   color: white;
 }
 body.lightgray-theme .task-card
@@ -545,6 +572,9 @@ body.lightgray-theme .task-icon
 body.lightgray-theme .task-details.show
 {
   background-color: #cfcecf;
+}
+body.lightgray-theme ::placeholder{
+  color: white;
 }
 /*Darkgray theme color*/
 body.darkgray-theme .add-task-form,
@@ -623,5 +653,18 @@ body.darkgray-theme .task-icon
 body.darkgray-theme .task-details.show
 {
   background-color: #79777a;
+  color: white;
+}
+body.darkgray-theme ::placeholder{
+  color: white;
+}
+body.darkgray-theme button.accept-button,
+body.darkgray-theme .add-task-button
+{
+  background-color: #333135;
+}
+body.darkgray-theme .form-group label,
+body.darkgray-theme span
+{
   color: white;
 }

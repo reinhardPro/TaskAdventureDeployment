@@ -35,13 +35,30 @@ h2 {
   max-width: 250px;
   margin-bottom: 20px;
   text-align: center;
+  align-items: center;
+  justify-content: center;
 }
 
 .input-group label {
   margin-top: 5px;
   margin-bottom: 5px;
 }
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #3e008d;
+  color: white;
+  font-size: 1em;
+  text-align: center;
+  box-sizing: border-box;
+}
 
+.input-group input::placeholder {
+  color: #ccc;
+  opacity: 0.8;
+  text-align: center;
+}
 .input-wrapper {
   width: 100vw;
   display: flex;

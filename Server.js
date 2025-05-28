@@ -307,7 +307,16 @@ app.get('/Stats', requireLogin, (req, res) => {
 // Task Manager
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
-
+  const today = new Date().toISOString().split('T')[0];
+// Verwijder taken waarvan de dueDate in het verleden ligt
+db.run(`
+  DELETE FROM tasks 
+  WHERE dueDate < date('now') 
+    AND characterId IN (SELECT id FROM characters WHERE userId = ?)
+`, [userId], (err) => {
+  if (err) return res.status(500).send('Fout bij het verwijderen van verlopen taken');
+  
+  // Daarna pas: laadt characters en taken
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
     if (err) return res.status(500).send('Error loading characters');
     if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [] });
@@ -325,10 +334,11 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
       characterIds,
       (err, tasks) => {
         if (err) return res.status(500).send('Error loading tasks');
-        res.render('Taskmanager', { characters, tasks });
+        res.render('Taskmanager', { characters, tasks, today });
       }
     );
   });
+});
 });
 
 // Handle task creation
@@ -635,32 +645,60 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 });
 
-  // Handle account removal
-  app.post('/Settings/removeAccount', requireLogin, (req, res) => {
-    const user = req.session.user;
+// Handle account removal
+app.post('/Settings/removeAccount', requireLogin, (req, res) => {
+  const user = req.session.user;
 
-  db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+  db.run(`
+  DELETE FROM tasks 
+  WHERE characterId IN (
+    SELECT id FROM characters WHERE userId = ?
+  )
+`, [user.id], (err) => {
+  if (err) {
+    return res.render('Settings', { 
+      alert: { type: 'error', message: 'Error deleting tasks' }
+    });
+  }
+
+  db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
     if (err) {
       return res.render('Settings', { 
-        alert: { type: 'error', message: 'Error deleting account' }
+        alert: { type: 'error', message: 'Error deleting characters' }
       });
     }
 
-    db.run('DELETE FROM tasks WHERE userId = ?', [user.id], (err) => {
+    db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
       if (err) {
         return res.render('Settings', { 
-          alert: { type: 'error', message: 'Error deleting tasks' }
+          alert: { type: 'error', message: 'Error deleting user roles' }
         });
       }
 
-      req.session.destroy(() => {
-        return res.render('Settings', { 
-          alert: { type: 'success', message: 'Your account has been successfully deleted.' }
+      db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
+        if (err) {
+          return res.render('Settings', { 
+            alert: { type: 'error', message: 'Error deleting stats' }
+          });
+        }
+
+        db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+          if (err) {
+            return res.render('Settings', { 
+              alert: { type: 'error', message: 'Error deleting account' }
+            });
+          }
+
+          req.session.destroy(() => {
+            res.redirect('/Login');
+          });
         });
+      });
     });
   });
 });
 });
+
 // Access Rights and Permissions link
 app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
