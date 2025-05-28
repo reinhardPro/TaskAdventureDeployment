@@ -3,6 +3,20 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './public/uploads'); // Zorg dat deze map bestaat
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
 
 const { db, createUser, findUser, getTasks } = require('./db/database');
 
@@ -122,7 +136,8 @@ app.get('/home', requireLogin, (req, res) => {
         user: req.session.user,
         characters: [],
         tasks: [],
-        noCharacter: true
+        noCharacter: true,
+        pageTitel: 'Home'
       });
     }
 
@@ -299,7 +314,7 @@ app.get('/Stats', requireLogin, (req, res) => {
       return res.status(500).send('Error fetching stats');
     }
     //Render the "Stats" view with stats 
-    res.render('Stats', { stats: stat });
+    res.render('Stats', { stats: stat, pageTitel:'Stats'});
   });
 });
 
@@ -319,7 +334,7 @@ db.run(`
   // Daarna pas: laadt characters en taken
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
     if (err) return res.status(500).send('Error loading characters');
-    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [] });
+    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [], pageTitel:'Task Manager' });
 
     const characterIds = characters.map(c => c.id);
     const placeholders = characterIds.map(() => '?').join(',');
@@ -334,7 +349,7 @@ db.run(`
       characterIds,
       (err, tasks) => {
         if (err) return res.status(500).send('Error loading tasks');
-        res.render('Taskmanager', { characters, tasks, today });
+        res.render('Taskmanager', { characters, tasks, today,  });
       }
     );
   });
@@ -405,12 +420,12 @@ app.post('/task/delete/:id', requireLogin, (req, res) => {
 
 
 // Login
-app.get('/Login', (req, res) => res.render('Login'));
+app.get('/Login', (req, res) => res.render('Login',{pageTitel:'Login'}));
 
 app.post('/Login', (req, res) => {
   const { username, password } = req.body;
   findUser(username, (err, user) => {
-    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.' });
+    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel:'Login' });
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
@@ -420,10 +435,11 @@ app.post('/Login', (req, res) => {
 });
 
 // Create Account
-app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
+app.get('/CreateAccount', (req, res) => res.render('CreateAccount',{pageTitel:'Create Account'}));
 
-app.post('/CreateAccount', (req, res) => {
+app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
+  const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
   // Basic password confirmation check
   if (password !== confirmPassword) {
@@ -449,38 +465,32 @@ app.post('/CreateAccount', (req, res) => {
     }
 
     // Create user
-    createUser(email, username, password, (err, userId) => {
+    createUser(email, username, password, profileImage, (err, userId) => {
       if (err) {
         return res.render('CreateAccount', { error: 'An error occurred while trying to create your account.' });
       }
 
-      // Get role ID for "user"
       db.get('SELECT id FROM roles WHERE name = ?', ['user'], (err, roleRow) => {
         if (err || !roleRow) {
-          req.session.user = { id: userId, username, email };
+          req.session.user = { id: userId, username, email, profileImage };
           return res.redirect('/CharacterCreation');
         }
 
         const roleId = roleRow.id;
 
-        // Assign the "user" role to the new user
         db.run('INSERT INTO user_roles (userId, roleId) VALUES (?, ?)', [userId, roleId], (err) => {
           if (err) {
             console.error('Failed to assign role:', err);
           }
-          db.run(
-            `INSERT INTO stats (userId, username) VALUES (?, ?)`,
-            [userId, username],
-            (err) => {
-              if (err) {
-                console.error("❌ Kon stats niet aanmaken voor nieuwe gebruiker:", err);
-                // Hier kun je eventueel res.render met foutmelding doen
-                // maar we gaan gewoon verder met account creatie
-              }
 
-              req.session.user = { id: userId, username, email };
-              res.redirect('/CharacterCreation');
-            });
+          db.run('INSERT INTO stats (userId, username) VALUES (?, ?)', [userId, username], (err) => {
+            if (err) {
+              console.error("❌ Kon stats niet aanmaken voor nieuwe gebruiker:", err);
+            }
+
+            req.session.user = { id: userId, username, email, profileImage };
+            res.redirect('/CharacterCreation');
+          });
         });
       });
     });
@@ -541,7 +551,7 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
       }
     });
 
-    res.render('AdminPanel', { users: Object.values(usersMap) });
+    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel:'Admin Panel' });
   });
 });
 
@@ -594,7 +604,7 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
 
   // Focus Mode route
   app.get('/FocusMode', requireLogin, (req, res) => {
-    res.render('FocusMode');
+    res.render('FocusMode', {pageTitel:'Focus Mode'});
   });
 
   // Settings route
@@ -767,7 +777,7 @@ app.get('/leaderboard', requireLogin , (req, res) => {
     const top3 = rows.slice(0, 3);
     const others = rows.slice(3);
 
-    res.render('LeaderBoard', { top3, others });
+    res.render('LeaderBoard', { top3, others, pageTitel:'Leaderboard'});
   });
 });
 
@@ -780,7 +790,7 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
 });
 
 // Character Creation
-app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation'));
+app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', {pageTitel:'Character Creation'}));
 
 app.post('/CharacterCreation', (req, res) => {
   const { name, gender, imagevalue } = req.body;
@@ -814,7 +824,7 @@ app.get('/profile', requireLogin, (req, res) => {
       return res.status(500).send('Fout bij ophalen profiel.');
     }
 
-    res.render('Profile', { user: row });
+    res.render('Profile', { user: row, });
   });
 });
 

@@ -7,32 +7,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-}
-
-/* Niet meer nodig voor deze pagina, tenzij elders gebruikt */
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-}
-
-.content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  background-color: #1e1e1e;
-}
-
-/* Formulier */
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
-  padding: 0 20px;
+  padding: 20px; /* extra ruimte rond inhoud op kleine schermen */
+  box-sizing: border-box;
+  overflow: auto;
 }
 
 .login-container {
@@ -45,6 +23,18 @@ body {
   width: 100%;
   border-radius: 30px;
   padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+/* Responsive gedrag: kleinere padding en margin voor lage schermhoogte */
+@media (max-height: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .login-container {
+    padding: 20px 15px;
+  }
 }
 
 h2 {

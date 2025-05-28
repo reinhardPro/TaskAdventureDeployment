@@ -6,7 +6,7 @@
   <div class="login-container">
     <h2>Create Account</h2>
 
-    <form action="/CreateAccount" method="POST">
+    <form action="/CreateAccount" method="POST" enctype="multipart/form-data">
       <div class="input-wrapper">
         <div class="input-group">
           <label for="username">Username</label>
@@ -33,6 +33,13 @@
           <label for="confirmPassword">Confirm Password</label>
           <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required />
         </div>
+      </div>
+        
+      <div class="input-wrapper">
+      <div class="input-group">
+      <label for="profileImage">Profile Picture</label>
+      <input type="file" id="profileImage" name="profileImage" accept="image/*" />
+      </div>
       </div>
 
       <div class="input-wrapper">
