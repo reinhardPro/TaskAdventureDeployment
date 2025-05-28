@@ -3,6 +3,20 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './public/uploads'); // Zorg dat deze map bestaat
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
 
 const { db, createUser, findUser, getTasks } = require('./db/database');
 
@@ -423,8 +437,9 @@ app.post('/Login', (req, res) => {
 // Create Account
 app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
 
-app.post('/CreateAccount', (req, res) => {
+app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
+  const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
   // Basic password confirmation check
   if (password !== confirmPassword) {
@@ -450,38 +465,32 @@ app.post('/CreateAccount', (req, res) => {
     }
 
     // Create user
-    createUser(email, username, password, (err, userId) => {
+    createUser(email, username, password, profileImage, (err, userId) => {
       if (err) {
         return res.render('CreateAccount', { error: 'An error occurred while trying to create your account.' });
       }
 
-      // Get role ID for "user"
       db.get('SELECT id FROM roles WHERE name = ?', ['user'], (err, roleRow) => {
         if (err || !roleRow) {
-          req.session.user = { id: userId, username, email };
+          req.session.user = { id: userId, username, email, profileImage };
           return res.redirect('/CharacterCreation');
         }
 
         const roleId = roleRow.id;
 
-        // Assign the "user" role to the new user
         db.run('INSERT INTO user_roles (userId, roleId) VALUES (?, ?)', [userId, roleId], (err) => {
           if (err) {
             console.error('Failed to assign role:', err);
           }
-          db.run(
-            `INSERT INTO stats (userId, username) VALUES (?, ?)`,
-            [userId, username],
-            (err) => {
-              if (err) {
-                console.error("❌ Kon stats niet aanmaken voor nieuwe gebruiker:", err);
-                // Hier kun je eventueel res.render met foutmelding doen
-                // maar we gaan gewoon verder met account creatie
-              }
 
-              req.session.user = { id: userId, username, email };
-              res.redirect('/CharacterCreation');
-            });
+          db.run('INSERT INTO stats (userId, username) VALUES (?, ?)', [userId, username], (err) => {
+            if (err) {
+              console.error("❌ Kon stats niet aanmaken voor nieuwe gebruiker:", err);
+            }
+
+            req.session.user = { id: userId, username, email, profileImage };
+            res.redirect('/CharacterCreation');
+          });
         });
       });
     });
