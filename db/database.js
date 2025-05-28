@@ -232,3 +232,5 @@ function getTasks(userId, callback) {
 }
 
 module.exports = { db, createUser, findUser, getTasks };
+
+//correct script
