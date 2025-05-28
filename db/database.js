@@ -4,8 +4,8 @@ const bcrypt = require('bcrypt');
 const db = new sqlite3.Database('./TAdatabase.db');
 
 db.serialize(() => {
-  
-  // Create tables
+
+  // Tabellen aanmaken
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +26,6 @@ db.serialize(() => {
       completed INTEGER DEFAULT 0,
       xp INTEGER DEFAULT 0,
       FOREIGN KEY (characterId) REFERENCES characters(id)
-
     )
   `);
 
@@ -42,8 +41,7 @@ db.serialize(() => {
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
-  
-  
+
   db.run(`
     CREATE TABLE IF NOT EXISTS levelup (
       level INTEGER PRIMARY KEY,
@@ -51,7 +49,6 @@ db.serialize(() => {
     )
   `);
 
-  // Leaderboard table
   db.run(`
     CREATE TABLE IF NOT EXISTS leaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,27 +92,22 @@ db.serialize(() => {
     )
   `);
 
-//stats table
-db.run(`
-  CREATE TABLE IF NOT EXISTS stats (
-    userId INTEGER NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    taskCompleted INTEGER DEFAULT 0,
-    taskFailed INTEGER DEFAULT 0,
-    totalXpGained INTEGER DEFAULT 0,
-    friends INTEGER DEFAULT 0,
-    mostXpForOneTask INTEGER DEFAULT 0,
-    mostTaskIn24h INTEGER DEFAULT 0,
-    dailyStreak INTEGER DEFAULT 0,
-    timeSpentOnTasks INTERGER DEFAULT 0,
-    FOREIGN KEY(username) REFERENCES users(name)
-  );
-`);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS stats (
+      userId INTEGER NOT NULL,
+      username TEXT UNIQUE NOT NULL,
+      taskCompleted INTEGER DEFAULT 0,
+      taskFailed INTEGER DEFAULT 0,
+      totalXpGained INTEGER DEFAULT 0,
+      friends INTEGER DEFAULT 0,
+      mostXpForOneTask INTEGER DEFAULT 0,
+      mostTaskIn24h INTEGER DEFAULT 0,
+      dailyStreak INTEGER DEFAULT 0,
+      timeSpentOnTasks INTEGER DEFAULT 0,
+      FOREIGN KEY(username) REFERENCES users(username)
+    )
+  `);
 
-
-
-
-  // Klassen-tabel: Elke klas heeft een naam, code, leraar en max aantal leerlingen
   db.run(`
     CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -128,7 +120,6 @@ db.run(`
     )
   `);
 
-  // Klassen-gebruikers-tabel: Welke users zitten in welke klassen
   db.run(`
     CREATE TABLE IF NOT EXISTS class_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,9 +132,7 @@ db.run(`
     )
   `);
 
-
-
-  // Dummy users (met email, username, password)
+  // Dummy users
   const users = [
     ['alice@example.com', 'alice', 'password123'],
     ['bob@example.com', 'bob', 'password123'],
@@ -157,8 +146,10 @@ db.run(`
   users.forEach(([email, username, password]) => {
     const hashed = bcrypt.hashSync(password, 10);
     userStmt.run(email, username, hashed);
+  });
+  userStmt.finalize();
 
-  // Standaardrollen toevoegen indien nodig
+  // Rollen toevoegen
   db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
     const existingRoles = rows.map(r => r.name);
     if (!existingRoles.includes('admin')) db.run(`INSERT INTO roles (name) VALUES ('admin')`);
@@ -166,7 +157,7 @@ db.run(`
     if (!existingRoles.includes('guest')) db.run(`INSERT INTO roles (name) VALUES ('guest')`);
   });
 
-  // Admin-gebruiker aanmaken als die nog niet bestaat
+  // Admin-gebruiker aanmaken
   db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
     if (err) {
       console.error("Error checking for admin user:", err);
@@ -202,7 +193,8 @@ db.run(`
       );
     }
   });
-});
+
+}); // Einde db.serialize()
 
 // Gebruikersfuncties
 function createUser(email, username, password, callback) {
