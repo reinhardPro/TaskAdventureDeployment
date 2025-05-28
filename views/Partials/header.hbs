@@ -5,13 +5,13 @@
     </a>
   </div>
 
-  <h1 class="title">Task Adventure</h1>
+  <h1 class="title">{{pageTitel}}</h1>
 
   <div class="right-section">
     <div class="user-menu">
       {{#if user}}
         <div class="user-info">
-          <img src="/img/UserIcon.jpg" alt="Avatar" class="avatar" />
+          <img src="{{#if user.profileImage}}{{user.profileImage}}{{else}}/uploads/UserIcon.jpg{{/if}}" alt="Avatar" class="avatar" />
           <span>{{user.username}}</span>
           <form action="/Logout" method="POST">
             <button type="submit">Logout</button>
@@ -28,6 +28,7 @@
 
     {{#if user}}
       <nav class="dropdown-menu hidden" id="dropdownMenu">
+        <a href="/home">Home</a>
         <a href="/LeaderBoard">Leaderboard</a>
         <a href="/Settings">Settings</a>
         <a href="/CharacterCreation">Character Creation</a>

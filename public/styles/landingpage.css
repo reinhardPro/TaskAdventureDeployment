@@ -1,34 +1,35 @@
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
   font-family: 'Segoe UI', sans-serif;
-  /* background: linear-gradient(to bottom, #330066, #1e0033); */
   background-image: url('/img/landingimg.png');
-  background-size: cover; /* Makes it cover the entire screen */
-  background-repeat: no-repeat; /* Prevents tiling */
-  /* background-position: center center; /* Centers the image */
-  /* background-attachment: fixed; */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
   color: white;
-  min-height: 100vh;
+  overflow: hidden; /* NO scrollbars at all */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 120px;
-  padding-bottom: 80px;
+  justify-content: center; /* Center vertically */
   text-align: center;
-  height: 100%;
+  box-sizing: border-box;
+  padding: 20px; /* padding inside viewport */
 }
 
 /* Logo Section */
 .logo-section img.logo {
-  width: 500px;
+  width: 40vw;      /* Responsive width relative to viewport */
+  max-width: 400px; /* Max size */
   height: auto;
-  margin-top: -5px;
-  /* margin-bottom: 20px; */
+  margin: 0 0 20px 0;
 }
 
 /* Info Section */
 .info-section h1 {
-  font-size: 36px;
+  font-size: clamp(1.5rem, 4vw, 2.5rem); /* Scales with viewport */
   margin-bottom: 10px;
 }
 
@@ -37,65 +38,44 @@ body {
 }
 
 .info-section p {
-  font-size: 18px;
+  font-size: clamp(0.9rem, 2vw, 1.125rem);
   margin: 5px 0;
   color: #f2eaff;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Button Styling (like .create-task-btn) */
+/* Buttons */
 .btn {
   display: inline-block;
-  padding: 10px 20px;
+  padding: clamp(6px, 1.5vw, 12px) clamp(12px, 3vw, 24px);
   background-color: #d9b9ff;
   color: white;
   border: none;
   border-radius: 5px;
   text-decoration: none;
   font-weight: bold;
-  margin: 10px;
+  margin: 10px 8px;
   transition: background-color 0.3s ease;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  min-width: 90px;
+  box-sizing: border-box;
 }
 
 .btn:hover {
   background-color: #b98cff;
 }
 
-
-/* Responsive Enhancements */
-@media (max-width: 768px) {
-  .info-section h1 {
-    font-size: 28px;
-  }
-
-  .info-section p {
-    font-size: 16px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    font-size: 16px;
-  }
-
-  .logo-section img.logo {
-    width: 120px;
-  }
-}
-
+/* Layout for buttons: stack vertically on small screens */
 @media (max-width: 480px) {
-  .info-section h1 {
-    font-size: 24px;
-  }
-
-  .info-section p {
-    font-size: 14px;
-  }
-
   .btn {
-    padding: 6px 14px;
-    font-size: 14px;
+    display: block;
+    margin: 10px auto;
   }
 
   .logo-section img.logo {
-    width: 100px;
+    width: 60vw; /* bigger on small screens but still fitting */
+    max-width: 250px;
   }
 }

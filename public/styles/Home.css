@@ -209,7 +209,8 @@ label {
 
 /* Task Section (now contained within .tasks-column) */
 .task-section {
-    margin-top: 0; /* Remove redundant margin */
+  flex-grow: 1;
+  margin-top: 6px;
 }
 
 .task-list {

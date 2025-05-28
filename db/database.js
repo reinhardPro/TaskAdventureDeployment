@@ -4,14 +4,15 @@ const bcrypt = require('bcrypt');
 const db = new sqlite3.Database('./TAdatabase.db');
 
 db.serialize(() => {
-  
-  // Create tables
+
+  // Tabellen aanmaken
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      profileImage TEXT
     )
   `);
 
@@ -26,7 +27,6 @@ db.serialize(() => {
       completed INTEGER DEFAULT 0,
       xp INTEGER DEFAULT 0,
       FOREIGN KEY (characterId) REFERENCES characters(id)
-
     )
   `);
 
@@ -42,8 +42,7 @@ db.serialize(() => {
       FOREIGN KEY(userId) REFERENCES users(id)
     )
   `);
-  
-  
+
   db.run(`
     CREATE TABLE IF NOT EXISTS levelup (
       level INTEGER PRIMARY KEY,
@@ -51,7 +50,6 @@ db.serialize(() => {
     )
   `);
 
-  // Leaderboard table
   db.run(`
     CREATE TABLE IF NOT EXISTS leaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,170 +93,102 @@ db.serialize(() => {
     )
   `);
 
-//stats table
-db.run(`
-  CREATE TABLE IF NOT EXISTS stats (
-    userId INTEGER NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    taskCompleted INTEGER DEFAULT 0,
-    taskFailed INTEGER DEFAULT 0,
-    totalXpGained INTEGER DEFAULT 0,
-    friends INTEGER DEFAULT 0,
-    mostXpForOneTask INTEGER DEFAULT 0,
-    mostTaskIn24h INTEGER DEFAULT 0,
-    dailyStreak INTEGER DEFAULT 0,
-    timeSpentOnTasks INTERGER DEFAULT 0,
-    FOREIGN KEY(username) REFERENCES users(name)
-  );
-`);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS stats (
+      userId INTEGER NOT NULL,
+      username TEXT UNIQUE NOT NULL,
+      taskCompleted INTEGER DEFAULT 0,
+      taskFailed INTEGER DEFAULT 0,
+      totalXpGained INTEGER DEFAULT 0,
+      friends INTEGER DEFAULT 0,
+      mostXpForOneTask INTEGER DEFAULT 0,
+      mostTaskIn24h INTEGER DEFAULT 0,
+      dailyStreak INTEGER DEFAULT 0,
+      timeSpentOnTasks INTEGER DEFAULT 0,
+      FOREIGN KEY(username) REFERENCES users(username)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT UNIQUE NOT NULL,
+      teacherId INTEGER NOT NULL,
+      maxStudents INTEGER DEFAULT 40,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (teacherId) REFERENCES users(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS class_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      classId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (classId) REFERENCES classes(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (classId, userId)
+    )
+  `);
 
 
-  // Dummy users (met email, username, password)
-  const users = [
-    ['alice@example.com', 'alice', 'password123'],
-    ['bob@example.com', 'bob', 'password123'],
-    ['carol@example.com', 'carol', 'password123'],
-    ['dave@example.com', 'dave', 'password123'],
-    ['eve@example.com', 'eve', 'password123']
-  ];
 
-  db.run(`DELETE FROM users`);
-  const userStmt = db.prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
-  users.forEach(([email, username, password]) => {
-    const hashed = bcrypt.hashSync(password, 10);
-    userStmt.run(email, username, hashed);
+  // Rollen toevoegen
+  db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
+    const existingRoles = rows.map(r => r.name);
+    if (!existingRoles.includes('admin')) db.run(`INSERT INTO roles (name) VALUES ('admin')`);
+    if (!existingRoles.includes('user')) db.run(`INSERT INTO roles (name) VALUES ('user')`);
+    if (!existingRoles.includes('guest')) db.run(`INSERT INTO roles (name) VALUES ('guest')`);
   });
-  userStmt.finalize();
 
-  // Dummy characters
-const characters = [
-  [1, 'ShadowBlade', 4, 950, 1,'/img/pixelFemale.png'],
-  [2, 'IronFist', 6, 1400, 0,'/img/purpleguy.png'],
-  [3, 'WindRunner', 2, 450, 0,'/img/torkoal.png'],
-  [4, 'FireMage', 7, 1900, 1,'/img/goku.png'],
-  [5, 'NightElf', 5, 1200, 1,'/img/purpleguy.png'],
-  [6, 'DarkElf', 3, 700, 1,'/img/malePixel.png'],
-  [7, 'SpingBing', 10, 2500, 0,'/img/Hermit.png'],
-  [8, 'Logan', 8, 2000, 0,'/img/FeyereJoe.png'],
-  [9, 'CumMaster', 9, 2300, 1,'/img/purpleguy.png']
-];
-// --- Create default roles (admin, user, guest) ---
-
-db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
-  const existingRoles = rows.map(r => r.name);
-  if (!existingRoles.includes('admin')) db.run(`INSERT INTO roles (name) VALUES ('admin')`);
-  if (!existingRoles.includes('user')) db.run(`INSERT INTO roles (name) VALUES ('user')`);
-  if (!existingRoles.includes('guest')) db.run(`INSERT INTO roles (name) VALUES ('guest')`);
-});
-
-// --- Create the admin user if it doesn't exist ---
-db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
-  if (err) {
-    console.error("Error checking for admin user:", err);
-    return;
-  }
-  if (!user) {
-    const hashedPassword = bcrypt.hashSync('admin', 10);
-
-    db.run(
-      `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
-      ['admin@example.com', 'admin', hashedPassword],
-      function (err) {
-        if (err) {
-          console.error("Error creating admin user:", err);
-          return;
-        }
-        const userId = this.lastID;
-        console.log("✅ Admin user created!");
-                db.run(
-          `INSERT INTO stats (userId, username, taskCompleted, totalXpGained, mostXpForOneTask)
-           VALUES (?, ?, 0, 0, 0)`,
-          [userId, 'admin'],
-          (err) => {
-            if (err) {
-              console.error("❌ Kon stats niet aanmaken voor admin:", err);
-            } else {
-              console.log("✅ Stats voor admin aangemaakt!");
-            }
-          }
-        );
-
-        db.get(`SELECT id FROM roles WHERE name = 'admin'`, (err, role) => {
-          if (err || !role) {
-            console.error("Error retrieving admin role:", err);
+  // Admin-gebruiker aanmaken
+  db.get(`SELECT * FROM users WHERE username = 'admin'`, (err, user) => {
+    if (err) {
+      console.error("Error checking for admin user:", err);
+      return;
+    }
+    if (!user) {
+      const hashedPassword = bcrypt.hashSync('admin', 10);
+      db.run(
+        `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
+        ['admin@example.com', 'admin', hashedPassword],
+        function (err) {
+          if (err) {
+            console.error("Error creating admin user:", err);
             return;
           }
-
+          const userId = this.lastID;
           db.run(
-            `INSERT OR IGNORE INTO user_roles (userId, roleId) VALUES (?, ?)`,
-            [userId, role.id],
+            `INSERT INTO stats (userId, username) VALUES (?, ?)`,
+            [userId, 'admin'],
             (err) => {
-              if (err) {
-                console.error("Error assigning admin role:", err);
-                return;
-              }
-              console.log("✅ Admin role assigned!");
+              if (err) console.error("❌ Kon stats niet aanmaken voor admin:", err);
             }
           );
-        });
-      }
-    );
-  } else {
-    console.log("✅ Admin user already exists!");
-  }
-});
-
-
-  db.run(`DELETE FROM characters`);
-  characters.forEach(([userId, name, level, xp, gender, imagevalue]) => {
-    db.run(
-      "INSERT INTO characters (userId, name, level, xp, gender, imagevalue) VALUES (?, ?, ?, ?, ?, ?)",
-      [userId, name, level, xp, gender, imagevalue]
-    );
-  });
-  // charStmt.finalize();
-
-  // Dummy tasks
-  // const tasks = [
-  //   [1, 'Craft a Sword', 'Gather iron and craft a new sword.', '2025-05-10', 0],
-  //   [2, 'Scout the Area', 'Explore the nearby forest for enemies.', '2025-05-12', 1],
-  //   [3, 'Deliver Message', 'Take the letter to the capital.', '2025-05-15', 0],
-  //   [4, 'Defend the Wall', 'Hold the wall from invading forces.', '2025-05-20', 0],
-  //   [5, 'Collect Taxes', 'Visit villagers and collect taxes.', '2025-05-18', 1]
-  // ];
-
-  // db.run(`DELETE FROM tasks`);
-  // const taskStmt = db.prepare("INSERT INTO tasks (userId, title, description, dueDate, completed) VALUES (?, ?, ?, ?, ?)");
-  // tasks.forEach(task => taskStmt.run(...task));
-  // taskStmt.finalize();
-
-  // console.log("✅ Dummy users, characters en tasks succesvol toegevoegd!");
-});
-//Dummy stats
-  const stats = [
-    [1, 'alice', 3, 7, 950, 6, 400, 2, 1, 0],
-    [2, 'bob', 6, 4, 1400, 19, 500, 3, 1, 0],
-    [3, 'carol', 1, 9, 450, 9, 55, 1, 4, 0],
-    [4, 'dave', 5, 5, 1900, 5, 500, 2, 3, 0],
-    [5, 'eve', 4, 6, 1200, 14, 650, 3, 2, 0],
-  ];
-  db.run(`DELETE FROM stats`);
-  stats.forEach(([userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]) => {
-    db.run(
-      "INSERT INTO stats (userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [userId, username, taskCompleted, taskFailed, totalXpGained, friends, mostXpForOneTask, mostTaskIn24h, dailyStreak, timeSpentOnTasks]
-    );
+          db.get(`SELECT id FROM roles WHERE name = 'admin'`, (err, role) => {
+            if (!err && role) {
+              db.run(
+                `INSERT OR IGNORE INTO user_roles (userId, roleId) VALUES (?, ?)`,
+                [userId, role.id]
+              );
+            }
+          });
+        }
+      );
+    }
   });
 
+}); // Einde db.serialize()
 
-
-// Gebruikersfuncties blijven ongewijzigd
-function createUser(email, username, password, callback) {
+// Gebruikersfuncties
+function createUser(email, username, password, profileImage, callback) {
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return callback(err);
     db.run(
-      `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
-      [email, username, hashedPassword],
+      `INSERT INTO users (email, username, password, profileImage) VALUES (?, ?, ?, ?)`,
+      [email, username, hashedPassword, profileImage],
       function (err) {
         callback(err, this.lastID);
       }
@@ -287,3 +217,5 @@ function getTasks(userId, callback) {
 }
 
 module.exports = { db, createUser, findUser, getTasks };
+
+//correct script
