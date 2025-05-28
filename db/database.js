@@ -133,22 +133,7 @@ db.serialize(() => {
     )
   `);
 
-  // Dummy users
-  const users = [
-    ['alice@example.com', 'alice', 'password123'],
-    ['bob@example.com', 'bob', 'password123'],
-    ['carol@example.com', 'carol', 'password123'],
-    ['dave@example.com', 'dave', 'password123'],
-    ['eve@example.com', 'eve', 'password123']
-  ];
 
-  db.run(`DELETE FROM users`);
-  const userStmt = db.prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
-  users.forEach(([email, username, password]) => {
-    const hashed = bcrypt.hashSync(password, 10);
-    userStmt.run(email, username, hashed);
-  });
-  userStmt.finalize();
 
   // Rollen toevoegen
   db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {

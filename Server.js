@@ -136,7 +136,8 @@ app.get('/home', requireLogin, (req, res) => {
         user: req.session.user,
         characters: [],
         tasks: [],
-        noCharacter: true
+        noCharacter: true,
+        pageTitel: 'Home'
       });
     }
 
@@ -313,7 +314,7 @@ app.get('/Stats', requireLogin, (req, res) => {
       return res.status(500).send('Error fetching stats');
     }
     //Render the "Stats" view with stats 
-    res.render('Stats', { stats: stat });
+    res.render('Stats', { stats: stat, pageTitel:'Stats'});
   });
 });
 
@@ -333,7 +334,7 @@ db.run(`
   // Daarna pas: laadt characters en taken
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
     if (err) return res.status(500).send('Error loading characters');
-    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [] });
+    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [], pageTitel:'Task Manager' });
 
     const characterIds = characters.map(c => c.id);
     const placeholders = characterIds.map(() => '?').join(',');
@@ -348,7 +349,7 @@ db.run(`
       characterIds,
       (err, tasks) => {
         if (err) return res.status(500).send('Error loading tasks');
-        res.render('Taskmanager', { characters, tasks, today });
+        res.render('Taskmanager', { characters, tasks, today,  });
       }
     );
   });
@@ -419,12 +420,12 @@ app.post('/task/delete/:id', requireLogin, (req, res) => {
 
 
 // Login
-app.get('/Login', (req, res) => res.render('Login'));
+app.get('/Login', (req, res) => res.render('Login',{pageTitel:'Login'}));
 
 app.post('/Login', (req, res) => {
   const { username, password } = req.body;
   findUser(username, (err, user) => {
-    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.' });
+    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel:'Login' });
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
@@ -434,7 +435,7 @@ app.post('/Login', (req, res) => {
 });
 
 // Create Account
-app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
+app.get('/CreateAccount', (req, res) => res.render('CreateAccount',{pageTitel:'Create Account'}));
 
 app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
@@ -550,7 +551,7 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
       }
     });
 
-    res.render('AdminPanel', { users: Object.values(usersMap) });
+    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel:'Admin Panel' });
   });
 });
 
@@ -603,13 +604,13 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
 
   // Focus Mode route
   app.get('/FocusMode', requireLogin, (req, res) => {
-    res.render('FocusMode');
+    res.render('FocusMode', {pageTitel:'Focus Mode'});
   });
 
   // Settings route
   app.get('/Settings', requireLogin, (req, res) => {
     const user = req.session.user;
-    res.render('Settings', { user });
+    res.render('Settings', { user, pageTitel:'Settings' });
   });
 
   // Handle change password request
@@ -723,7 +724,7 @@ app.get('/leaderboard', (req, res) => {
     const top3 = rows.slice(0, 3);
     const others = rows.slice(3);
 
-    res.render('LeaderBoard', { top3, others });
+    res.render('LeaderBoard', { top3, others, pageTitel:'Leaderboard'});
   });
 });
 
@@ -736,7 +737,7 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
 });
 
 // Character Creation
-app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation'));
+app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', {pageTitel:'Character Creation'}));
 
 app.post('/CharacterCreation', (req, res) => {
   const { name, gender, imagevalue } = req.body;
@@ -770,7 +771,7 @@ app.get('/profile', requireLogin, (req, res) => {
       return res.status(500).send('Fout bij ophalen profiel.');
     }
 
-    res.render('Profile', { user: row });
+    res.render('Profile', { user: row, });
   });
 });
 
