@@ -117,18 +117,23 @@ app.get('/home', requireLogin, (req, res) => {
   db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
     if (err) return res.status(500).send('Error fetching characters');
 
+  console.log('Characters:', characters);
+
     if (!characters || characters.length === 0) {
       return res.render('Home', {
         user: req.session.user,
         characters: [],
         tasks: [],
-        noCharacter: true
+        noCharacter: true,
+        selectedCharacter: null // <--- THIS IS THE CRUCIAL ADDITION!
       });
     }
 
     // Make sure characterId is valid
     const characterId = parseInt(req.query.characterId) || characters[0].id;
     const selectedCharacter = characters.find(c => c.id === characterId);
+
+  console.log('Selected Character:', selectedCharacter);
 
     if (!selectedCharacter) {
       return res.status(404).send('Character not found');
@@ -144,7 +149,8 @@ app.get('/home', requireLogin, (req, res) => {
         noCharacter: false,
         selectedCharacterId: characterId,
         xp: selectedCharacter.xp,
-        level: selectedCharacter.level
+        level: selectedCharacter.level,
+        selectedCharacterImage: selectedCharacter.imagevalue, // <--- THIS IS THE CRUCIAL ADDITION!
       });
     });
   });

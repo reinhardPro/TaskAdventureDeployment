@@ -1,279 +1,491 @@
-
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #1e1e1e;
-  color: white;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #1e1e1e;
+    color: white;
 }
 
-.container {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
+/* Global Headings */
+h1 {
+    color: #d9b9ff;
+    margin-bottom: 20px;
+    margin-top: 30px; /* Adjust as needed */
+    margin-left: 40px; /* Align with the start of the grid */
 }
 
-.character-section {
-  flex-shrink: 0;
-  scroll-margin-top: 120px;
+h2 {
+    color: #d9b9ff;
+    margin-bottom: 20px;
+    /* For h2 inside tasks-column, margin will be handled by column padding */
 }
 
-.character-image {
-  max-width: 150px;
-  height: auto;
+
+/* New: Main 3-column Grid Layout Container */
+.main-layout-grid {
+    display: grid;
+    /* Define 3 columns:
+       - 1st column (selection): Fixed width
+       - 2nd column (character display): Fixed width for consistent centering
+       - 3rd column (tasks): Takes remaining space
+    */
+    grid-template-columns: 250px 300px 1fr; /* Adjust widths as desired */
+    gap: 40px; /* Space between the columns */
+    padding: 20px 40px 80px 40px; /* Top, Right, Bottom, Left padding for the grid area */
+    /* Adjusted top padding to give space below the main H1 */
 }
 
-.task-section {
-  flex-grow: 1;
-  margin-top: 20px;
+/* COLUMN STYLES */
+.selection-column {
+    /* Styles for the left column (character selection) */
+    padding-right: 0; /* No internal padding to the right, gap handles spacing */
 }
 
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.character-display-column {
+    /* Styles for the middle column (character display box) */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the content (character-display-box) horizontally */
+    justify-content: flex-start; /* Align content to the top within its grid cell */
+    /* No border or extra background here, it's for the character-display-box itself */
 }
 
-.task-card {
-  display: flex;
-  align-items: center;
-  background-color: #330066;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
+.tasks-column {
+    /* Styles for the right column (tasks) */
+    border-left: 1px solid rgba(255, 255, 255, 0.1); /* Separator line */
+    padding-left: 40px; /* Padding after the border */
 }
 
-.task-icon {
-  background-color: #5900b3;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-right: 10px;
+
+/* Character Selection Dropdown */
+label {
+    margin-bottom: 10px;
+    display: block;
+    font-weight: bold;
+    color: #eee;
 }
 
-.task-info {
-  flex-grow: 1;
+#character-select {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 8px 12px;
+    border-radius: 5px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    width: 100%; /* Take full width of its column */
+    max-width: 250px; /* Constrain width if column is larger */
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
 }
 
-.task-title {
-  font-size: 16px;
+#character-select:focus {
+    outline: none;
+    border-color: #d9b9ff;
+    box-shadow: 0 0 0 2px rgba(217, 185, 255, 0.5);
 }
 
-.task-date {
-  font-size: 12px;
-  color: white;
-}
-
-.task-expand {
-  font-size: 18px;
-  margin-left: 10px;
-  transition: transform 0.3s ease;
-  cursor: pointer;
-}
-
-.task-card.open .task-expand {
-  transform: rotate(180deg);
-}
-
-.task-details {
-  color: black;
-  padding: 10px;
-  margin-top: -10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-}
-
-.task-details.show {
-  max-height: 500px;
-  opacity: 1;
-}
-
-.task-details.hidden {
-  display: block;
-  max-height: 0;
-  opacity: 0;
-}
-.container {
-  padding-top: 120px;
-  padding-bottom: 80px;
-  
-}
-
-.character-image {
-  max-width: 150px; 
-  height: auto;
-  
-}
-
-.hidden {
-  display: none;
-}
-
-.create-task-btn {
-  display: inline-block;
-  padding: 8px 14px;
-  background-color: #d9b9ff;;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.complete-btn {
-  background-color: #4caf50;
-  color: white;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-left: auto;
-  align-self: center;
-  transition: background-color 0.3s;
-}
-
-.complete-btn:hover {
-  background-color: #45a049;
-}
-
-.task-card.completed {
-  opacity: 0.5;
-  text-decoration: line-through;
-}
-
-.task-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 15px;
-}
-
-.xp-bar-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.xp-bar-container {
-  width: 200px;
-  height: 18px;
-  background-color: #ddd;
-  border: 2px solid #aaa;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.xp-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(to right, #4caf50, #81c784);
-  transition: width 0.4s ease-in-out;
-}
-
-.xp-text {
-  font-size: 14px;
-  color: #333;
-}
-
-.no-character-message p a{
-  color: #fd0000;
+/* Character Display Box (Contains image, level, XP) - This is the central box */
+.character-display-box {
+    background-color: #2c2c2c; /* Background for the box */
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 0; /* Aligned to the top of its flex container */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 250px; /* Fixed width for the box itself */
+    box-sizing: border-box; /* Include padding in width */
 }
 
 .character-preview {
-  margin: 15px 0;
-  text-align: center;
-}
-
-.character-preview img {
-  max-width: 120px;
-  height: auto;
-  border-radius: 10px;
-}
-/*media query's / responsivenes*/
-@media (max-width: 1024px) {
-  .container {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 20px 10px;
-    padding-top: 120px;
-  }
-
-  .task-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .xp-bar-container {
+    padding: 0;
+    background-color: transparent;
+    margin: 0;
+    margin-bottom: 20px; /* Space between image and level info */
     width: 100%;
-  }
+}
+
+.character-image {
+    max-width: 180px;
+    height: auto;
+    border-radius: 5px;
+    border: 2px solid #5900b3;
+    transition: transform 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+.character-image:hover {
+    transform: scale(1.05);
+}
+
+/* Redundant elements - ensure these are handled in HTML or hidden */
+.character-info,
+.character-card {
+    display: none; /* Hide if still present in HTML to avoid conflicts */
+}
+
+
+/* XP bar */
+.level-info {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.xp-bar-wrapper {
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+    margin-top: 0px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.xp-bar-container {
+    width: 200px;
+    height: 20px;
+    background-color: #555;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #4caf50, #9fd8a2);
+    transition: width 0.4s ease-in-out;
+    border-radius: 10px 0 0 10px;
+}
+
+.xp-text {
+    color: #d9b9ff;
+    font-weight: bold;
+    font-size: 15px;
+    margin-left: 15px;
+    min-width: 70px;
+    text-align: right;
+}
+
+
+/* No Character Message */
+.no-character-message,
+.no-character-selected { /* Apply similar styles to both 'no character' messages */
+    background-color: #2c2c2c;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    margin-top: 20px; /* Space from top of column */
+}
+
+.no-character-message p a,
+.no-character-selected p a {
+    color: #d9b9ff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.no-character-message p a:hover,
+.no-character-selected p a:hover {
+    color: #ffccff;
+    text-decoration: underline;
+}
+
+/* Task Section (now contained within .tasks-column) */
+.task-section {
+    margin-top: 0; /* Remove redundant margin */
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-card {
+    background-color: #2c2c2c;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-color: #5900b3;
+}
+
+.task-card.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+    pointer-events: none;
+    border-color: #4caf50;
+}
+
+.task-icon {
+    background-color: #5900b3;
+    color: white;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.task-info {
+    flex-grow: 1;
+}
+
+.task-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #d9b9ff;
+    margin-bottom: 5px;
+}
+
+.task-date {
+    font-size: 13px;
+    color: #bbb;
+}
+
+.task-expand {
+    font-size: 20px;
+    color: #bbb;
+    margin-left: 15px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.task-card.open .task-expand {
+    transform: rotate(180deg);
+}
+
+.task-details {
+    color: #eee;
+    background-color: #3a3a3a;
+    padding: 0 15px;
+    border-radius: 0 0 10px 10px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease-out, opacity 0.4s ease-out, padding 0.4s ease-out;
+}
+
+.task-details.show {
+    max-height: 500px;
+    opacity: 1;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.task-details.hidden {
+    display: block;
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.task-details p {
+    margin-bottom: 10px;
+}
+
+.task-details p:last-child {
+    margin-bottom: 0;
+}
+
+/* Buttons */
+.complete-btn {
+    background-color: #4caf50;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 15px;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+}
+
+.complete-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.create-task-btn {
+    display: inline-block;
+    padding: 10px 18px;
+    background-color: #d9b9ff;
+    color: #1e1e1e;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.create-task-btn:hover {
+    background-color: #ffccff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+/* Responsive adjustments for 3-column layout */
+@media (max-width: 1024px) {
+    .main-layout-grid {
+        grid-template-columns: 1fr; /* Stack columns vertically on smaller screens */
+        padding: 20px 20px;
+        gap: 20px;
+    }
+
+    .selection-column,
+    .character-display-column,
+    .tasks-column {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+        border-left: none; /* Remove border when stacked */
+        margin-left: 0; /* Reset margins */
+    }
+
+    .character-display-column {
+        margin-top: 20px; /* Add some space when stacked */
+    }
+
+    .tasks-column {
+        margin-top: 20px; /* Add space between character info and tasks */
+    }
+
+    /* Adjust main H1 if it's outside the grid */
+    h1 {
+        margin-left: 20px;
+    }
 }
 
 @media (max-width: 768px) {
-  .task-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+    h1 {
+        font-size: 24px;
+    }
+    h2 {
+        font-size: 20px;
+    }
 
-  .task-icon {
-    margin-bottom: 8px;
-  }
+    .task-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+    }
 
-  .task-expand {
-    align-self: flex-end;
-    margin-top: 10px;
-  }
+    .task-icon {
+        margin-bottom: 8px;
+        margin-right: 0;
+    }
 
-  .xp-bar-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+    .task-info {
+        flex-basis: auto;
+        width: 100%;
+        margin-bottom: 10px;
+    }
 
-  .xp-text {
-    color: white;
-  }
+    .task-expand {
+        align-self: flex-end;
+        margin-top: 0;
+        margin-left: 0;
+    }
+
+    .xp-bar-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .xp-text {
+        margin-left: 0;
+        margin-top: 10px;
+        text-align: left;
+    }
 }
 
 @media (max-width: 480px) {
-  body {
-    font-size: 14px;
-  }
+    body {
+        font-size: 14px;
+    }
+    h1 {
+        font-size: 20px;
+    }
+    h2 {
+        font-size: 18px;
+    }
 
-  .character-image {
-    max-width: 100px;
-  }
+    .main-layout-grid {
+        padding: 15px 15px;
+    }
 
-  .xp-bar-container {
-    width: 100%;
-  }
+    .character-image {
+        max-width: 120px;
+    }
 
-  .create-task-btn {
-    padding: 6px 10px;
-    font-size: 14px;
-  }
+    .create-task-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
 
-  .complete-btn {
-    padding: 5px 8px;
-    font-size: 14px;
-  }
+    .complete-btn {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
 
-  .task-title {
-    font-size: 14px;
-  }
+    .task-title {
+        font-size: 15px;
+    }
 
-  .task-date {
-    font-size: 11px;
-  }
+    .task-date {
+        font-size: 12px;
+    }
+
+    #character-select {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
 }
-
-

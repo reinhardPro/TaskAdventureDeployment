@@ -14,92 +14,91 @@
 
 <body>
 
-  <div class="container">
-    {{#if noCharacter}}
-    <div class="no-character-message">
-      <h1>You don't have a character yet!</h1>
-      <p>Click <a href="/CharacterCreation">here</a> to create one.</p>
-    </div>
-    {{else}}
-    <div class="character-section">
-      <h1>Welcome, {{user.username}}</h1>
+  <h1>Welcome, {{user.username}}</h1>
 
-      <!-- Character selection dropdown -->
-      <form action="/home" method="GET">
-        <label for="character-select">Choose a character:</label>
-        <select id="character-select" name="characterId" required onchange="this.form.submit()">
-          <option value="">-- Select a character --</option>
-          {{#each characters}}
-          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
-          {{/each}}
-        </select>
-      </form>
+  <div class="main-layout-grid">
 
- {{#if selectedCharacterId}}
-  {{#with (lookup characters selectedCharacterId)}}
-    <div class="character-preview">
-      <img src="/img/{{this.imagevalue}}" alt="{{this.name}}" class="character-image" />
-    </div>
-  {{/with}}
-{{/if}}
-
-<div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
-    <div class="xp-bar-wrapper">
-      <div class="xp-bar-container">
-        <div class="xp-bar-fill" id="xpFill"></div>
+    <div class="selection-column">
+      {{#if noCharacter}}
+      <div class="no-character-message">
+        <h2>You don't have a character yet!</h2>
+        <p>Click <a href="/CharacterCreation">here</a> to create one.</p>
       </div>
-      <span id="xpInfo" data-xp="{{xp}}">XP: {{xp}}</span>
+      {{else}}
+      <div class="character-selection">
+        <form action="/home" method="GET">
+          <label for="character-select">Choose a character:</label>
+          <select id="character-select" name="characterId" required onchange="this.form.submit()">
+            <option value="">-- Select a character --</option>
+            {{#each characters}}
+            <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>
+              {{this.name}}</option>
+            {{/each}}
+          </select>
+        </form>
+      </div>
+      {{/if}}
     </div>
 
-      <div class="character-info">
+    <div class="character-display-column">
+      {{#if noCharacter}}
+      {{else}}
+      {{#if selectedCharacterId}}
+      <div class="character-display-box">
+       <img src="{{selectedCharacterImage}}" class="character-image">
+        <div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
+        <div class="xp-bar-wrapper">
+          <div class="xp-bar-container">
+            <div class="xp-bar-fill" id="xpFill"></div>
+          </div>
+          <span id="xpInfo" data-xp="{{xp}}">XP: {{xp}}</span>
+        </div>
+      </div>
+      {{else}}
+      <div class="no-character-selected">
+        <h2>No character selected</h2>
+        <p>Please select a character from the dropdown above to view their information.</p>
+      </div>
+      {{/if}}
+      {{/if}}
+    </div>
+
+    <div class="tasks-column">
+      <h2>Active tasks for {{#if selectedCharacterId}}{{!-- with (lookup characters selectedCharacterId)
+        --}}{{this.name}}{{/if}}</h2>
+      <div class="task-section">
         {{#if selectedCharacterId}}
-        {{#with (lookup characters selectedCharacterId)}}
-        <div class="character-card">
-          <h2>{{this.name}}</h2>
-          <img src="/img/malePixel.png" alt="{{this.name}}" class="character-image">
+        {{#if tasks.length}}
+        <div class="task-list">
+          {{#each tasks}}
+          <div class="task-card">
+            <div class="task-icon" title="XP: {{xp}}">{{title.[0]}}</div>
+            <div class="task-info">
+              <div class="task-title">{{title}} (XP: {{xp}})</div>
+              <div class="task-date">Due: {{dueDate}}</div>
+            </div>
+            <div class="task-expand">&#9660;</div>
+          </div>
+          <div class="task-details hidden">
+            <p><strong>Description:</strong> {{description}}</p>
+            <p><strong>XP:</strong> {{xp}}</p>
+            <form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
+              <button type="submit" class="complete-btn">Complete</button>
+            </form>
+          </div>
+          {{/each}}
         </div>
-        {{/with}}
         {{else}}
-        <div class="no-character-selected">
-          <h2>No character selected</h2>
-          <p>Please select a character from the dropdown above to view their information.</p>
-        </div>
+        <p>You have no active tasks for this character.
+          <a href="/Taskmanager" class="create-task-btn">Create one here</a>
+        </p>
+        {{/if}}
+        {{else}}
+        <p>Select a character to view tasks.</p>
         {{/if}}
       </div>
     </div>
 
-    <div class="task-section">
-      {{#if selectedCharacterId}}
-      <h2>Active tasks for {{#with (lookup characters selectedCharacterId)}}{{this.name}}{{/with}}</h2>
-
-      {{#if tasks.length}}
-      <div class="task-list">
-        {{#each tasks}}
-        <div class="task-card">
-          <div class="task-icon" title="XP: {{xp}}">{{title.[0]}}</div>
-          <div class="task-info">
-            <div class="task-title">{{title}} (XP: {{xp}})</div>
-            <div class="task-date">Due: {{dueDate}}</div>
-          </div>
-          <div class="task-expand">&#9660;</div>
-        </div>
-        <div class="task-details hidden">
-          <p><strong>Description:</strong> {{description}}</p>
-          <p><strong>XP:</strong> {{xp}}</p>
-          <form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
-            <button type="submit">Complete</button>
-          </form>
-        </div>
-        {{/each}}
-      </div>
-      {{else}}
-      <p>You have no active tasks for this character.
-        <a href="/Taskmanager" class="create-task-btn">Create one here</a>
-      </p>
-      {{/if}}
-      {{/if}}
-    </div>
-    {{/if}}
   </div>
 
 </body>
