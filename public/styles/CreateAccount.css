@@ -49,6 +49,8 @@ h2 {
   width: 100%;
   max-width: 250px;
   margin-bottom: 20px;
+  align-items: center;
+  justify-content: center;
 }
 
 .input-group label {

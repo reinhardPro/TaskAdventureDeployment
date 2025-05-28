@@ -7,7 +7,7 @@
   <title>Home</title>
   <link rel="stylesheet" href="/styles/Home.css" />
   <script>
-    const currentUser Id = {{ user.id }};
+    const currentUserId = {{ user.id }};
   </script>
   
 </head>
@@ -30,11 +30,26 @@
         <select id="character-select" name="characterId" required onchange="this.form.submit()">
           <option value="">-- Select a character --</option>
           {{#each characters}}
-          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}
-          </option>
+          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
           {{/each}}
         </select>
       </form>
+
+ {{#if selectedCharacterId}}
+  {{#with (lookup characters selectedCharacterId)}}
+    <div class="character-preview">
+      <img src="/img/{{this.imagevalue}}" alt="{{this.name}}" class="character-image" />
+    </div>
+  {{/with}}
+{{/if}}
+
+<div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
+    <div class="xp-bar-wrapper">
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xpFill"></div>
+      </div>
+      <span id="xpInfo" data-xp="{{xp}}">XP: {{xp}}</span>
+    </div>
 
       <div class="character-info">
         {{#if selectedCharacterId}}
@@ -71,10 +86,10 @@
         <div class="task-details hidden">
           <p><strong>Description:</strong> {{description}}</p>
           <p><strong>XP:</strong> {{xp}}</p>
-<form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
-  <button type="submit">Complete</button>
-</form>
-      </div>
+          <form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
+            <button type="submit">Complete</button>
+          </form>
+        </div>
         {{/each}}
       </div>
       {{else}}

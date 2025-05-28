@@ -188,6 +188,17 @@ body {
 .no-character-message p a{
   color: #fd0000;
 }
+
+.character-preview {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.character-preview img {
+  max-width: 120px;
+  height: auto;
+  border-radius: 10px;
+}
 /*media query's / responsivenes*/
 @media (max-width: 1024px) {
   .container {
