@@ -420,12 +420,12 @@ app.post('/task/delete/:id', requireLogin, (req, res) => {
 
 
 // Login
-app.get('/Login', (req, res) => res.render('Login'));
+app.get('/Login', (req, res) => res.render('Login',{pageTitel:'Login'}));
 
 app.post('/Login', (req, res) => {
   const { username, password } = req.body;
   findUser(username, (err, user) => {
-    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.' });
+    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel:'Login' });
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
@@ -435,7 +435,7 @@ app.post('/Login', (req, res) => {
 });
 
 // Create Account
-app.get('/CreateAccount', (req, res) => res.render('CreateAccount'));
+app.get('/CreateAccount', (req, res) => res.render('CreateAccount',{pageTitel:'Create Account'}));
 
 app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
