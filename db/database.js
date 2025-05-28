@@ -113,6 +113,35 @@ db.run(`
 `);
 
 
+
+  // Klassen-tabel: Elke klas heeft een naam, code, leraar en max aantal leerlingen
+  db.run(`
+    CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT UNIQUE NOT NULL,
+      teacherId INTEGER NOT NULL,
+      maxStudents INTEGER DEFAULT 40,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (teacherId) REFERENCES users(id)
+    )
+  `);
+
+  // Klassen-gebruikers-tabel: Welke users zitten in welke klassen
+  db.run(`
+    CREATE TABLE IF NOT EXISTS class_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      classId INTEGER NOT NULL,
+      userId INTEGER NOT NULL,
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (classId) REFERENCES classes(id),
+      FOREIGN KEY (userId) REFERENCES users(id),
+      UNIQUE (classId, userId)
+    )
+  `);
+
+
+
   // Dummy users (met email, username, password)
   const users = [
     ['alice@example.com', 'alice', 'password123'],
