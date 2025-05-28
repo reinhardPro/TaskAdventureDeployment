@@ -22,14 +22,14 @@ const { db, createUser, findUser, getTasks } = require('./db/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+    return res.render('Login', { error: 'You must first log in to view this page.' });
   }
   next();
 }
 
 function requireAdmin(req, res, next) {
   if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+    return res.render('Login', { error: 'You must first log in to view this page.' });
   }
 
   const userId = req.session.user.id;
@@ -40,7 +40,7 @@ function requireAdmin(req, res, next) {
     WHERE ur.userId = ?
   `, [userId], (err, row) => {
     if (err || !row || row.name !== 'admin') {
-      return res.render('Login', { error: 'Je hebt geen toegang tot deze pagina. Je moet een admin zijn.' });
+      return res.render('Login', { error: 'You do not have access to this page. you must be an admin.' });
     }
     next();
   });
@@ -608,113 +608,166 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 
   // Settings route
-  app.get('/Settings', requireLogin, (req, res) => {
-    const user = req.session.user;
-    res.render('Settings', { user, pageTitel:'Settings' });
-  });
 
-  // Handle change password request
-  app.post('/Settings/changePassword', requireLogin, (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    const user = req.session.user;
+// Helper functies
+function getCharacters(userId, callback) {
+  db.all('SELECT id, name FROM characters WHERE userId = ?', [userId], (err, characters) => {
+    if (err) return callback(err);
+    callback(null, characters);
+  });
+}
+
+function renderSettingsPage(res, user, alert) {
+  getCharacters(user.id, (err, characters) => {
+    if (err) {
+      return res.render('Settings', {
+        user,
+        characters: [],
+        alert: { type: 'error', message: 'Fout bij laden van characters' }
+      });
+    }
+
+    res.render('Settings', {
+      user,
+      characters,
+      alert
+    });
+  });
+}
+
+// GET Settings pagina
+app.get('/Settings', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const alert = req.session.alert;
+  delete req.session.alert;
+
+  renderSettingsPage(res, user, alert);
+});
+
+// Wachtwoord wijzigen
+app.post('/Settings/changePassword', requireLogin, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.session.user;
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
-      return res.render('Settings', { 
-        alert: { type: 'error', message: 'User not found' }
-      });
+      req.session.alert = { type: 'error', message: 'User not found' };
+      return res.redirect('/Settings');
     }
 
     bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.render('Settings', { 
-          alert: { type: 'error', message: 'Incorrect current password' }
-        });
+        req.session.alert = { type: 'error', message: 'Incorrect current password' };
+        return res.redirect('/Settings');
       }
 
       bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
         if (err) {
-          return res.render('Settings', { 
-            alert: { type: 'error', message: 'Error hashing new password' }
-          });
+          req.session.alert = { type: 'error', message: 'Error hashing new password' };
+          return res.redirect('/Settings');
         }
 
         db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
           if (err) {
-            return res.render('Settings', { 
-              alert: { type: 'error', message: 'Error updating password' }
-            });
+            req.session.alert = { type: 'error', message: 'Error updating password' };
+            return res.redirect('/Settings');
           }
 
-          res.render('Settings', { 
-            alert: { type: 'success', message: 'Password updated successfully' }
-          });
+          req.session.alert = { type: 'success', message: 'Password updated successfully' };
+          res.redirect('/Settings');
         });
       });
     });
   });
 });
 
-// Handle account removal
+// Account verwijderen
 app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   const user = req.session.user;
 
   db.run(`
-  DELETE FROM tasks 
-  WHERE characterId IN (
-    SELECT id FROM characters WHERE userId = ?
-  )
-`, [user.id], (err) => {
-  if (err) {
-    return res.render('Settings', { 
-      alert: { type: 'error', message: 'Error deleting tasks' }
-    });
-  }
-
-  db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
+    DELETE FROM tasks 
+    WHERE characterId IN (
+      SELECT id FROM characters WHERE userId = ?
+    )
+  `, [user.id], (err) => {
     if (err) {
-      return res.render('Settings', { 
-        alert: { type: 'error', message: 'Error deleting characters' }
-      });
+      req.session.alert = { type: 'error', message: 'Error deleting tasks' };
+      return res.redirect('/Settings');
     }
 
-    db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
+    db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
       if (err) {
-        return res.render('Settings', { 
-          alert: { type: 'error', message: 'Error deleting user roles' }
-        });
+        req.session.alert = { type: 'error', message: 'Error deleting characters' };
+        return res.redirect('/Settings');
       }
 
-      db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
+      db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
         if (err) {
-          return res.render('Settings', { 
-            alert: { type: 'error', message: 'Error deleting stats' }
-          });
+          req.session.alert = { type: 'error', message: 'Error deleting user roles' };
+          return res.redirect('/Settings');
         }
 
-        db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+        db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
           if (err) {
-            return res.render('Settings', { 
-              alert: { type: 'error', message: 'Error deleting account' }
-            });
+            req.session.alert = { type: 'error', message: 'Error deleting stats' };
+            return res.redirect('/Settings');
           }
 
-          req.session.destroy(() => {
-            res.redirect('/Login');
+          db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+            if (err) {
+              req.session.alert = { type: 'error', message: 'Error deleting account' };
+              return res.redirect('/Settings');
+            }
+
+            req.session.destroy(() => {
+              res.redirect('/Login');
+            });
           });
         });
       });
     });
   });
 });
+
+// Character verwijderen
+app.post('/Settings/removecharacter', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const characterId = req.body.characterId;
+
+  db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
+    if (err || !character) {
+      req.session.alert = { type: 'error', message: 'Character niet gevonden of niet van jou' };
+      return res.redirect('/Settings');
+    }
+
+    db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
+      if (err) {
+        req.session.alert = { type: 'error', message: 'Fout bij verwijderen van taken' };
+        return res.redirect('/Settings');
+      }
+
+      db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+        if (err) {
+          req.session.alert = { type: 'error', message: 'Fout bij verwijderen van character' };
+          return res.redirect('/Settings');
+        }
+
+        req.session.alert = { type: 'success', message: 'Character succesvol verwijderd' };
+        res.redirect('/Settings');
+      });
+    });
+  });
 });
+
+
 
 // Access Rights and Permissions link
 app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
-app.get('/leaderboard', (req, res) => {
+app.get('/leaderboard', requireLogin , (req, res) => {
   db.all('SELECT name, xp, imagevalue FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
     if (err) {
       console.error("Query error:", err.message);

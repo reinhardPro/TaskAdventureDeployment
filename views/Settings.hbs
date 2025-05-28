@@ -58,7 +58,7 @@
     <li>
       Change password
       <div class="details">
-        <form action="/Settings/changePassword" method="POST">
+        <form action="/Settings/changePassword" method="POST" onsubmit="confirmChangePassword(event)">
           <label for="currentPassword">Current Password:</label>
           <input type="password" id="currentPassword" name="currentPassword" required>
           
@@ -69,10 +69,26 @@
         </form>
       </div>
     </li>
+<li>
+  Remove character
+  <div class="details">
+   <form action="/Settings/removecharacter" method="POST" onsubmit="confirmDeleteCharacter(event)">
+      <p>Select a character to delete:</p>
+      <label for="character-select">Choose a character:</label>
+      <select id="character-select" name="characterId" required>
+         {{#each characters}}
+          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
+          {{/each}}
+      </select>
+      <button type="submit">Delete selected character</button>
+    </form>
+  </div>
+</li>
+
     <li>
       Remove account
       <div class="details">
-        <form action="/Settings/removeAccount" method="POST">
+        <form action="/Settings/removeAccount" method="POST" onsubmit="confirmDeleteAccount(event)">
           <p>Are you sure you want to permanently delete your account and all of its data?</p>
           <button type="submit">Delete Account</button>
         </form>

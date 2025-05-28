@@ -24,3 +24,23 @@ document.querySelectorAll("li").forEach(item => {
       localStorage.setItem("selectedTheme", selected);
     });
   }
+// Bevestiging voor wachtwoord wijzigen
+  function confirmChangePassword(event) {
+    if (!confirm("Weet je zeker dat je je wachtwoord wilt wijzigen?")) {
+      event.preventDefault();
+    }
+  }
+
+  // Bevestiging voor character verwijderen
+  function confirmDeleteCharacter(event) {
+    if (!confirm("Weet je zeker dat je dit character wilt verwijderen?")) {
+      event.preventDefault();
+    }
+  }
+
+  // Bevestiging voor account verwijderen
+  function confirmDeleteAccount(event) {
+    if (!confirm("Weet je zeker dat je je account permanent wilt verwijderen?")) {
+      event.preventDefault();
+    }
+  }
