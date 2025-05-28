@@ -11,7 +11,8 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      profileImage TEXT
     )
   `);
 
@@ -205,12 +206,12 @@ db.run(`
 });
 
 // Gebruikersfuncties
-function createUser(email, username, password, callback) {
+function createUser(email, username, password, profileImage, callback) {
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return callback(err);
     db.run(
-      `INSERT INTO users (email, username, password) VALUES (?, ?, ?)`,
-      [email, username, hashedPassword],
+      `INSERT INTO users (email, username, password, profileImage) VALUES (?, ?, ?, ?)`,
+      [email, username, hashedPassword, profileImage],
       function (err) {
         callback(err, this.lastID);
       }
