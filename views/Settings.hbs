@@ -69,6 +69,22 @@
         </form>
       </div>
     </li>
+<li>
+  Remove character
+  <div class="details">
+    <form action="/Settings/removecharacter" method="POST">
+      <p>Select a character to delete:</p>
+      <label for="character-select">Choose a character:</label>
+      <select id="character-select" name="characterId" required>
+         {{#each characters}}
+          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
+          {{/each}}
+      </select>
+      <button type="submit">Delete selected character</button>
+    </form>
+  </div>
+</li>
+
     <li>
       Remove account
       <div class="details">

@@ -598,106 +598,119 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 
   // Settings route
-  app.get('/Settings', requireLogin, (req, res) => {
-    const user = req.session.user;
-    res.render('Settings', { user });
-  });
+// Helper om Settings pagina te tonen met de juiste characters
+function renderSettingsPage(res, user, alert) {
+  db.all('SELECT id, name FROM characters WHERE userId = ?', [user.id], (err, characters) => {
+    if (err) {
+      return res.render('Settings', {
+        user,
+        characters: [],
+        alert: { type: 'error', message: 'Fout bij laden van characters' }
+      });
+    }
 
-  // Handle change password request
-  app.post('/Settings/changePassword', requireLogin, (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    const user = req.session.user;
+    res.render('Settings', { user, characters, alert });
+  });
+}
+
+// GET Settings pagina
+app.get('/Settings', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const alert = req.session.alert;
+  delete req.session.alert;
+
+  renderSettingsPage(res, user, alert);
+});
+
+// Wachtwoord wijzigen
+app.post('/Settings/changePassword', requireLogin, (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.session.user;
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
-      return res.render('Settings', { 
-        alert: { type: 'error', message: 'User not found' }
-      });
+      return renderSettingsPage(res, user, { type: 'error', message: 'User not found' });
     }
 
     bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return res.render('Settings', { 
-          alert: { type: 'error', message: 'Incorrect current password' }
-        });
+        return renderSettingsPage(res, user, { type: 'error', message: 'Incorrect current password' });
       }
 
       bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
         if (err) {
-          return res.render('Settings', { 
-            alert: { type: 'error', message: 'Error hashing new password' }
-          });
+          return renderSettingsPage(res, user, { type: 'error', message: 'Error hashing new password' });
         }
 
         db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
           if (err) {
-            return res.render('Settings', { 
-              alert: { type: 'error', message: 'Error updating password' }
-            });
+            return renderSettingsPage(res, user, { type: 'error', message: 'Error updating password' });
           }
 
-          res.render('Settings', { 
-            alert: { type: 'success', message: 'Password updated successfully' }
-          });
+          return renderSettingsPage(res, user, { type: 'success', message: 'Password updated successfully' });
         });
       });
     });
   });
 });
 
-// Handle account removal
+// Account verwijderen
 app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   const user = req.session.user;
 
-  db.run(`
-  DELETE FROM tasks 
-  WHERE characterId IN (
-    SELECT id FROM characters WHERE userId = ?
-  )
-`, [user.id], (err) => {
-  if (err) {
-    return res.render('Settings', { 
-      alert: { type: 'error', message: 'Error deleting tasks' }
-    });
-  }
+  db.run(`DELETE FROM tasks WHERE characterId IN (SELECT id FROM characters WHERE userId = ?)`, [user.id], (err) => {
+    if (err) return renderSettingsPage(res, user, { type: 'error', message: 'Error deleting tasks' });
 
-  db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
-    if (err) {
-      return res.render('Settings', { 
-        alert: { type: 'error', message: 'Error deleting characters' }
-      });
-    }
+    db.run('DELETE FROM characters WHERE userId = ?', [user.id], (err) => {
+      if (err) return renderSettingsPage(res, user, { type: 'error', message: 'Error deleting characters' });
 
-    db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
-      if (err) {
-        return res.render('Settings', { 
-          alert: { type: 'error', message: 'Error deleting user roles' }
-        });
-      }
+      db.run('DELETE FROM user_roles WHERE userId = ?', [user.id], (err) => {
+        if (err) return renderSettingsPage(res, user, { type: 'error', message: 'Error deleting user roles' });
 
-      db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
-        if (err) {
-          return res.render('Settings', { 
-            alert: { type: 'error', message: 'Error deleting stats' }
-          });
-        }
+        db.run('DELETE FROM stats WHERE userId = ?', [user.id], (err) => {
+          if (err) return renderSettingsPage(res, user, { type: 'error', message: 'Error deleting stats' });
 
-        db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
-          if (err) {
-            return res.render('Settings', { 
-              alert: { type: 'error', message: 'Error deleting account' }
+          db.run('DELETE FROM users WHERE id = ?', [user.id], (err) => {
+            if (err) return renderSettingsPage(res, user, { type: 'error', message: 'Error deleting account' });
+
+            req.session.destroy(() => {
+              res.redirect('/Login');
             });
-          }
-
-          req.session.destroy(() => {
-            res.redirect('/Login');
           });
         });
       });
     });
   });
 });
+
+// Character verwijderen
+app.post('/Settings/removecharacter', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const characterId = req.body.characterId;
+
+  db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
+    if (err || !character) {
+      return renderSettingsPage(res, user, { type: 'error', message: 'Character niet gevonden of niet van jou' });
+    }
+
+    db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
+      if (err) {
+        return renderSettingsPage(res, user, { type: 'error', message: 'Fout bij verwijderen van taken' });
+      }
+
+      db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+        if (err) {
+          return renderSettingsPage(res, user, { type: 'error', message: 'Fout bij verwijderen van character' });
+        }
+
+        // Redirect met alert
+        req.session.alert = { type: 'success', message: 'Character succesvol verwijderd' };
+        res.redirect('/Settings');
+      });
+    });
+  });
 });
+
 
 // Access Rights and Permissions link
 app.get('/access-rights', (req, res) => {
