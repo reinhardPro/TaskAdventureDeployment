@@ -629,25 +629,30 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
-      return renderSettingsPage(res, user, { type: 'error', message: 'User not found' });
+      req.session.alert = { type: 'error', message: 'User not found' };
+      return res.redirect('/Settings');
     }
 
     bcrypt.compare(currentPassword, dbUser.password, (err, isMatch) => {
       if (err || !isMatch) {
-        return renderSettingsPage(res, user, { type: 'error', message: 'Incorrect current password' });
+        req.session.alert = { type: 'error', message: 'Incorrect current password' };
+        return res.redirect('/Settings');
       }
 
       bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
         if (err) {
-          return renderSettingsPage(res, user, { type: 'error', message: 'Error hashing new password' });
+          req.session.alert = { type: 'error', message: 'Error hashing new password' };
+          return res.redirect('/Settings');
         }
 
         db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (err) => {
           if (err) {
-            return renderSettingsPage(res, user, { type: 'error', message: 'Error updating password' });
+            req.session.alert = { type: 'error', message: 'Error updating password' };
+            return res.redirect('/Settings');
           }
 
-          return renderSettingsPage(res, user, { type: 'success', message: 'Password updated successfully' });
+          req.session.alert = { type: 'success', message: 'Password updated successfully' };
+          res.redirect('/Settings');
         });
       });
     });
