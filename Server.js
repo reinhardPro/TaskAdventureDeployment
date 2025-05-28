@@ -8,14 +8,14 @@ const { db, createUser, findUser, getTasks } = require('./db/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+    return res.render('Login', { error: 'You must first log in to view this page.' });
   }
   next();
 }
 
 function requireAdmin(req, res, next) {
   if (!req.session.user) {
-    return res.render('Login', { error: 'Je moet eerst inloggen om deze pagina te bekijken.' });
+    return res.render('Login', { error: 'You must first log in to view this page.' });
   }
 
   const userId = req.session.user.id;
@@ -26,7 +26,7 @@ function requireAdmin(req, res, next) {
     WHERE ur.userId = ?
   `, [userId], (err, row) => {
     if (err || !row || row.name !== 'admin') {
-      return res.render('Login', { error: 'Je hebt geen toegang tot deze pagina. Je moet een admin zijn.' });
+      return res.render('Login', { error: 'You do not have access to this page. you must be an admin.' });
     }
     next();
   });
@@ -704,7 +704,7 @@ app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
-app.get('/leaderboard', (req, res) => {
+app.get('/leaderboard', requireLogin , (req, res) => {
   db.all('SELECT name, xp, imagevalue FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
     if (err) {
       console.error("Query error:", err.message);
