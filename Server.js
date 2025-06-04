@@ -308,9 +308,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
               (err) => {
                 if (err) console.error('Fout bij updaten van stats:', err);
 
-                db.run(
-                  'UPDATE tasks SET completed = 1 WHERE id = ?',
-                  [taskId],
+                db.run('UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?', [taskId],
                   function (err) {
                     if (err) return res.status(500).send('Taak voltooien faalde');
 
