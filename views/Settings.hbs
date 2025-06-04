@@ -4,122 +4,123 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="/styles/Settings.css">
-  <script defer src="/Scripts/Settings.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <title>Settings</title>
 </head>
 <body>
-  <div class="Titles">
-    <h1>Default Settings</h1>
-  </div>
-  <ul>
-    <li>
-      Notifications
-      <div class="details">
-        <p>Enable or disable app notifications.</p>
-        <label class="switch">
-          <input type="checkbox">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </li>
-  </ul>
-  
-  <div class="Titles">
-    <h1>Color Theme</h1>
-  </div>
-  <ul>
-    <li>
-      Select Theme
-      <div class="details">
-        <p>Chose a color theme for the interface:</p>
-        <select id="themeSelector">
-          <option value="default">Purple (standard)</option>
-          <option value="lightgray">lightgray</option>
-          <option value="darkgray">darkgray</option>
-          <option value="lightblue">lightblue</option>
-        </select>
-      </div>
-    </li>
-  </ul>
+  <nav class="sidebar">
+    <h2>Settings</h2>
+    <ul>
+      <li class="active" data-section="default">Default Settings</li>
+      <li data-section="theme">Color Theme</li>
+      <li data-section="account">Account Settings</li>
+      <li data-section="privacy">Privacy & Security</li>
+    </ul>
+  </nav>
 
-  <div class="Titles">
-    <h1>Account Settings</h1>
-  </div>
-  <ul>
-  <li>
-      Profile data
-      <div class="details">
-        <p><strong>Email:</strong> {{user.email}}</p>
-        <p><strong>Username:</strong> {{user.username}}</p>
-    <a href="/profile" class="settings-link-button">Update your name and email here</a>
-      </div>
-    </li>
-    <li>
-      Change password
-      <div class="details">
-        <form action="/Settings/changePassword" method="POST" onsubmit="confirmChangePassword(event)">
-          <label for="currentPassword">Current Password:</label>
-          <input type="password" id="currentPassword" name="currentPassword" required>
-          
-          <label for="newPassword">New Password:</label>
-          <input type="password" id="newPassword" name="newPassword" required>
-          
-          <button type="submit">Change Password</button>
-        </form>
-      </div>
-    </li>
-<li>
-  Remove character
-  <div class="details">
-   <form action="/Settings/removecharacter" method="POST" onsubmit="confirmDeleteCharacter(event)">
-      <p>Select a character to delete:</p>
-      <label for="character-select">Choose a character:</label>
-      <select id="character-select" name="characterId" required>
-         {{#each characters}}
-          <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
-          {{/each}}
-      </select>
-      <button type="submit">Delete selected character</button>
-    </form>
-  </div>
-</li>
+  <main class="main-content">
+    <section id="default" class="settings-section">
+      <div class="Titles"><h1>Default Settings</h1></div>
+      <ul class="settings-list">
+        <li>
+          Notifications
+          <div class="details">
+            <p>Enable or disable app notifications.</p>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </li>
+      </ul>
+    </section>
 
-    <li>
-      Remove account
-      <div class="details">
-        <form action="/Settings/removeAccount" method="POST" onsubmit="confirmDeleteAccount(event)">
-          <p>Are you sure you want to permanently delete your account and all of its data?</p>
-          <button type="submit">Delete Account</button>
-        </form>
-      </div>
-    </li>
-  </ul>
+    <section id="theme" class="settings-section" style="display:none;">
+      <div class="Titles"><h1>Color Theme</h1></div>
+      <ul class="settings-list">
+        <li>
+          Select Theme
+          <div class="details">
+            <p>Choose a color theme for the interface:</p>
+            <select id="themeSelector">
+              <option value="default">Purple (standard)</option>
+              <option value="lightgray">lightgray</option>
+              <option value="darkgray">darkgray</option>
+              <option value="lightblue">lightblue</option>
+            </select>
+          </div>
+        </li>
+      </ul>
+    </section>
 
-  <div class="Titles">
-    <h1>Privacy & Security</h1>
-  </div>
-  <ul>
-    <li>
-      Access rights and permissions
-      <div class="details">
-        <p>Learn more about access rights and permissions on <a href="https://en.wikipedia.org/wiki/Access_control" target="_blank">Wikipedia</a>.</p>
-      </div>
-    </li>
-  </ul>
-  <script>
-  // Check if there's an alert object passed from the server
-  {{#if alert}}
-    const alertType = '{{alert.type}}';
-    const alertMessage = '{{alert.message}}';
+    <section id="account" class="settings-section" style="display:none;">
+      <div class="Titles"><h1>Account Settings</h1></div>
+      <ul class="settings-list">
+        <li>
+          Profile data
+          <div class="details">
+            <p><strong>Email:</strong> {{user.email}}</p>
+            <p><strong>Username:</strong> {{user.username}}</p>
+            <a href="/profile" class="settings-link-button">Update your name and email here</a>
+          </div>
+        </li>
+        <li>
+          Change password
+          <div class="details">
+            <form action="/Settings/changePassword" method="POST" onsubmit="confirmChangePassword(event)">
+              <label for="currentPassword">Current Password:</label>
+              <input type="password" id="currentPassword" name="currentPassword" required>
+              
+              <label for="newPassword">New Password:</label>
+              <input type="password" id="newPassword" name="newPassword" required>
+              
+              <button type="submit">Change Password</button>
+            </form>
+          </div>
+        </li>
+        <li>
+          Remove character
+          <div class="details">
+            <form action="/Settings/removecharacter" method="POST" onsubmit="confirmDeleteCharacter(event)">
+              <p>Select a character to delete:</p>
+              <label for="character-select">Choose a character:</label>
+              <select id="character-select" name="characterId" required>
+                {{#each characters}}
+                <option value="{{this.id}}" {{#ifEquals this.id ../selectedCharacterId}} selected {{/ifEquals}}>{{this.name}}</option>
+                {{/each}}
+              </select>
+              <button type="submit">Delete selected character</button>
+            </form>
+          </div>
+        </li>
+        <li>
+          Remove account
+          <div class="details">
+            <form action="/Settings/removeAccount" method="POST" onsubmit="confirmDeleteAccount(event)">
+              <p>Are you sure you want to permanently delete your account and all of its data?</p>
+              <button type="submit">Delete Account</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </section>
 
-    Swal.fire({
-      icon: alertType,
-      title: alertType === 'error' ? 'Error' : 'Success',
-      text: alertMessage
-    });
-  {{/if}}
-</script>
+    <section id="privacy" class="settings-section" style="display:none;">
+      <div class="Titles"><h1>Privacy & Security</h1></div>
+      <ul class="settings-list">
+        <li>
+          Access rights and permissions
+          <div class="details">
+            <p>Learn more about access rights and permissions on <a href="https://en.wikipedia.org/wiki/Access_control" target="_blank" rel="noopener noreferrer">Wikipedia</a>.</p>
+          </div>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="/Scripts/Settings.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
+
 </html>
 
