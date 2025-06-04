@@ -1,57 +1,240 @@
+/* === Layout Basics === */
 body {
-  padding-top: 80px;
-  padding-bottom: 70px;
-  background-color: #1e1e1e;
-  
-  font-family: Arial, sans-serif;
-  margin: 20px;
-}
-.Titles h1 {
-  color: white;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 25px;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  padding: 2.5rem 1.5rem 2.5rem 1.5rem; /* keep your original */
+  border-right: 1px solid #bbb;
+  background: linear-gradient(135deg, var(--card-bg) 0%, #f0f0f0 100%);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.07);
+  user-select: none;
+  z-index: 10; /* make sure sidebar is on top */
+  box-sizing: border-box;
+}
 
-li {
-  line-height: 1.4;
-  margin: 5px 0;
-  font-size: 20px;
+.sidebar ul li {
+  padding: 12px 16px; /* reduce right padding slightly */
+  margin-bottom: 12px;
+  border-radius: 10px;
   cursor: pointer;
-  padding: 10px;
-  margin-bottom: 5px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.35s;
+  color: var(--text-color);
+  font-weight: 600;
+  box-sizing: border-box; /* prevent padding overflow */
+  max-width: calc(100% - 8px); /* leave a little space so no overlap */
 }
 
-  ul {
-    list-style: none;
-    padding-left: 0;
-    color: #FFFFFF;
+.sidebar ul li:hover,
+.sidebar ul li.active {
+  box-shadow: 0 4px 8px var(--accent-color);
+  position: relative; /* make sure shadows stay inside */
+  z-index: 5;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 240px;
+  padding: 3rem 3.5rem;
+  flex-grow: 1;
+  background-color: var(--background-color);
+  min-height: 100vh;
+  /* subtle shadow for separation */
+  box-shadow: inset 2px 0 6px rgba(0, 0, 0, 0.03);
+}
+
+/* Sections */
+.settings-section {
+  display: none;
+  animation: fadeIn 0.35s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-
-  li:hover {
-    background-color: #230B66;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  .details {
-    display: none;
-    margin-top: 5px;
-    font-size: 0.9em;
-    color: #FFFFFF;
-  }
+.settings-section.active {
+  display: block;
+}
 
+.settings-section h1 {
+  font-size: 2.2rem;
+  margin-bottom: 1.8rem;
+  color: var(--accent-color);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
-  li.open .details {
-    display: block;
-  }
+/* Settings List */
+.settings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
+.settings-list li {
+  background-color: var(--card-bg);
+  padding: 1.6rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 1.8rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: box-shadow 0.4s ease, transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: visible;
+  min-height: auto;
+  user-select: none;
+  /* smooth and subtle */
+  will-change: transform, box-shadow;
+}
+
+.settings-list li.open .details {
+  max-height: 2200px;
+  padding-top: 1.4rem;
+  overflow: visible;
+}
+
+.settings-list li:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* lighter shadow */
+  transform: translateY(-1.5px); /* smaller lift */
+}
+
+.settings-list .details {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.45s ease, padding-top 0.45s ease;
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.65;
+  user-select: text;
+}
+
+/* Form Controls inside settings-list */
+.settings-list select,
+.settings-list input[type="text"],
+.settings-list input[type="password"],
+.settings-list textarea {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1.8px solid #ccc;
+  border-radius: 12px;
+  padding: 0.85rem 1.25rem;
+  box-shadow:
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.1);
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+  font-weight: 500;
+  font-family: inherit;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  letter-spacing: 0.03em;
+  font-size: 1rem;
+}
+
+.settings-list select:hover,
+.settings-list input[type="text"]:hover,
+.settings-list input[type="password"]:hover,
+.settings-list textarea:hover {
+  border-color: var(--accent-color);
+  box-shadow:
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.07);
+}
+
+.settings-list select:focus,
+.settings-list input[type="text"]:focus,
+.settings-list input[type="password"]:focus,
+.settings-list textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background-color: var(--background-color);
+  box-shadow:
+    0 0 8px 2px var(--accent-color),
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.05);
+  color: var(--text-color);
+}
+
+/* Buttons scoped only inside settings-list */
+.settings-list button,
+.settings-list .settings-link-button {
+  background: var(--accent-color);
+  color: #fff;
+  border-radius: 14px;
+  border: none;
+  padding: 0.85rem 1.8rem;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.15);
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.25s ease;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  align-self: flex-start;
+  margin-bottom: 0.6rem;
+  user-select: none;
+}
+
+.settings-list button:hover,
+.settings-list .settings-link-button:hover {
+  background: var(--accent-color-light);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.07);
+  transform: translateY(-4px);
+}
+
+.settings-list button:focus,
+.settings-list .settings-link-button:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 3.5px var(--accent-color),
+    inset 0 0 0 1000px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+
+/* Toggle Switch */
 .switch {
-  margin: 5px;
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 28px;
+  width: 54px;
+  height: 30px;
+  margin-top: 0.65rem;
+  flex-shrink: 0;
 }
-
 
 .switch input {
   opacity: 0;
@@ -59,62 +242,39 @@ li {
   height: 0;
 }
 
-
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #ccc;
-  transition: 0.4s;
-  border-radius: 34px;
+  transition: background-color 0.45s ease;
+  border-radius: 30px;
+  box-shadow: inset 0 2.5px 7px rgba(0, 0, 0, 0.12);
 }
 
-
-.slider::before {
+.slider:before {
   position: absolute;
   content: "";
-  height: 22px;
-  width: 22px;
+  height: 24px;
+  width: 24px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
-  transition: 0.4s;
+  background-color: #fff;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
-
 
 .switch input:checked + .slider {
-  background-color: #4caf50;
+  background-color: var(--accent-color);
+  box-shadow: 0 0 12px var(--accent-color);
 }
 
-
-.switch input:checked + .slider::before {
-  transform: translateX(22px);
+.switch input:checked + .slider:before {
+  transform: translateX(26px);
 }
 
-
-.settings-link-button {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #120320;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.settings-link-button:hover {
-  background-color: #0e0118;
-  transform: scale(1.03);
-  cursor: pointer;
-}
-
-.settings-link-button:active {
-  transform: scale(0.97);
-  box-shadow: 0 0 5px #000 inset;
+.settings-list select#themeSelector {
+  color: black !important;
+  background-color: white;
 }

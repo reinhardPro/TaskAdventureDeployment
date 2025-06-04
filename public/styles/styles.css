@@ -426,6 +426,15 @@ body.lightblue-theme .task-details.show
   background-color: #85b4bf;
   color: white;
 }
+body.lightblue-theme .classroom-form,
+body.lightblue-theme .classroom-list section {
+  background-color: #e0f7ff;
+  color: black;
+}
+body.lightblue-theme .message {
+  background-color: #ffe6e6;
+  color: #b80000;
+}
 /*Default color theme*/
 body.default-theme .add-task-form,
 body.default-theme .task-list,
@@ -576,6 +585,15 @@ body.lightgray-theme .task-details.show
 body.lightgray-theme ::placeholder{
   color: white;
 }
+body.lightgray-theme .classroom-form,
+body.lightgray-theme .classroom-list section {
+  background-color: #d0d0d0;
+  color: black;
+}
+body.lightgray-theme .message {
+  background-color: #fbecec;
+  color: #b80000;
+}
 /*Darkgray theme color*/
 body.darkgray-theme .add-task-form,
 body.darkgray-theme .task-list,
@@ -667,4 +685,13 @@ body.darkgray-theme .form-group label,
 body.darkgray-theme span
 {
   color: white;
+}
+body.darkgray-theme .classroom-form,
+body.darkgray-theme .classroom-list section {
+  background-color: #444;
+  color: white;
+}
+body.darkgray-theme .message {
+  background-color: #661111;
+  color: #ffe6e6;
 }

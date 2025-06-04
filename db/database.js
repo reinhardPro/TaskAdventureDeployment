@@ -127,7 +127,7 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      code TEXT UNIQUE NOT NULL,
+      code TEXT NOT NULL,
       teacherId INTEGER NOT NULL,
       maxStudents INTEGER DEFAULT 40,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
