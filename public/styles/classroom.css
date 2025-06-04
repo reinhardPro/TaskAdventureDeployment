@@ -1,0 +1,98 @@
+.classroom-form {
+  max-width: 600px;
+  margin: 100px auto;
+  background-color: #2a005f;
+  padding: 30px;
+  border-radius: 12px;
+  color: white;
+}
+
+.classroom-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.classroom-form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 6px;
+}
+
+.classroom-form button {
+  background-color: #6200ea;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.classroom-form button:hover {
+  background-color: #4500a5;
+}
+
+.classroom-list {
+  max-width: 900px;
+  margin: 100px auto;
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #3e008d;
+  color: white;
+}
+
+.classroom-list section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #5200bb;
+  border-radius: 10px;
+}
+
+.classroom-list h2 {
+  margin-bottom: 10px;
+}
+
+.classroom-list ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.classroom-list li {
+  margin-bottom: 6px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+.message {
+  color: #ff4d4d;
+  background-color: #ffe6e6;
+  text-align: center;
+  font-weight: bold;
+  padding: 15px 20px;
+  margin: 30px auto;
+  border: 1px solid #ffcccc;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.extra-button {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.button-secondary {
+  display: inline-block;
+  background-color: #cccccc;
+  color: #333;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: #bbbbbb;
+}
