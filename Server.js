@@ -629,7 +629,7 @@ function renderSettingsPage(res, user, alert) {
       return res.render('Settings', {
         user,
         characters: [],
-        alert: { type: 'error', message: 'Fout bij laden van characters' }
+        alert: { type: 'error', message: 'Error loading characters' }
       });
     }
 
@@ -654,6 +654,16 @@ app.get('/Settings', requireLogin, (req, res) => {
 app.post('/Settings/changePassword', requireLogin, (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const user = req.session.user;
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+
+  if (!passwordRegex.test(newPassword)) {
+    req.session.alert = {
+      type: 'error',
+      message: 'Password must be at least 6 characters long and include one uppercase letter, one lowercase letter, and one special character.'
+    };
+    return res.redirect('/Settings');
+  }
 
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
@@ -741,31 +751,45 @@ app.post('/Settings/removecharacter', requireLogin, (req, res) => {
   const user = req.session.user;
   const characterId = req.body.characterId;
 
+
+  // Bekijkt het aantal characters van de gebruiker
+ db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
+    if (err) {
+      req.session.alert = { type: 'error', message: 'Error checking characters' };
+      return res.redirect('/Settings');
+    }
+
+    if (row.count <= 1) {
+      req.session.alert = { type: 'error', message: 'You must keep at least one character.' };
+      return res.redirect('/Settings');
+    }
+
+
   db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
     if (err || !character) {
-      req.session.alert = { type: 'error', message: 'Character niet gevonden of niet van jou' };
+      req.session.alert = { type: 'error', message: 'Character not found or not yours' };
       return res.redirect('/Settings');
     }
 
     db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
       if (err) {
-        req.session.alert = { type: 'error', message: 'Fout bij verwijderen van taken' };
+        req.session.alert = { type: 'error', message: 'Error deleting tasks' };
         return res.redirect('/Settings');
       }
 
       db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
         if (err) {
-          req.session.alert = { type: 'error', message: 'Fout bij verwijderen van character' };
+          req.session.alert = { type: 'error', message: 'Error deleting character' };
           return res.redirect('/Settings');
         }
 
-        req.session.alert = { type: 'success', message: 'Character succesvol verwijderd' };
+        req.session.alert = { type: 'success', message: 'Character removed successfully' };
         res.redirect('/Settings');
       });
     });
   });
 });
-
+});
 
 
 // Access Rights and Permissions link
