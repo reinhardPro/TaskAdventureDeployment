@@ -213,10 +213,19 @@ label {
   margin-top: 6px;
 }
 
-.task-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+task-list {
+  display: inline-flex;
+  flex-direction: column;
+  background-color: #26656e;
+  border-radius: 16px;
+  padding: 16px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Remove any gap from the container */
+.task-list > *:not(:last-child) {
+  margin-bottom: 10px;
 }
 
 .task-card {
