@@ -1,79 +1,54 @@
+// Houdt de intervalreferentie bij voor de timer
 let timerInterval;
+
+// Totaal aantal seconden dat nog op de timer staat
 let totalSeconds = 0;
+
+// Geeft aan of de timer momenteel gepauzeerd is
 let isPaused = false;
 
 /**
- * Start de timer op basis van de ingevoerde minuten.
- * Herstart timer als deze gepauzeerd was.
+ * Start of hervat de timer.
+ * Als de timer gepauzeerd is en er nog tijd over is, hervat hij zonder opnieuw te starten.
  */
 function startTimer() {
-    const input = document.getElementById("minutesInput");
-    const minutes = parseInt(input.value);
-
-    if (isPaused && totalSeconds > 0) {
+    // Hervat timer als deze gepauzeerd was
+    if (totalSeconds > 0 && isPaused) {
         isPaused = false;
         return;
     }
 
+    const minutesInput = document.getElementById("minutesInput").value;
+    const minutes = parseInt(minutesInput);
+
+    // Voorkom starten met lege of ongeldige invoer
     if (!minutes || minutes <= 0) return;
 
     totalSeconds = minutes * 60;
     isPaused = false;
 
-    toggleElementsVisibility(false);
+    // Verberg UI-elementen tijdens de focusmodus
+    document.querySelector(".header").style.visibility = "hidden";
+    document.querySelector(".footer").style.visibility = "hidden";
+    document.getElementById("minutesInput").style.display = "none";
+
     updateTimerDisplay();
 
-    clearInterval(timerInterval);
+    // Stop vorige interval als die bestaat
+    if (timerInterval) clearInterval(timerInterval);
+
+    // Start een nieuwe interval (1 seconde)
     timerInterval = setInterval(() => {
         if (!isPaused) {
             totalSeconds--;
             updateTimerDisplay();
 
+            // Stop timer bij nul
             if (totalSeconds <= 0) clearInterval(timerInterval);
         }
     }, 1000);
 
-    enterFullscreen();
-}
-
-/** Wisselt tussen pauze en hervatten van de timer. */
-function pauseTimer() {
-    isPaused = !isPaused;
-}
-
-/** Stopt de timer en reset de interface. */
-function stopTimer() {
-    clearInterval(timerInterval);
-    totalSeconds = 0;
-    isPaused = false;
-
-    toggleElementsVisibility(true);
-    document.getElementById("timerDisplay").textContent = "00:00";
-
-    exitFullscreen();
-}
-
-/** Update de timerweergave in mm:ss-formaat. */
-function updateTimerDisplay() {
-    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    document.getElementById("timerDisplay").textContent = `${minutes}:${seconds}`;
-}
-
-/** Hulpfunctie: Verberg of toon UI-elementen. */
-function toggleElementsVisibility(show) {
-    const visibility = show ? "visible" : "hidden";
-    const displayInput = show ? "inline-block" : "none";
-    const displayControls = show ? "flex" : "none";
-
-    document.querySelector(".header")?.style.visibility = visibility;
-    document.querySelector(".footer")?.style.visibility = visibility;
-    document.getElementById("minutesInput").style.display = displayInput;
-    document.querySelector(".timer-controls").style.display = displayControls;
-}
-
-/** Activeer fullscreenmodus (indien nog niet actief). */
-function enterFullscreen() {
+    // Activeer fullscreenmodus indien nog niet actief
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
             console.warn("Fullscreen mislukt:", err);
@@ -81,14 +56,50 @@ function enterFullscreen() {
     }
 }
 
-/** Verlaat fullscreenmodus (indien actief). */
-function exitFullscreen() {
+/**
+ * Pauzeert of hervat de timer.
+ */
+function pauseTimer() {
+    isPaused = !isPaused;
+}
+
+/**
+ * Stopt de timer volledig en herstelt de oorspronkelijke interface.
+ */
+function stopTimer() {
+    clearInterval(timerInterval);
+
+    // Herstel zichtbaarheid van elementen
+    document.querySelector(".header").style.visibility = "visible";
+    document.querySelector(".footer").style.visibility = "visible";
+    document.querySelector(".timer-controls").style.display = "flex";
+    document.getElementById("minutesInput").style.display = "inline-block";
+
+    // Reset de timer en interface
+    document.getElementById("timerDisplay").textContent = "00:00";
+    totalSeconds = 0;
+    isPaused = false;
+
+    // Verlaat fullscreenmodus indien actief
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
 }
 
-/** Alias voor het sluiten van de focusmodus. */
+/**
+ * Werkt de weergave van de timer bij in het formaat mm:ss.
+ */
+function updateTimerDisplay() {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    document.getElementById("timerDisplay").textContent = formattedTime;
+}
+
+/**
+ * Alias voor stopTimer, bedoeld om focusmodus te verlaten.
+ */
 function CloseFocusMode() {
     stopTimer();
 }
