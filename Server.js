@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-const { db, createUser, findUser, getTasks } = require('./db/database');
+const { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage } = require('./db/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
@@ -65,10 +65,25 @@ app.engine('hbs', exphbs.engine({
     lookupCharacter: (characters, id) => {
       // Find the character by the given ID
       return characters.find(character => character.id == id);
+    },
+// NEW HELPER: Get character image based on level
+    getCharacterImage: (character, characterInfo) => {
+      if (!characterInfo) {
+        console.warn('getCharacterImage: characterInfo is null or undefined', character);
+        return '/img/default.png'; // Fallback image
+      }
+
+      // Example: Simple evolution based on level
+      if (character.level >= 5 && characterInfo.evolutionStage2Image) {
+        return characterInfo.evolutionStage2Image;
+      } else if (character.level >= 2 && characterInfo.evolutionStage1Image) {
+        return characterInfo.evolutionStage1Image;
+      } else {
+        return characterInfo.baseImage;
+      }
     }
   }
 }));
-
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -128,10 +143,17 @@ app.get('/', (req, res) => {
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
-  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
-    if (err) return res.status(500).send('Error fetching characters');
-
-  console.log('Characters:', characters);
+   // IMPORTANT CHANGE: Join with character_info to get all image paths
+  db.all(`
+    SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
+    FROM characters c
+    LEFT JOIN character_info ci ON c.characterInfoId = ci.id
+    WHERE c.userId = ?
+  `, [userId], (err, characters) => {
+    if (err) {
+      console.error("Error fetching characters with info:", err);
+      return res.status(500).send('Error fetching characters');
+    }
 
     if (!characters || characters.length === 0) {
       return res.render('Home', {
@@ -159,21 +181,20 @@ app.get('/home', requireLogin, (req, res) => {
 
       res.render('Home', {
         user: req.session.user,
-        characters,
+        characters, // characters now include character_info fields
         tasks,
         noCharacter: false,
         selectedCharacterId: characterId,
         xp: selectedCharacter.xp,
         level: selectedCharacter.level,
-        selectedCharacterImage: selectedCharacter.imagevalue, // <--- THIS IS THE CRUCIAL ADDITION!
-        pageTitel:'Home'
+        selectedCharacter: selectedCharacter // Pass the full selectedCharacter object
       });
     });
   });
 });
 
 
-// XP gain route
+// XP gain route (No direct changes needed here, as it operates on character XP and level)
 app.post('/api/gain-xp', (req, res) => {
   const userId = req.session.user?.id;
   const characterId = parseInt(req.body.characterId);
@@ -204,9 +225,9 @@ app.post('/api/gain-xp', (req, res) => {
       let newLevel = character.level;
       let leveledUp = false;
 
-      const xpThreshold = 100;
+      const xpThreshold = 100; // Assuming 100 XP per level for simplicity
 
-      while (newXP >= xpThreshold) {
+      while (newXP >= xpThreshold) { // Changed condition to check against constant threshold
         newLevel++;
         newXP -= xpThreshold;
         leveledUp = true;
@@ -239,7 +260,7 @@ app.post('/api/gain-xp', (req, res) => {
 
 
 
-// Taak voltooien + XP toekennen
+// Taak voltooien + XP toekennen (No direct changes needed here, as it operates on character XP and level)
 app.post('/task/complete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
   const characterId = req.query.characterId;
@@ -257,9 +278,9 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
       const userId = character.userId;
       const newXp = (character.xp || 0) + taskXp;
       let newLevel = character.level || 1;
-      const requiredXp = 100;
+      const requiredXp = 100; // Assuming 100 XP per level for simplicity
 
-      while (newXp >= newLevel * requiredXp) {
+      while (newXp >= newLevel * requiredXp) { // This logic also needs to be adjusted based on desired level up curve.
         newLevel++;
       }
 
@@ -330,37 +351,43 @@ app.get('/Stats', requireLogin, (req, res) => {
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
-// Verwijder taken waarvan de dueDate in het verleden ligt
-db.run(`
-  DELETE FROM tasks 
-  WHERE dueDate < date('now') 
-    AND characterId IN (SELECT id FROM characters WHERE userId = ?)
-`, [userId], (err) => {
-  if (err) return res.status(500).send('Fout bij het verwijderen van verlopen taken');
-  
-  // Daarna pas: laadt characters en taken
-  db.all('SELECT * FROM characters WHERE userId = ?', [userId], (err, characters) => {
-    if (err) return res.status(500).send('Error loading characters');
-    if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [], pageTitel:'Task Manager' });
+  // Verwijder taken waarvan de dueDate in het verleden ligt
+  db.run(`
+    DELETE FROM tasks
+    WHERE dueDate < date('now')
+      AND characterId IN (SELECT id FROM characters WHERE userId = ?)
+  `, [userId], (err) => {
+    if (err) return res.status(500).send('Fout bij het verwijderen van verlopen taken');
 
-    const characterIds = characters.map(c => c.id);
-    const placeholders = characterIds.map(() => '?').join(',');
+    // Daarna pas: laadt characters en taken
+    // IMPORTANT CHANGE: Join with character_info for Taskmanager too, so you can display images
+    db.all(`
+        SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
+        FROM characters c
+        LEFT JOIN character_info ci ON c.characterInfoId = ci.id
+        WHERE c.userId = ?
+    `, [userId], (err, characters) => {
+      if (err) return res.status(500).send('Error loading characters');
+      if (characters.length === 0) return res.render('Taskmanager', { characters: [], tasks: [], pageTitel: 'Task Manager' });
 
-    db.all(
-      `
-      SELECT tasks.*, characters.name AS characterName 
-      FROM tasks 
-      JOIN characters ON tasks.characterId = characters.id 
-      WHERE tasks.characterId IN (${placeholders})
-      `,
-      characterIds,
-      (err, tasks) => {
-        if (err) return res.status(500).send('Error loading tasks');
-        res.render('Taskmanager', { characters, tasks, today, pageTitel:'Task Manager'  });
-      }
-    );
+      const characterIds = characters.map(c => c.id);
+      const placeholders = characterIds.map(() => '?').join(',');
+
+      db.all(
+        `
+        SELECT tasks.*, characters.name AS characterName
+        FROM tasks
+        JOIN characters ON tasks.characterId = characters.id
+        WHERE tasks.characterId IN (${placeholders})
+        `,
+        characterIds,
+        (err, tasks) => {
+          if (err) return res.status(500).send('Error loading tasks');
+          res.render('Taskmanager', { characters, tasks, today, pageTitel: 'Task Manager' });
+        }
+      );
+    });
   });
-});
 });
 
 // Handle task creation
@@ -618,7 +645,14 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
 
 // Helper functies
 function getCharacters(userId, callback) {
-  db.all('SELECT id, name FROM characters WHERE userId = ?', [userId], (err, characters) => {
+  // IMPORTANT CHANGE: Join with character_info here too for settings page if you want to display current images
+  db.all(`
+    SELECT c.id, c.name, c.level,
+           ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
+    FROM characters c
+    LEFT JOIN character_info ci ON c.characterInfoId = ci.id
+    WHERE c.userId = ?
+  `, [userId], (err, characters) => {
     if (err) return callback(err);
     callback(null, characters);
   });
@@ -799,19 +833,31 @@ app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
-app.get('/leaderboard', requireLogin , (req, res) => {
-  db.all('SELECT name, xp, imagevalue FROM characters ORDER BY xp DESC LIMIT 10', [], (err, rows) => {
+// Leaderboard (Needs join to character_info to get character image for leaderboard display)
+app.get('/leaderboard', requireLogin, (req, res) => {
+  db.all(`
+    SELECT c.name, c.xp, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image, c.level
+    FROM characters c
+    LEFT JOIN character_info ci ON c.characterInfoId = ci.id
+    ORDER BY c.xp DESC
+    LIMIT 10
+  `, [], (err, rows) => {
     if (err) {
       console.error("Query error:", err.message);
       return res.status(500).send("Database error");
     }
 
+    // You might want to determine the correct image path for each character here
+    // based on their level before passing to the template, or use the helper.
+    // For now, the helper 'getCharacterImage' will handle it in the template.
+
     const top3 = rows.slice(0, 3);
     const others = rows.slice(3);
 
-    res.render('LeaderBoard', { top3, others, pageTitel:'Leaderboard'});
+    res.render('LeaderBoard', { top3, others, pageTitel: 'Leaderboard' });
   });
 });
+
 
 app.post('/admin/delete-user', requireAdmin, (req, res) => {
   const { userId } = req.body;
@@ -821,31 +867,45 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
   });
 });
 
-// Character Creation
+// Inside your server.js, find a logical place for this.
+// For example, you can put it near your other app.get routes like '/Login' or '/CreateAccount'.
+
+// Character Creation GET route (to display the character creation form)
 app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', {pageTitel:'Character Creation'}));
 
+// Character Creation POST (IMPORTANT CHANGES HERE)
 app.post('/CharacterCreation', (req, res) => {
-  const { name, gender, imagevalue } = req.body;
+  const { name, gender, imagevalue } = req.body; // imagevalue is now the baseImage path
   const userId = req.session.user?.id;
 
   if (!userId) {
     return res.status(401).send("Unauthorized: You must be logged in.");
   }
 
-  // Insert into the database
-  db.run(
-    'INSERT INTO characters (userId, name, gender, imagevalue) VALUES (?, ?, ?, ?)',
-    [userId, name, gender, imagevalue],
-    function (err) {
-      if (err) {
-        console.error('Error during DB insert:', err.message);
-        return res.status(500).send('Error adding character to the database');
-      }
-
-      // Return success message as JSON
-      return res.json({ success: true, message: 'Character created successfully!' });
+  // First, find the characterInfoId based on the selected base image
+  getCharacterInfoByBaseImage(imagevalue, (err, characterInfo) => {
+    if (err || !characterInfo) {
+      console.error('Error fetching character info:', err);
+      return res.status(500).json({ success: false, message: 'Selected character image info not found.' });
     }
-  );
+
+    const characterInfoId = characterInfo.id;
+
+    // Now insert into the characters table using characterInfoId
+    db.run(
+      'INSERT INTO characters (userId, name, gender, characterInfoId) VALUES (?, ?, ?, ?)', // Use characterInfoId
+      [userId, name, gender, characterInfoId],
+      function (err) {
+        if (err) {
+          console.error('Error during DB insert for character:', err.message);
+          return res.status(500).json({ success: false, message: 'Error adding character to the database' });
+        }
+
+        // Return success message as JSON
+        return res.json({ success: true, message: 'Character created successfully!' });
+      }
+    );
+  });
 });
 
 app.get('/profile', requireLogin, (req, res) => {
