@@ -166,6 +166,7 @@ app.get('/home', requireLogin, (req, res) => {
         xp: selectedCharacter.xp,
         level: selectedCharacter.level,
         selectedCharacterImage: selectedCharacter.imagevalue, // <--- THIS IS THE CRUCIAL ADDITION!
+        pageTitel:'Home'
       });
     });
   });
@@ -355,7 +356,7 @@ db.run(`
       characterIds,
       (err, tasks) => {
         if (err) return res.status(500).send('Error loading tasks');
-        res.render('Taskmanager', { characters, tasks, today,  });
+        res.render('Taskmanager', { characters, tasks, today, pageTitel:'Task Manager'  });
       }
     );
   });
@@ -636,7 +637,8 @@ function renderSettingsPage(res, user, alert) {
     res.render('Settings', {
       user,
       characters,
-      alert
+      alert,
+      pageTitel:'Settings'
     });
   });
 }
