@@ -45,7 +45,7 @@
       {{else}}
       {{#if selectedCharacterId}}
       <div class="character-display-box">
-       <img src="{{selectedCharacterImage}}" class="character-image">
+      <img class="character-image" src="{{getCharacterImage selectedCharacter selectedCharacter}}" alt="Selected Character">
         <div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
         <div class="xp-bar-wrapper">
           <div class="xp-bar-container">
@@ -74,7 +74,7 @@
           <div class="task-card">
             <div class="task-icon" title="XP: {{xp}}">{{title.[0]}}</div>
             <div class="task-info">
-              <div class="task-title">{{title}} (XP: {{xp}})</div>
+              <div class="task-title">{{title}} </div>
               <div class="task-date">Due: {{dueDate}}</div>
             </div>
             <div class="task-expand">&#9660;</div>
