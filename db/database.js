@@ -31,17 +31,31 @@ db.serialize(() => {
   `);
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS characters (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      level INTEGER DEFAULT 1,
-      xp INTEGER DEFAULT 0,
-      gender INTEGER DEFAULT 0,
-      imagevalue TEXT,
-      FOREIGN KEY(userId) REFERENCES users(id)
-    )
-  `);
+  CREATE TABLE IF NOT EXISTS characters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    level INTEGER DEFAULT 1,
+    xp INTEGER DEFAULT 0,
+    gender INTEGER DEFAULT 0,
+    -- REMOVE THE LINE BELOW
+    -- imagevalue TEXT,
+    -- ADD THIS LINE BELOW (foreign key to character_info)
+    characterInfoId INTEGER,
+    FOREIGN KEY(userId) REFERENCES users(id),
+    FOREIGN KEY(characterInfoId) REFERENCES character_info(id) -- This line establishes the link
+  )
+`);
+
+    db.run(`
+  CREATE TABLE IF NOT EXISTS character_info (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    baseImage TEXT UNIQUE NOT NULL, -- The initial image path that links characters to this info
+    evolutionStage1Image TEXT,
+    evolutionStage2Image TEXT,
+    evolutionName TEXT
+  )
+`);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS levelup (
@@ -133,7 +147,44 @@ db.serialize(() => {
     )
   `);
 
-
+   // Insert initial character info (you'll need to decide on your base images and evolutions)
+  // This is just an example. You'll add more based on your characterImages array.
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/malePixel.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/malePixel.png', '/img/malePixel_evo1.png', '/img/malePixel_evo2.png', 'Basic Male']);
+    }
+  });
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/pixelFemale.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/pixelFemale.png', '/img/pixelFemale_evo1.png', '/img/pixelFemale_evo2.png', 'Basic Female']);
+    }
+  });
+ db.all(`SELECT id FROM character_info WHERE baseImage = '/img/Hermit.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/Hermit.png', '/img/Hermit2.png', '/img/Hermit3.png', 'Hermit']);
+    }
+  });
+   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/FeyereJoe.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/FeyereJoe.png', '/img/FeyereJoe2.png', '/img/FeyereJoe3.png', 'Feyere Joe']);
+    }
+  });
+   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/samurai.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/samurai.png', '/img/samurai2.png', '/img/samurai3.png', 'Samurai']);
+    }
+  });
+    db.all(`SELECT id FROM character_info WHERE baseImage = '/img/purpleguy.png'`, (err, rows) => {
+    if (rows.length === 0) {
+      db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
+        ['/img/purpleguy.png', '/img/purpleguy2.png', '/img/purpleguy3.png', 'Purple Guy']);
+    }
+  });
 
   // Rollen toevoegen
   db.all(`SELECT name FROM roles WHERE name IN ('admin', 'user', 'guest')`, (err, rows) => {
@@ -216,6 +267,12 @@ function getTasks(userId, callback) {
   );
 }
 
-module.exports = { db, createUser, findUser, getTasks };
+function getCharacterInfoByBaseImage(baseImage, callback) {
+  db.get('SELECT * FROM character_info WHERE baseImage = ?', [baseImage], (err, row) => {
+    callback(err, row);
+  });
+}
+
+module.exports = { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage };
 
 //correct script

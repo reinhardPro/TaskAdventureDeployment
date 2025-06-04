@@ -92,32 +92,41 @@ label {
     background-color: #2c2c2c; /* Background for the box */
     padding: 20px;
     border-radius: 10px;
-    margin-top: 0; /* Aligned to the top of its flex container */
+    margin-top: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     text-align: center;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 250px; /* Fixed width for the box itself */
-    box-sizing: border-box; /* Include padding in width */
+    align-items: center; /* Center items horizontally */
+    width: 350px;
+    height: 550px; /* Keep height ample for larger character */
+    box-sizing: border-box;
+    justify-content: space-between; /* Push top content to top, bottom content to bottom */
 }
 
 .character-preview {
     padding: 0;
     background-color: transparent;
     margin: 0;
-    margin-bottom: 20px; /* Space between image and level info */
     width: 100%;
+    display: flex;
+    flex-direction: column; /* Stack image and level vertically */
+    justify-content: center; /* Center image and level vertically within this section */
+    align-items: center; /* Center image and level horizontally */
+    flex-grow: 1; /* Allow this section to take up available space above XP bar */
+    /* Add padding to give space around the image within this section */
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
-
 .character-image {
-    max-width: 180px;
+    max-height: 350px;
+    /* Adjusted from 300px to 320px for even larger */
     height: auto;
     border-radius: 5px;
     border: 2px solid #5900b3;
     transition: transform 0.3s ease;
     display: block;
-    margin: 0 auto;
+    /* margin: 0 auto 15px auto; Removed specific bottom margin as level-info will follow */
 }
 
 .character-image:hover {
@@ -131,26 +140,29 @@ label {
 }
 
 
-/* XP bar */
+/* Level Info directly below the character image */
 .level-info {
     color: white;
-    font-size: 18px;
+    font-size: 20px; /* Slightly increased font size for level */
     font-weight: bold;
-    margin-top: 0px;
-    margin-bottom: 10px;
+    margin-top: 15px; /* Space between image and level */
+    margin-bottom: 0; /* Remove default bottom margin */
     text-align: center;
 }
 
+
+/* XP bar */
 .xp-bar-wrapper {
     background-color: transparent;
     padding: 0;
     box-shadow: none;
-    margin-top: 0px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
+    padding-bottom: 20px; /* Padding from the very bottom of the dark box */
+    margin-top: auto; /* Ensure it stays at the bottom if `justify-content: space-between` isn't enough */
 }
 
 .xp-bar-container {
