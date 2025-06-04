@@ -1,0 +1,20 @@
+<link rel="stylesheet" href="/styles/classroom.css" />
+<h1>{{pageTitel}}</h1>
+
+{{#if message}}
+<p style="color: red;">{{message}}</p>
+{{/if}}
+
+<form action="/joinClassroom" method="POST" class="classroom-form">
+  <div>
+    <label for="name">Naam classroom:</label>
+    <input type="text" id="name" name="name" required value="{{name}}">
+  </div>
+
+  <div>
+    <label for="code">Code classroom:</label>
+    <input type="text" id="code" name="code" required value="{{code}}">
+  </div>
+
+  <button type="submit">Join Classroom</button>
+</form>

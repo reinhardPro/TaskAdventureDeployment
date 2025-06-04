@@ -930,6 +930,204 @@ app.post('/reset-password', (req, res) => {
     });
   });
 });
+
+app.get('/Classroom', requireLogin, (req, res) => {
+  const userId = req.session.user.id;
+
+  // Stap 1: Zoek alle klassen waarin de gebruiker zit
+  const klasQuery = `
+    SELECT c.id AS classId, c.name AS className, c.code, c.teacherId, u.username AS teacherName
+    FROM classes c
+    JOIN users u ON c.teacherId = u.id
+    JOIN class_users cu ON cu.classId = c.id
+    WHERE cu.userId = ?
+  `;
+
+  db.all(klasQuery, [userId], (err, classes) => {
+    if (err) {
+      console.error("❌ Fout bij ophalen van klassen:", err);
+      return res.status(500).send("Interne fout bij ophalen van klassen.");
+    }
+
+    if (classes.length === 0) {
+  return res.render('CreateClassroom', {
+    pageTitel: 'Nieuwe Klas Aanmaken',
+    message: 'Je zit nog niet in een klas. Maak er een aan!'
+  });
+}
+
+    // Stap 2: Voor elke klas de leden ophalen met hun personages
+    const classIds = classes.map(c => c.classId);
+
+    const memberQuery = `
+      SELECT cu.classId, u.id AS userId, u.username, ch.name AS characterName, ch.level, ch.xp
+      FROM class_users cu
+      JOIN users u ON u.id = cu.userId
+      LEFT JOIN characters ch ON ch.userId = u.id
+      WHERE cu.classId IN (${classIds.map(() => '?').join(',')})
+      ORDER BY cu.classId, u.username
+    `;
+
+    db.all(memberQuery, classIds, (err, members) => {
+      if (err) {
+        console.error("❌ Fout bij ophalen van klasleden:", err);
+        return res.status(500).send("Fout bij ophalen van klasleden.");
+      }
+
+      // Groepeer per klas
+      const classData = classes.map(klas => {
+    return {
+      id: klas.classId,
+      name: klas.className,
+      code: klas.code,
+      teacher: klas.teacherName,
+      isTeacher: klas.teacherId === userId, // 👈 toegevoegd veld
+      members: members
+        .filter(m => m.classId === klas.classId)
+        .map(m => ({
+          username: m.username,
+          character: m.characterName,
+          level: m.level,
+          xp: m.xp
+        }))
+    };
+  });
+
+  res.render('Classroom', {
+    pageTitel: 'Mijn Classroom',
+    classes: classData
+  });
+    });
+  });
+});
+app.post('/Classroom', requireLogin, (req, res) => {
+  const userId = req.session.user.id;
+  const { name, code } = req.body;
+
+  // ✅ Eerst controleren of er al een klas bestaat met dezelfde NAAM
+  const checkQuery = `SELECT * FROM classes WHERE name = ?`;
+
+  db.get(checkQuery, [name], (err, row) => {
+    if (err) {
+      console.error("❌ Fout bij controleren van klasnaam:", err);
+      return res.status(500).send("Interne fout bij controleren van klasnaam.");
+    }
+
+    if (row) {
+      // ❌ Klasnaam bestaat al, render het formulier opnieuw met foutmelding
+      return res.render('CreateClassroom', {
+        pageTitel: 'Nieuwe Klas Aanmaken',
+        message: `De naam "${name}" is al in gebruik. Kies een andere naam.`,
+        name,
+        code
+      });
+    }
+
+    // ✅ Naam bestaat niet, klas toevoegen
+    const insertQuery = `INSERT INTO classes (name, code, teacherId) VALUES (?, ?, ?)`;
+
+    db.run(insertQuery, [name, code, userId], function(err) {
+      if (err) {
+        console.error("❌ Fout bij toevoegen van klas:", err);
+        return res.status(500).send("Kon klas niet toevoegen.");
+      }
+
+      const classId = this.lastID;
+
+      // Voeg de leraar toe als lid van deze klas
+      const insertClassUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
+
+      db.run(insertClassUser, [classId, userId], (err) => {
+        if (err) {
+          console.error("❌ Fout bij toevoegen van klas-gebruiker:", err);
+          return res.status(500).send("Kon klasgebruikers niet bijwerken.");
+        }
+
+        res.redirect('/Classroom');
+      });
+    });
+  });
+});
+app.post('/Classroom/:id/delete', requireLogin, (req, res) => {
+  const classId = req.params.id;
+  const userId = req.session.user.id;
+
+  db.get(`SELECT * FROM classes WHERE id = ? AND teacherId = ?`, [classId, userId], (err, row) => {
+    if (err) return res.status(500).send("Databasefout.");
+    if (!row) return res.status(403).send("Geen toegang.");
+
+    db.run(`DELETE FROM class_users WHERE classId = ?`, [classId], function (err) {
+      if (err) return res.status(500).send("Fout bij verwijderen klasgebruikers.");
+
+      db.run(`DELETE FROM classes WHERE id = ?`, [classId], function (err) {
+        if (err) return res.status(500).send("Fout bij verwijderen klas.");
+        res.redirect('/Classroom');
+      });
+    });
+  });
+});
+
+
+app.get('/joinClassroom', requireLogin, (req, res) => {
+  res.render('JoinClassroom', {
+    pageTitel: 'Join Classroom',
+    message: ''
+  });
+});
+
+app.post('/joinClassroom', requireLogin, (req, res) => {
+  const userId = req.session.user.id;
+  const { name, code } = req.body;
+
+  // Zoek classroom met gegeven naam + code
+  const query = `SELECT * FROM classes WHERE name = ? AND code = ?`;
+
+  db.get(query, [name, code], (err, classroom) => {
+    if (err) {
+      console.error("❌ Fout bij zoeken classroom:", err);
+      return res.status(500).send("Interne fout.");
+    }
+
+    if (!classroom) {
+      // Geen klas gevonden met die naam + code
+      return res.render('JoinClassroom', {
+        pageTitel: 'Join Classroom',
+        message: 'Geen classroom gevonden met deze naam en code.',
+        name,
+        code
+      });
+    }
+
+    // Check of gebruiker al in die klas zit
+    const checkUserInClass = `SELECT * FROM class_users WHERE classId = ? AND userId = ?`;
+
+    db.get(checkUserInClass, [classroom.id, userId], (err, row) => {
+      if (err) {
+        console.error("❌ Fout bij checken klaslid:", err);
+        return res.status(500).send("Interne fout.");
+      }
+
+      if (row) {
+        // Gebruiker zit al in de klas
+        return res.redirect('/Classroom'); // of een melding tonen
+      }
+
+      // Voeg gebruiker toe aan klas
+      const insertUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
+
+      db.run(insertUser, [classroom.id, userId], (err) => {
+        if (err) {
+          console.error("❌ Fout bij toevoegen aan klas:", err);
+          return res.status(500).send("Interne fout.");
+        }
+
+        res.redirect('/Classroom');
+      });
+    });
+  });
+});
+
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
