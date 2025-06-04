@@ -6,12 +6,6 @@ body {
 }
 
 /* Global Headings */
-h1 {
-    color: #d9b9ff;
-    margin-bottom: 20px;
-    margin-top: 30px; /* Adjust as needed */
-    margin-left: 40px; /* Align with the start of the grid */
-}
 
 h2 {
     color: #d9b9ff;
