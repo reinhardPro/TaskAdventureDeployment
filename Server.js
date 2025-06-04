@@ -655,6 +655,16 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const user = req.session.user;
 
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
+
+  if (!passwordRegex.test(newPassword)) {
+    req.session.alert = {
+      type: 'error',
+      message: 'Password must be at least 6 characters long and include one uppercase letter, one lowercase letter, and one special character.'
+    };
+    return res.redirect('/Settings');
+  }
+
   findUser(user.username, (err, dbUser) => {
     if (err || !dbUser) {
       req.session.alert = { type: 'error', message: 'User not found' };
