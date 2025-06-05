@@ -505,3 +505,8 @@ task-list {
         font-size: 14px;
     }
 }
+
+.task-card,
+.task-details {
+  transition: opacity 2s ease;
+}

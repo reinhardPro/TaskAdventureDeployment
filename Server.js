@@ -308,9 +308,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
               (err) => {
                 if (err) console.error('Fout bij updaten van stats:', err);
 
-                db.run(
-                  'UPDATE tasks SET completed = 1 WHERE id = ?',
-                  [taskId],
+                db.run('UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?', [taskId],
                   function (err) {
                     if (err) return res.status(500).send('Taak voltooien faalde');
 
@@ -379,6 +377,7 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
         FROM tasks
         JOIN characters ON tasks.characterId = characters.id
         WHERE tasks.characterId IN (${placeholders})
+        AND tasks.completed == 0
         `,
         characterIds,
         (err, tasks) => {
@@ -1021,11 +1020,16 @@ app.get('/Classroom', requireLogin, (req, res) => {
 
     const memberQuery = `
       SELECT cu.classId, u.id AS userId, u.username, ch.name AS characterName, ch.level, ch.xp
-      FROM class_users cu
-      JOIN users u ON u.id = cu.userId
-      LEFT JOIN characters ch ON ch.userId = u.id
-      WHERE cu.classId IN (${classIds.map(() => '?').join(',')})
-      ORDER BY cu.classId, u.username
+  FROM class_users cu
+  JOIN users u ON u.id = cu.userId
+  LEFT JOIN (
+    SELECT * FROM characters
+    WHERE id IN (
+      SELECT MAX(id) FROM characters GROUP BY userId
+    )
+  ) ch ON ch.userId = u.id
+  WHERE cu.classId IN (${classIds.map(() => '?').join(',')})
+  ORDER BY cu.classId, u.username
     `;
 
     db.all(memberQuery, classIds, (err, members) => {
