@@ -1,14 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   const acceptButtons = document.querySelectorAll('.accept-button');
 
-  // Start countdown for all timers already shown on page load
-  document.querySelectorAll('.timer').forEach(timerDiv => {
-    const dueDateStr = timerDiv.getAttribute('data-due-date');
-    if (timerDiv.style.display !== 'none') {
-      startTimer(timerDiv, dueDateStr);
-    }
-  });
-
   acceptButtons.forEach(button => {
     button.addEventListener('click', async function () {
       const taskItem = button.closest('.task-item');
@@ -25,21 +17,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!response.ok) throw new Error('Failed to accept task');
 
-        // Hide ONLY accept button
         const acceptButton = taskItem.querySelector('.accept-button');
         if (acceptButton) acceptButton.style.display = 'none';
 
-        // Update status to "In Progress"
         const statusSpan = [...taskItem.querySelectorAll('span')]
           .find(span => span.textContent.trim().startsWith('Status:'));
         if (statusSpan) {
           statusSpan.innerHTML = 'Status: In Progress';
         }
 
-        // Show and start timer
         const timerDiv = taskItem.querySelector('.timer');
         timerDiv.style.display = 'block';
-        startTimer(timerDiv, dueDateStr);
+
+        taskItem.dataset.startTime = Date.now();
+        taskItem.dataset.taskId = taskId;
+
+        startTimer(taskItem, timerDiv, dueDateStr);
 
       } catch (err) {
         alert('Error: ' + err.message);
@@ -47,9 +40,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  function startTimer(timerDiv, dueDateStr) {
+  document.querySelectorAll('.task-item .timer').forEach(timerDiv => {
+    const taskItem = timerDiv.closest('.task-item');
+    const dueDateStr = timerDiv.getAttribute('data-due-date');
+    startTimer(taskItem, timerDiv, dueDateStr);
+  });
+
+  function startTimer(taskItem, timerDiv, dueDateStr) {
     const dueDate = new Date(dueDateStr);
-    dueDate.setHours(23, 59, 59, 999); // Extend to end of day
+    dueDate.setHours(23, 59, 59, 999);
 
     const updateTimer = () => {
       const now = new Date();
@@ -58,6 +57,25 @@ document.addEventListener('DOMContentLoaded', function () {
       if (diff <= 0) {
         timerDiv.textContent = "Time's up!";
         clearInterval(intervalId);
+
+        const startTime = parseInt(taskItem.dataset.startTime, 10);
+        const endTime = Date.now();
+        const minutesSpent = Math.floor((endTime - startTime) / (1000 * 60)) || 1;
+        const taskId = taskItem.dataset.taskId;
+
+        fetch('/task/fail', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            taskId: taskId,
+            minutesSpent: minutesSpent
+          })
+        }).catch(err => {
+          console.error('Fout bij versturen fail info:', err);
+        });
+
         return;
       }
 
