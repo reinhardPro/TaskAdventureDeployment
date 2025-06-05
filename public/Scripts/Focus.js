@@ -12,7 +12,6 @@ let isPaused = false;
  * Als de timer gepauzeerd is en er nog tijd over is, hervat hij zonder opnieuw te starten.
  */
 function startTimer() {
-    // Hervat timer als deze gepauzeerd was
     if (totalSeconds > 0 && isPaused) {
         isPaused = false;
         return;
@@ -21,7 +20,6 @@ function startTimer() {
     const minutesInput = document.getElementById("minutesInput").value;
     const minutes = parseInt(minutesInput);
 
-    // Voorkom starten met lege of ongeldige invoer
     if (!minutes || minutes < 5 || minutes > 120) {
         alert("Voer een tijd in tussen 5 en 120 minuten.");
         return;
@@ -35,23 +33,23 @@ function startTimer() {
     document.querySelector(".footer").style.visibility = "hidden";
     document.getElementById("minutesInput").style.display = "none";
 
+    // Toggle button visibility
+    document.getElementById("startButton").style.display = "none";
+    document.getElementById("pauseButton").style.display = "inline-block";
+    document.getElementById("stopButton").style.display = "inline-block";
+
     updateTimerDisplay();
 
-    // Stop vorige interval als die bestaat
     if (timerInterval) clearInterval(timerInterval);
 
-    // Start een nieuwe interval (1 seconde)
     timerInterval = setInterval(() => {
         if (!isPaused) {
             totalSeconds--;
             updateTimerDisplay();
-
-            // Stop timer bij nul
             if (totalSeconds <= 0) clearInterval(timerInterval);
         }
     }, 1000);
 
-    // Activeer fullscreenmodus indien nog niet actief
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
             console.warn("Fullscreen mislukt:", err);
@@ -72,18 +70,20 @@ function pauseTimer() {
 function stopTimer() {
     clearInterval(timerInterval);
 
-    // Herstel zichtbaarheid van elementen
     document.querySelector(".header").style.visibility = "visible";
     document.querySelector(".footer").style.visibility = "visible";
     document.querySelector(".timer-controls").style.display = "flex";
     document.getElementById("minutesInput").style.display = "inline-block";
 
-    // Reset de timer en interface
     document.getElementById("timerDisplay").textContent = "00:00";
     totalSeconds = 0;
     isPaused = false;
 
-    // Verlaat fullscreenmodus indien actief
+    // Show start, hide pause & stop
+    document.getElementById("startButton").style.display = "inline-block";
+    document.getElementById("pauseButton").style.display = "none";
+    document.getElementById("stopButton").style.display = "none";
+
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }

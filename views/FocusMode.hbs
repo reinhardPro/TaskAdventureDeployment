@@ -5,12 +5,13 @@
 </head>
 <body>
     <div class="container">
-        <div class="timer-controls">
-<input type="number" id="minutesInput" placeholder="Minuten" min="5" max="120">
-            <button onclick="startTimer()">Start</button>
-            <button onclick="pauseTimer()">Pause</button>
-            <button onclick="stopTimer()">Stop</button>
-        </div>
+<div class="timer-controls">
+    <input type="number" id="minutesInput" placeholder="Minuten" min="5" max="120">
+    
+    <button id="startButton" onclick="startTimer()">Start</button>
+    <button id="pauseButton" onclick="pauseTimer()" style="display: none;">Pause</button>
+    <button id="stopButton" onclick="stopTimer()" style="display: none;">Stop</button>
+</div>
 
         <div id="timerDisplay" class="timer-display">00:00</div>
     </div>
