@@ -1,0 +1,19 @@
+<head>
+    <title>Friends</title>
+    <link rel="stylesheet" href="/styles/Friends.css">
+</head>
+<body>
+    <div class="container">
+    <div class="scroll-box">
+        <div class="scroll-content">
+            {{#each potentialFriends}}
+            <div class="item">
+                <p class="name">{{this.username}}</p>
+                <p class="experience">email: {{this.email}}</p>
+                <button>Add Friend</button>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
+</body>

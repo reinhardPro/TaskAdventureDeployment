@@ -46,8 +46,8 @@ function requireAdmin(req, res, next) {
   });
 }
 
-  const app = express();
-  const port = 3000;
+const app = express();
+const port = 3000;
 
 app.engine('hbs', exphbs.engine({
   extname: 'hbs',
@@ -66,7 +66,7 @@ app.engine('hbs', exphbs.engine({
       // Find the character by the given ID
       return characters.find(character => character.id == id);
     },
-// NEW HELPER: Get character image based on level
+    // NEW HELPER: Get character image based on level
     getCharacterImage: (character, characterInfo) => {
       if (!characterInfo) {
         console.warn('getCharacterImage: characterInfo is null or undefined', character);
@@ -129,7 +129,7 @@ app.use((req, res, next) => {
   );
 });
 
-  // Landing Page Route
+// Landing Page Route
 app.get('/', (req, res) => {
   if (req.session && req.session.userId) {
     return res.redirect('/home');
@@ -308,7 +308,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
 //Stats route
 app.get('/Stats', requireLogin, (req, res) => {
   const userId = req.session.user?.id;
-  const username =req.session.user?.username;
+  const username = req.session.user?.username;
   // Fetch stats for the logged-in user
   db.get('SELECT * FROM stats WHERE username = ?', [username], (err, stat) => {
     if (err) {
@@ -316,7 +316,7 @@ app.get('/Stats', requireLogin, (req, res) => {
       return res.status(500).send('Error fetching stats');
     }
     //Render the "Stats" view with stats 
-    res.render('Stats', { stats: stat, pageTitel:'Stats'});
+    res.render('Stats', { stats: stat, pageTitel: 'Stats' });
   });
 });
 
@@ -369,14 +369,14 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 app.post('/Taskmanager', requireLogin, (req, res) => {
   const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-db.run(
-  `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
-  [taskName, taskDescription, taskDeadline, characterId, taskXp],
-  err => {
-    if (err) return res.status(500).send('Error adding task');
-    res.redirect('/Taskmanager');
-  }
-);
+  db.run(
+    `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
+    [taskName, taskDescription, taskDeadline, characterId, taskXp],
+    err => {
+      if (err) return res.status(500).send('Error adding task');
+      res.redirect('/Taskmanager');
+    }
+  );
 });
 
 // Handle task accept
@@ -429,12 +429,12 @@ app.post('/task/delete/:id', requireLogin, (req, res) => {
 
 
 // Login
-app.get('/Login', (req, res) => res.render('Login',{pageTitel:'Login'}));
+app.get('/Login', (req, res) => res.render('Login', { pageTitel: 'Login' }));
 
 app.post('/Login', (req, res) => {
   const { username, password } = req.body;
   findUser(username, (err, user) => {
-    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel:'Login' });
+    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel: 'Login' });
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
@@ -444,7 +444,7 @@ app.post('/Login', (req, res) => {
 });
 
 // Create Account
-app.get('/CreateAccount', (req, res) => res.render('CreateAccount',{pageTitel:'Create Account'}));
+app.get('/CreateAccount', (req, res) => res.render('CreateAccount', { pageTitel: 'Create Account' }));
 
 app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
@@ -561,7 +561,7 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
       }
     });
 
-    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel:'Admin Panel' });
+    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel: 'Admin Panel' });
   });
 });
 
@@ -596,7 +596,7 @@ app.post('/admin/delete-character', requireAdmin, (req, res) => {
 // Finish Task (mark as completed)
 app.post('/admin/finish-task', requireAdmin, (req, res) => {
   const { taskId } = req.body;
-db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
+  db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
     if (err) return res.status(500).send('Error finishing task');
     res.redirect('/AdminPanel');
   });
@@ -639,12 +639,12 @@ app.post('/admin/update-character-xp', (req, res) => {
 
 
 
-  // Focus Mode route
-  app.get('/FocusMode', requireLogin, (req, res) => {
-    res.render('FocusMode', {pageTitel:'Focus Mode'});
-  });
+// Focus Mode route
+app.get('/FocusMode', requireLogin, (req, res) => {
+  res.render('FocusMode', { pageTitel: 'Focus Mode' });
+});
 
-  // Settings route
+// Settings route
 
 // Helper functies
 function getCharacters(userId, callback) {
@@ -675,7 +675,7 @@ function renderSettingsPage(res, user, alert) {
       user,
       characters,
       alert,
-      pageTitel:'Settings'
+      pageTitel: 'Settings'
     });
   });
 }
@@ -792,7 +792,7 @@ app.post('/Settings/removecharacter', requireLogin, (req, res) => {
 
 
   // Bekijkt het aantal characters van de gebruiker
- db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
+  db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
     if (err) {
       req.session.alert = { type: 'error', message: 'Error checking characters' };
       return res.redirect('/Settings');
@@ -804,30 +804,30 @@ app.post('/Settings/removecharacter', requireLogin, (req, res) => {
     }
 
 
-  db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
-    if (err || !character) {
-      req.session.alert = { type: 'error', message: 'Character not found or not yours' };
-      return res.redirect('/Settings');
-    }
-
-    db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
-      if (err) {
-        req.session.alert = { type: 'error', message: 'Error deleting tasks' };
+    db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
+      if (err || !character) {
+        req.session.alert = { type: 'error', message: 'Character not found or not yours' };
         return res.redirect('/Settings');
       }
 
-      db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+      db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
         if (err) {
-          req.session.alert = { type: 'error', message: 'Error deleting character' };
+          req.session.alert = { type: 'error', message: 'Error deleting tasks' };
           return res.redirect('/Settings');
         }
 
-        req.session.alert = { type: 'success', message: 'Character removed successfully' };
-        res.redirect('/Settings');
+        db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+          if (err) {
+            req.session.alert = { type: 'error', message: 'Error deleting character' };
+            return res.redirect('/Settings');
+          }
+
+          req.session.alert = { type: 'success', message: 'Character removed successfully' };
+          res.redirect('/Settings');
+        });
       });
     });
   });
-});
 });
 
 
@@ -874,7 +874,7 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
 // For example, you can put it near your other app.get routes like '/Login' or '/CreateAccount'.
 
 // Character Creation GET route (to display the character creation form)
-app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', {pageTitel:'Character Creation'}));
+app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', { pageTitel: 'Character Creation' }));
 
 // Character Creation POST (IMPORTANT CHANGES HERE)
 app.post('/CharacterCreation', (req, res) => {
@@ -1013,11 +1013,11 @@ app.get('/Classroom', requireLogin, (req, res) => {
     }
 
     if (classes.length === 0) {
-  return res.render('CreateClassroom', {
-    pageTitel: 'Nieuwe Klas Aanmaken',
-    message: 'Je zit nog niet in een klas. Maak er een aan!'
-  });
-}
+      return res.render('CreateClassroom', {
+        pageTitel: 'Nieuwe Klas Aanmaken',
+        message: 'Je zit nog niet in een klas. Maak er een aan!'
+      });
+    }
 
     // Stap 2: Voor elke klas de leden ophalen met hun personages
     const classIds = classes.map(c => c.classId);
@@ -1044,27 +1044,27 @@ app.get('/Classroom', requireLogin, (req, res) => {
 
       // Groepeer per klas
       const classData = classes.map(klas => {
-    return {
-      id: klas.classId,
-      name: klas.className,
-      code: klas.code,
-      teacher: klas.teacherName,
-      isTeacher: klas.teacherId === userId, // 👈 toegevoegd veld
-      members: members
-        .filter(m => m.classId === klas.classId)
-        .map(m => ({
-          username: m.username,
-          character: m.characterName,
-          level: m.level,
-          xp: m.xp
-        }))
-    };
-  });
+        return {
+          id: klas.classId,
+          name: klas.className,
+          code: klas.code,
+          teacher: klas.teacherName,
+          isTeacher: klas.teacherId === userId, // 👈 toegevoegd veld
+          members: members
+            .filter(m => m.classId === klas.classId)
+            .map(m => ({
+              username: m.username,
+              character: m.characterName,
+              level: m.level,
+              xp: m.xp
+            }))
+        };
+      });
 
-  res.render('Classroom', {
-    pageTitel: 'Mijn Classroom',
-    classes: classData
-  });
+      res.render('Classroom', {
+        pageTitel: 'Mijn Classroom',
+        classes: classData
+      });
     });
   });
 });
@@ -1094,7 +1094,7 @@ app.post('/Classroom', requireLogin, (req, res) => {
     // ✅ Naam bestaat niet, klas toevoegen
     const insertQuery = `INSERT INTO classes (name, code, teacherId) VALUES (?, ?, ?)`;
 
-    db.run(insertQuery, [name, code, userId], function(err) {
+    db.run(insertQuery, [name, code, userId], function (err) {
       if (err) {
         console.error("❌ Fout bij toevoegen van klas:", err);
         return res.status(500).send("Kon klas niet toevoegen.");
@@ -1195,6 +1195,23 @@ app.post('/joinClassroom', requireLogin, (req, res) => {
   });
 });
 
+//Friends
+app.get('/Friends', requireLogin, (req, res) => {
+  db.all(`
+            SELECT *
+            FROM users
+            ORDER BY users.username ASC;
+    `, [], (err, rows) => {
+    if (err) {
+      console.error("Query error:", err.message);
+      return res.status(500).send("Database error");
+    }
+
+    const potentialFriends = rows.slice(0);
+    
+    res.render('Friends', { potentialFriends, pageTitel: 'Friends' });
+  });
+});
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
