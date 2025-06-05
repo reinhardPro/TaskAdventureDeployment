@@ -20,15 +20,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const acceptButton = taskItem.querySelector('.accept-button');
         if (acceptButton) acceptButton.style.display = 'none';
 
+        const statusSpan = [...taskItem.querySelectorAll('span')]
+          .find(span => span.textContent.trim().startsWith('Status:'));
+        if (statusSpan) {
+          statusSpan.innerHTML = 'Status: In Progress';
+        }
+
         const timerDiv = taskItem.querySelector('.timer');
-        const dueDate = new Date(dueDateStr);
         timerDiv.style.display = 'block';
 
-        // ⏱️ Sla starttijd op in dataset (ms sinds epoch)
         taskItem.dataset.startTime = Date.now();
         taskItem.dataset.taskId = taskId;
 
-        startTimer(taskItem, timerDiv, dueDate);
+        startTimer(taskItem, timerDiv, dueDateStr);
 
       } catch (err) {
         alert('Error: ' + err.message);
@@ -36,18 +40,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ⏱️ Voor timers die al actief zijn bij paginalaad
   document.querySelectorAll('.task-item .timer').forEach(timerDiv => {
     const taskItem = timerDiv.closest('.task-item');
     const dueDateStr = timerDiv.getAttribute('data-due-date');
-    const dueDate = new Date(dueDateStr);
-    startTimer(taskItem, timerDiv, dueDate);
+    startTimer(taskItem, timerDiv, dueDateStr);
   });
 
-  // 🔁 Timerfunctie per taak
   function startTimer(taskItem, timerDiv, dueDateStr) {
     const dueDate = new Date(dueDateStr);
-    dueDate.setHours(23, 59, 59, 999); // Stel deadline in op eind van dag
+    dueDate.setHours(23, 59, 59, 999);
 
     const updateTimer = () => {
       const now = new Date();
@@ -57,13 +58,11 @@ document.addEventListener('DOMContentLoaded', function () {
         timerDiv.textContent = "Time's up!";
         clearInterval(intervalId);
 
-        // ✅ Bereken gespendeerde tijd
         const startTime = parseInt(taskItem.dataset.startTime, 10);
         const endTime = Date.now();
         const minutesSpent = Math.floor((endTime - startTime) / (1000 * 60)) || 1;
         const taskId = taskItem.dataset.taskId;
 
-        // 🔁 Verstuur naar server dat de taak gefaald is + tijd gespendeerd
         fetch('/task/fail', {
           method: 'POST',
           headers: {
@@ -73,8 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
             taskId: taskId,
             minutesSpent: minutesSpent
           })
-        }).then(res => {
-          if (!res.ok) console.error('Kon mislukt posten');
         }).catch(err => {
           console.error('Fout bij versturen fail info:', err);
         });
