@@ -46,13 +46,13 @@ console.log("home.js is loaded");
     document.addEventListener("DOMContentLoaded", function () {
       const maxXP = 100;
     
-      function updateXPBar(xp, level) {
-        const percent = (xp / maxXP) * 100;
-        document.getElementById('xpFill').style.width = ${percent}%;
-        document.getElementById('xpInfo').textContent = XP: ${xp} / ${maxXP};
-        document.getElementById('level').textContent = Level: ${level};
-      }
-    
+    function updateXPBar(xp, level) {
+      const percent = (xp / maxXP) * 100;
+      document.getElementById('xpFill').style.width = `${percent}%`;
+      document.getElementById('xpInfo').textContent = `XP: ${xp} / ${maxXP}`;
+      document.getElementById('level').textContent = `Level: ${level}`;
+    }
+
       function gainXP(amount) {
         fetch('/api/gain-xp', {
           method: 'POST',
@@ -65,7 +65,7 @@ console.log("home.js is loaded");
         .then(data => {
           updateXPBar(data.xp, data.level);
           if (data.leveledUp) {
-            alert(Level Up! Je bent nu op level ${data.level});
+            alert("Level Up! Je bent nu op level ${data.level}");
           }
         });
       }
