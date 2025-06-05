@@ -349,7 +349,9 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 
       db.all(
         `
-        SELECT tasks.*, characters.name AS characterName
+        SELECT tasks.id, tasks.title, tasks.description, tasks.dueDate,
+       tasks.completed, tasks.Pending AS Pending, tasks.xp,
+       characters.name AS characterName
         FROM tasks
         JOIN characters ON tasks.characterId = characters.id
         WHERE tasks.characterId IN (${placeholders})
@@ -370,7 +372,7 @@ app.post('/Taskmanager', requireLogin, (req, res) => {
   const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
 db.run(
-  `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
+  `INSERT INTO tasks (title, description, dueDate, completed, pending, characterId, xp) VALUES (?, ?, ?, 0, 0, ?, ?)`,
   [taskName, taskDescription, taskDeadline, characterId, taskXp],
   err => {
     if (err) return res.status(500).send('Error adding task');
@@ -392,8 +394,8 @@ app.post('/task/accept/:id', requireLogin, (req, res) => {
         SELECT id FROM characters WHERE userId = ?
       )
   `, [taskId, userId], err => {
-    if (err) return res.status(500).send('Error accepting task');
-    res.redirect('/Taskmanager');
+    if (err) return res.status(500).json({ error: 'Error accepting task' });
+    res.json({ success: true });
   });
 });
 

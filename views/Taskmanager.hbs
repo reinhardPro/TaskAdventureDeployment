@@ -21,13 +21,23 @@
                 <span>Due Date: {{dueDate}}</span>
                 <span>Status: {{#if completed}} Completed {{else}} Pending {{/if}}</span>
                 <span>XP: {{xp}}</span>
+               <div 
+  class="timer" 
+  data-due-date="{{dueDate}}" 
+  style="display: {{#if (eq Pending 1)}}block{{else}}none{{/if}};">
+</div>
               </div>
 
               <div class="task-actions">
                 {{#unless Pending}}
-                  <form action="/task/accept/{{id}}" method="POST">
-                    <button type="submit" class="button accept-button">Accept</button>
-                  </form>
+
+                  <button 
+                type="button" 
+                class="button accept-button"
+                data-task-id="{{id}}"
+                data-due-date="{{dueDate}}">
+                Accept
+                </button>
                 {{/unless}}
 
                 <form action="/task/delete/{{id}}" method="POST">
@@ -82,8 +92,7 @@
       </form>
     </div>
   </div>
-
-  <script src="/scripts/TaskManger.js"></script>
+  <script src="/scripts/TaskManager.js"></script>
   <script>
     function verbergKnop(button) {
       button.style.display = 'none';
