@@ -17,14 +17,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!response.ok) throw new Error('Failed to accept task');
 
-const acceptButton = taskItem.querySelector('.accept-button');
-if (acceptButton) acceptButton.style.display = 'none';
+        const acceptButton = taskItem.querySelector('.accept-button');
+        if (acceptButton) acceptButton.style.display = 'none';
 
         const timerDiv = taskItem.querySelector('.timer');
         const dueDate = new Date(dueDateStr);
         timerDiv.style.display = 'block';
 
-        startTimer(timerDiv, dueDate);
+        // ⏱️ Sla starttijd op in dataset (ms sinds epoch)
+        taskItem.dataset.startTime = Date.now();
+        taskItem.dataset.taskId = taskId;
+
+        startTimer(taskItem, timerDiv, dueDate);
 
       } catch (err) {
         alert('Error: ' + err.message);
@@ -32,37 +36,61 @@ if (acceptButton) acceptButton.style.display = 'none';
     });
   });
 
-  
+  // ⏱️ Voor timers die al actief zijn bij paginalaad
   document.querySelectorAll('.task-item .timer').forEach(timerDiv => {
+    const taskItem = timerDiv.closest('.task-item');
     const dueDateStr = timerDiv.getAttribute('data-due-date');
     const dueDate = new Date(dueDateStr);
-    startTimer(timerDiv, dueDate);
+    startTimer(taskItem, timerDiv, dueDate);
   });
 
-function startTimer(timerDiv, dueDateStr) {
-  const dueDate = new Date(dueDateStr);
-  dueDate.setHours(23, 59, 59, 999); // set to end of day
+  // 🔁 Timerfunctie per taak
+  function startTimer(taskItem, timerDiv, dueDateStr) {
+    const dueDate = new Date(dueDateStr);
+    dueDate.setHours(23, 59, 59, 999); // Stel deadline in op eind van dag
 
-  const updateTimer = () => {
-    const now = new Date();
-    const diff = dueDate - now;
+    const updateTimer = () => {
+      const now = new Date();
+      const diff = dueDate - now;
 
-    if (diff <= 0) {
-      timerDiv.textContent = "Time's up!";
-      clearInterval(intervalId);
-      return;
-    }
+      if (diff <= 0) {
+        timerDiv.textContent = "Time's up!";
+        clearInterval(intervalId);
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
+        // ✅ Bereken gespendeerde tijd
+        const startTime = parseInt(taskItem.dataset.startTime, 10);
+        const endTime = Date.now();
+        const minutesSpent = Math.floor((endTime - startTime) / (1000 * 60)) || 1;
+        const taskId = taskItem.dataset.taskId;
 
-    timerDiv.textContent = `Time remaining: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-  };
+        // 🔁 Verstuur naar server dat de taak gefaald is + tijd gespendeerd
+        fetch('/task/fail', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            taskId: taskId,
+            minutesSpent: minutesSpent
+          })
+        }).then(res => {
+          if (!res.ok) console.error('Kon mislukt posten');
+        }).catch(err => {
+          console.error('Fout bij versturen fail info:', err);
+        });
 
-  updateTimer();
-  const intervalId = setInterval(updateTimer, 1000);
-}
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      timerDiv.textContent = `Time remaining: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    };
+
+    updateTimer();
+    const intervalId = setInterval(updateTimer, 1000);
+  }
 });
-
