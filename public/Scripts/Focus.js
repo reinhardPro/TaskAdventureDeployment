@@ -22,7 +22,10 @@ function startTimer() {
     const minutes = parseInt(minutesInput);
 
     // Voorkom starten met lege of ongeldige invoer
-    if (!minutes || minutes <= 0) return;
+    if (!minutes || minutes < 5 || minutes > 120) {
+        alert("Voer een tijd in tussen 5 en 120 minuten.");
+        return;
+    }
 
     totalSeconds = minutes * 60;
     isPaused = false;
