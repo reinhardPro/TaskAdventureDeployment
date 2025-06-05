@@ -73,3 +73,8 @@ function confirmDeleteAccount(event) {
     event.preventDefault();
   }
 }
+document.querySelectorAll('.switch').forEach((switchElem) => {
+  switchElem.addEventListener('click', function (e) {
+    e.stopPropagation(); // voorkomt openen van de li/dropdown
+  });
+});
