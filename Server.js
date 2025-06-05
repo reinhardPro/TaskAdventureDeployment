@@ -202,8 +202,6 @@ app.get('/home', requireLogin, (req, res) => {
   });
 });
 
-
-
 // XP gain route (No direct changes needed here, as it operates on character XP and level)
 app.post('/api/gain-xp', (req, res) => {
   const userId = req.session.user?.id;
@@ -277,7 +275,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
             const updatedTaskCompleted = (stats.taskCompleted || 0) + 1;
             const updatedXp = (stats.totalXpGained || 0) + taskXp;
 
-            // ✅ Bepaal of deze taak de meeste XP tot nu toe heeft opgeleverd
+            // Determen if this task gave the most xp
             const updatedMostXp = Math.max(taskXp, stats.mostXpForOneTask || 0);
 
             db.run(
