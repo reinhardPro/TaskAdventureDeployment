@@ -1,28 +1,29 @@
-// Log om te bevestigen dat het script geladen is
+// Meldt in de console dat het script geladen is
 console.log("home.js is loaded");
 
-// ================================
-// 1. Toggle Task Details on Click
-// ================================
+// ==============================
+// Toggle taakdetails tonen/verbergen
+// ==============================
 document.addEventListener("DOMContentLoaded", function () {
   const taskCards = document.querySelectorAll(".task-card");
 
   taskCards.forEach(card => {
-    const title = card.querySelector(".task-title");
-    const expand = card.querySelector(".task-expand");
-    const details = card.nextElementSibling; // De details-container staat direct na de task-card in de DOM
+    const title = card.querySelector(".task-title");     // Titel van de taak (optioneel gebruikt)
+    const expand = card.querySelector(".task-expand");   // Expand knop (optioneel gebruikt)
+    const details = card.nextElementSibling;             // Verondersteld: .task-details volgt direct na de kaart
 
+    // Functie voor tonen/verbergen van details
     function toggleDetails() {
       if (details && details.classList.contains("task-details")) {
         const isShown = details.classList.contains("show");
 
         if (isShown) {
-          // Verberg de details
+          // Verberg details
           details.classList.remove("show");
           details.classList.add("hidden");
           card.classList.remove("open");
         } else {
-          // Toon de details
+          // Toon details
           details.classList.add("show");
           details.classList.remove("hidden");
           card.classList.add("open");
@@ -30,40 +31,38 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Toggle details bij klikken op de kaart
+    // Activeer toggle wanneer kaart wordt aangeklikt
     card.addEventListener("click", toggleDetails);
   });
 });
 
-// ======================================
-// 2. Toggle Active State (Gender Select)
-// ======================================
+// ==============================
+// Geslacht selecteren via knoppen
+// ==============================
 document.addEventListener("DOMContentLoaded", () => {
   const btnMale = document.getElementById("btnMale");
   const btnFemale = document.getElementById("btnFemale");
 
-  // Activeer mannelijke knop
+  // Bij klikken op man
   btnMale.addEventListener("click", () => {
     btnMale.classList.add("active");
     btnFemale.classList.remove("active");
   });
 
-  // Activeer vrouwelijke knop
+  // Bij klikken op vrouw
   btnFemale.addEventListener("click", () => {
     btnFemale.classList.add("active");
     btnMale.classList.remove("active");
   });
 });
 
-// =============================
-// 3. XP Systeem en Leveling Up
-// =============================
+// ==============================
+// XP-systeem voor gamification
+// ==============================
 document.addEventListener("DOMContentLoaded", function () {
-  const maxXP = 100; // Max XP nodig per level
+  const maxXP = 100; // Maximale XP voordat je levelt
 
-  /**
-   * Update de XP-balk visueel op basis van huidige XP en level
-   */
+  // Update voortgangsbalk en leveltekst
   function updateXPBar(xp, level) {
     const percent = (xp / maxXP) * 100;
     document.getElementById('xpFill').style.width = `${percent}%`;
@@ -71,62 +70,69 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('level').textContent = `Level: ${level}`;
   }
 
-  /**
-   * Stuur een XP-vermeerderingsverzoek naar de backend en verwerk het resultaat
-   */
+  // Stuur XP-waarde naar server en verwerk respons
   function gainXP(amount) {
     fetch('/api/gain-xp', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ xpGained: amount })
     })
     .then(res => res.json())
     .then(data => {
       updateXPBar(data.xp, data.level);
 
-      // Toon alert als gebruiker een nieuw level bereikt
+      // Toon melding bij level-up
       if (data.leveledUp) {
         alert(`Level Up! Je bent nu op level ${data.level}`);
       }
     });
   }
 
-  // Knoppen om XP toe te voegen
-  document.getElementById("gainXp1").addEventListener("click", () => gainXP(1));
-  document.getElementById("gainXp5").addEventListener("click", () => gainXP(5));
-  document.getElementById("gainXp10").addEventListener("click", () => gainXP(10));
+  // XP toevoegen bij klikken op knoppen
+  document.getElementById("gainXp1").addEventListener("click", function () {
+    gainXP(1);
+  });
 
-  // Initialiseer XP-balk op basis van bestaande gegevens in HTML
+  document.getElementById("gainXp5").addEventListener("click", function () {
+    gainXP(5);
+  });
+
+  document.getElementById("gainXp10").addEventListener("click", function () {
+    gainXP(10);
+  });
+
+  // Start met initiële XP en level (uit HTML geladen via data-attributen)
   const initialXP = parseInt(document.getElementById('xpInfo').dataset.xp, 10);
   const initialLevel = parseInt(document.getElementById('level').dataset.level, 10);
   updateXPBar(initialXP, initialLevel);
 });
 
-// =============================================
-// 4. Taken visueel verwijderen na voltooien
-// =============================================
+// ==============================
+// Taken visueel verwijderen bij voltooiing
+// ==============================
 document.addEventListener("DOMContentLoaded", function () {
   const completeButtons = document.querySelectorAll(".complete-btn");
 
   completeButtons.forEach(button => {
     button.addEventListener("click", function (event) {
-      event.stopPropagation(); // Voorkom het togglen van taakdetails bij klik
+      event.stopPropagation(); // Voorkom dat het klikken details togglet
 
-      // Zoek de bijbehorende taak en details-sectie
-      const taskDetails = button.closest(".task-details");
-      const taskCard = taskDetails?.previousElementSibling;
+      const taskDetails = button.closest(".task-details");           // Vind de details-container
+      const taskCard = taskDetails?.previousElementSibling;          // Bijbehorende taakkaart
 
-      if (!taskCard) return; // Safety check
+      if (!taskCard) return;
 
-      // Visueel effect: vervagen voor verwijderen
+      // Geef visueel effect (vervagen)
       taskCard.style.opacity = "0.5";
       taskDetails.style.opacity = "0.5";
 
-      // Verwijder beide elementen na korte delay
+      // Verwijder na 2 seconden beide elementen uit de DOM
       setTimeout(() => {
         taskDetails.remove();
         taskCard.remove();
-      }, 2000); // 2 seconden animatie
+      }, 2000);
     });
   });
 });
