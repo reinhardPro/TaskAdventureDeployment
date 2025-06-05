@@ -377,7 +377,7 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
         FROM tasks
         JOIN characters ON tasks.characterId = characters.id
         WHERE tasks.characterId IN (${placeholders})
-        AND tasks.completed = 0
+        AND tasks.completed == 0
         `,
         characterIds,
         (err, tasks) => {
