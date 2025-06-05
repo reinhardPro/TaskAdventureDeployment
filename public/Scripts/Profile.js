@@ -1,18 +1,23 @@
-document.getElementById('profileForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
+// Voeg een event listener toe voor het verzenden van het profielwijzigingsformulier
+document.getElementById('profileForm').addEventListener('submit', async function (e) {
+  e.preventDefault(); // Voorkom standaard formuliergedrag (pagina herladen)
 
-  const username = document.getElementById('username').value;
-  const email = document.getElementById('email').value;
+  // Haal de huidige inputwaarden op
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
 
-const originalUsername = document.getElementById('username').defaultValue;
-const originalEmail = document.getElementById('email').defaultValue;
+  // Haal de originele waarden op (zoals die waren bij het laden van de pagina)
+  const originalUsername = document.getElementById('username').defaultValue;
+  const originalEmail = document.getElementById('email').defaultValue;
 
-if (username === originalUsername && email === originalEmail) {
-  Swal.fire('No changes detected.', 'Please adjust your details to save.', 'warning');
-  return;
-}
+  // Controleer of er überhaupt iets gewijzigd is
+  if (username === originalUsername && email === originalEmail) {
+    Swal.fire('No changes detected.', 'Please adjust your details to save.', 'warning');
+    return; // Stop hier: geen update nodig
+  }
 
   try {
+    // Verstuur de gewijzigde gegevens naar de server
     const response = await fetch('/profile/update', {
       method: 'POST',
       headers: {
@@ -21,16 +26,22 @@ if (username === originalUsername && email === originalEmail) {
       body: JSON.stringify({ username, email })
     });
 
+    // Ontvang en verwerk het antwoord van de server
     const result = await response.json();
 
+    // Als de update succesvol was
     if (result.success) {
       Swal.fire('Profile updated!', '', 'success').then(() => {
-    window.location.href = '/home';
+        // Navigeer na bevestiging terug naar homepagina
+        window.location.href = '/home';
       });
     } else {
-      Swal.fire('Fout', result.message, 'error');
+      // Server gaf een fout terug (bijv. validatie)
+      Swal.fire('Fout', result.message || 'Er ging iets mis bij het bijwerken.', 'error');
     }
+
   } catch (err) {
+    // Fout bij het versturen of verbinden (bijv. netwerkprobleem)
     Swal.fire('Fout bij verbinding met server.', '', 'error');
   }
 });
