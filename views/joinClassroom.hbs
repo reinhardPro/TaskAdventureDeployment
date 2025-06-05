@@ -2,7 +2,7 @@
 <h1>{{pageTitel}}</h1>
 
 {{#if message}}
-<p style="color: red;">{{message}}</p>
+<p class="message-status {{#ifEquals message 'Je bent succesvol lid geworden van de klas!'}}success{{else}}error{{/ifEquals}}">{{message}}</p>
 {{/if}}
 
 <form action="/joinClassroom" method="POST" class="classroom-form">

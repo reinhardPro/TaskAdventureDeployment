@@ -127,11 +127,11 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      code TEXT NOT NULL,
-      teacherId INTEGER NOT NULL,
-      maxStudents INTEGER DEFAULT 40,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (teacherId) REFERENCES users(id)
+      code TEXT NOT NULL UNIQUE,
+      characterId INTEGER,
+      user_id INTEGER NOT NULL,
+      FOREIGN KEY (characterId ) REFERENCES characters(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
 
