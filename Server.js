@@ -143,7 +143,8 @@ app.get('/', (req, res) => {
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
 
-   // IMPORTANT CHANGE: Join with character_info to get all image paths
+  const xpThreshold = 100; // XP required per level
+
   db.all(`
     SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
     FROM characters c
@@ -166,11 +167,8 @@ app.get('/home', requireLogin, (req, res) => {
       });
     }
 
-    // Make sure characterId is valid
     const characterId = parseInt(req.query.characterId) || characters[0].id;
     const selectedCharacter = characters.find(c => c.id === characterId);
-
-  console.log('Selected Character:', selectedCharacter);
 
     if (!selectedCharacter) {
       return res.status(404).send('Character not found');
@@ -179,20 +177,30 @@ app.get('/home', requireLogin, (req, res) => {
     db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
+      // Calculate XP progress inside the current level
+      const totalXp = selectedCharacter.xp;
+      const level = selectedCharacter.level;
+      const xpForPreviousLevels = (level - 1) * xpThreshold;
+      const xpIntoCurrentLevel = totalXp - xpForPreviousLevels;
+      const xpToNextLevel = xpThreshold;
+      const xpPercentage = Math.min(100, (xpIntoCurrentLevel / xpToNextLevel) * 100);
+
       res.render('Home', {
         user: req.session.user,
-        characters, // characters now include character_info fields
+        characters,
         tasks,
         noCharacter: false,
         selectedCharacterId: characterId,
-        xp: selectedCharacter.xp,
-        level: selectedCharacter.level,
-        selectedCharacter: selectedCharacter, // Pass the full selectedCharacter object
+        xp: totalXp,
+        level,
+        xpIntoCurrentLevel,
+        xpToNextLevel,
+        xpPercentage,
+        selectedCharacter
       });
     });
   });
 });
-
 
 // XP gain route (No direct changes needed here, as it operates on character XP and level)
 app.post('/api/gain-xp', (req, res) => {
@@ -201,64 +209,32 @@ app.post('/api/gain-xp', (req, res) => {
   const xpGained = parseInt(req.body.xpGained);
 
   if (!userId || isNaN(characterId) || isNaN(xpGained)) {
-    console.log("Invalid input", { userId, characterId, xpGained });
     return res.status(400).json({ error: 'Invalid input' });
   }
 
-  console.log(`User ${userId} gaining ${xpGained} XP for character ${characterId}`);
-
   db.get(
-    'SELECT xp, level FROM characters WHERE id = ? AND userId = ?',
+    'SELECT xp FROM characters WHERE id = ? AND userId = ?',
     [characterId, userId],
     (err, character) => {
-      if (err) {
-        console.error("DB SELECT error:", err);
-        return res.status(500).json({ error: 'Database error' });
-      }
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (!character) return res.status(404).json({ error: 'Character not found' });
 
-      if (!character) {
-        console.warn("Character not found:", characterId);
-        return res.status(404).json({ error: 'Character not found' });
-      }
-
-      let newXP = character.xp + xpGained;
-      let newLevel = character.level;
-      let leveledUp = false;
-
-      const xpThreshold = 100; // Assuming 100 XP per level for simplicity
-
-      while (newXP >= xpThreshold) { // Changed condition to check against constant threshold
-        newLevel++;
-        newXP -= xpThreshold;
-        leveledUp = true;
-      }
-
-      console.log(`Updating character ${characterId} — New XP: ${newXP}, Level: ${newLevel}`);
+      const xpThreshold = 100;
+      const totalXp = character.xp + xpGained;
+      const newLevel = Math.floor(totalXp / xpThreshold) + 1;
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ? AND userId = ?',
-        [newXP, newLevel, characterId, userId],
+        [totalXp, newLevel, characterId, userId],
         function (updateErr) {
-          if (updateErr) {
-            console.error("DB UPDATE error:", updateErr);
-            return res.status(500).json({ error: 'Failed to update XP' });
-          }
+          if (updateErr) return res.status(500).json({ error: 'Failed to update XP' });
 
-          console.log(`Rows updated: ${this.changes}`);
-
-          if (this.changes === 0) {
-            return res.status(404).json({ error: 'Character not updated (not found?)' });
-          }
-
-          res.json({ xp: newXP, level: newLevel, leveledUp });
+          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > character.level });
         }
       );
     }
   );
 });
-
-
-
 
 // Taak voltooien + XP toekennen (No direct changes needed here, as it operates on character XP and level)
 app.post('/task/complete/:id', requireLogin, (req, res) => {
@@ -542,7 +518,7 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
   db.all(`
     SELECT 
       u.id AS userId, u.username, u.email,
-      c.id AS characterId, c.name AS characterName,
+      c.id AS characterId, c.name AS characterName, c.xp AS characterXP,
       t.id AS taskId, t.title AS taskTitle, t.description AS taskDescription,
       t.xp AS taskXP, t.dueDate AS taskDueDate,
       t.pending, t.characterId AS taskCharacterId
@@ -568,7 +544,8 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
       if (row.characterId && !usersMap[row.userId].characters.find(c => c.id === row.characterId)) {
         usersMap[row.userId].characters.push({
           id: row.characterId,
-          name: row.characterName
+          name: row.characterName,
+          xp: row.characterXP
         });
       }
 
@@ -633,6 +610,33 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
     res.redirect('/AdminPanel');
   });
 });
+
+app.post('/admin/update-character-xp', (req, res) => {
+  const characterId = parseInt(req.body.characterId);
+  const newTotalXp = parseInt(req.body.newXp);
+
+  if (isNaN(characterId) || isNaN(newTotalXp)) {
+    return res.status(400).send('Invalid input');
+  }
+
+  const xpThreshold = 100;
+  const newLevel = Math.floor(newTotalXp / xpThreshold) + 1;
+
+  db.run(
+    'UPDATE characters SET xp = ?, level = ? WHERE id = ?',
+    [newTotalXp, newLevel, characterId],
+    function (err) {
+      if (err) {
+        console.error("DB UPDATE error:", err);
+        return res.status(500).send('Failed to update XP and level');
+      }
+
+      console.log(`Character ${characterId} updated to XP: ${newTotalXp}, Level: ${newLevel}`);
+      res.redirect('/adminpanel');
+    }
+  );
+});
+
 
 
   // Focus Mode route
