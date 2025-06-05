@@ -63,41 +63,45 @@
       {{/if}}
     </div>
 
-    <div class="tasks-column">
-      <h2>Active tasks for {{#if selectedCharacterId}}{{!-- with (lookup characters selectedCharacterId)
-        --}}{{this.name}}{{/if}}</h2>
-      <div class="task-section">
-        {{#if selectedCharacterId}}
-        {{#if tasks.length}}
-        <div class="task-list">
-          {{#each tasks}}
-          <div class="task-card">
-            <div class="task-icon" title="XP: {{xp}}">{{title.[0]}}</div>
-            <div class="task-info">
-              <div class="task-title">{{title}} </div>
-              <div class="task-date">Due: {{dueDate}}</div>
-            </div>
-            <div class="task-expand">&#9660;</div>
+<div class="tasks-column">
+  <h2>Active tasks for {{#if selectedCharacterId}}{{!-- character name hier als gewenst --}}{{/if}}</h2>
+  <div class="task-section">
+    {{#if selectedCharacterId}}
+      <div class="task-list" id="taskList" style="{{#unless tasks.length}}display:none;{{/unless}}">
+        {{#each tasks}}
+        <div class="task-card">
+          <div class="task-icon" title="XP: {{xp}}">{{title.[0]}}</div>
+          <div class="task-info">
+            <div class="task-title">{{title}}</div>
+            <div class="task-date">Due: {{dueDate}}</div>
           </div>
-          <div class="task-details hidden">
-            <p><strong>Description:</strong> {{description}}</p>
-            <p><strong>XP:</strong> {{xp}}</p>
-            <form action="/task/complete/{{id}}?characterId={{../selectedCharacterId}}" method="POST">
-              <button type="submit" class="complete-btn">Complete</button>
-            </form>
-          </div>
-          {{/each}}
+          <div class="task-expand">&#9660;</div>
         </div>
-        {{else}}
-        <p>You have no active tasks for this character.
-          <a href="/Taskmanager" class="create-task-btn">Create one here</a>
-        </p>
-        {{/if}}
-        {{else}}
-        <p>Select a character to view tasks.</p>
-        {{/if}}
+        <div class="task-details hidden">
+          <p><strong>Description:</strong> {{description}}</p>
+          <p><strong>XP:</strong> {{xp}}</p>
+          <button
+            class="complete-btn"
+            data-task-id="{{id}}"
+            data-character-id="{{../selectedCharacterId}}"
+            data-xp="{{xp}}"
+          >
+            Complete
+          </button>
+        </div>
+        {{/each}}
       </div>
-    </div>
+
+      <!-- Altijd tonen, eerst verborgen -->
+      <p id="no-tasks-message" style="{{#if tasks.length}}display:none;{{/if}}">
+        You have no active tasks for this character.
+        <a href="/Taskmanager" class="create-task-btn">Create one here</a>
+      </p>
+    {{else}}
+      <p>Select a character to view tasks.</p>
+    {{/if}}
+  </div>
+</div>
 
   </div>
 <script src="/scripts/Home.js" defer></script>

@@ -431,6 +431,17 @@ body.lightblue-theme .classroom-list section {
   background-color: #e0f7ff;
   color: black;
 }
+body.lightblue-theme .classroom-list{
+  background-color: #85b4bf;
+}
+body.lightblue-theme .classroom-list li{
+  background-color: #9ad0dd;
+}
+body.lightblue-theme .classroom-form button,
+body.lightblue-theme .button-secondary{
+  background-color: #59a6ab;
+  color: white;
+}
 body.lightblue-theme .message {
   background-color: #ffe6e6;
   color: #b80000;
@@ -590,6 +601,15 @@ body.lightgray-theme .classroom-list section {
   background-color: #d0d0d0;
   color: black;
 }
+body.lightgray-theme .classroom-list{
+  background-color: #565656;
+}
+body.lightgray-theme .classroom-list li{
+  background-color: #7d7d7d;
+}
+body.lightgray-theme .classroom-form button{
+  background-color: #6b6b6b;
+}
 body.lightgray-theme .message {
   background-color: #fbecec;
   color: #b80000;
@@ -688,8 +708,17 @@ body.darkgray-theme span
 }
 body.darkgray-theme .classroom-form,
 body.darkgray-theme .classroom-list section {
-  background-color: #444;
+  background-color: #5f5e5e;
   color: white;
+}
+body.darkgray-theme .classroom-list{
+  background-color: #565656;
+}
+body.darkgray-theme .classroom-list li{
+  background-color: #7d7d7d;
+}
+body.darkgray-theme .classroom-form button{
+  background-color: #333333;
 }
 body.darkgray-theme .message {
   background-color: #661111;

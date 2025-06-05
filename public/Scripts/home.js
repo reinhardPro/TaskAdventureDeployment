@@ -97,30 +97,57 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // complete btn
-  const completeButtons = document.querySelectorAll(".complete-btn");
+document.querySelectorAll(".complete-btn").forEach(button => {
+  button.addEventListener("click", function (event) {
+    event.stopPropagation(); // avoid toggling task details
+    button.disabled = true;
+button.textContent = "Completing...";
+    const taskId = button.dataset.taskId;
+    const characterId = button.dataset.characterId;
+    const taskXp = parseInt(button.dataset.xp, 10);
 
-  completeButtons.forEach(button => {
-    button.addEventListener("click", function (event) {
-      event.stopPropagation();
+    const taskDetails = button.closest(".task-details");
+    const taskCard = taskDetails?.previousElementSibling;
 
-      const taskDetails = button.closest(".task-details");
-      const taskCard = taskDetails?.previousElementSibling;
-      const taskXp = parseInt(button.dataset.xp, 10) || 0;
+    if (!taskId || !characterId || !taskCard || !taskDetails) return;
 
-      if (!taskCard || isNaN(taskXp)) return;
+    // XP update
+    addXP(taskXp);
 
-      addXP(taskXp);
+    // Visually fade out
+    taskCard.style.opacity = "0.5";
+    taskDetails.style.opacity = "0.5";
 
-      // Fade-out effect
-      taskCard.style.opacity = "0.5";
-      taskDetails.style.opacity = "0.5";
+    // Send async request to server
+    fetch(`/task/complete/${taskId}?characterId=${characterId}`, {
+      method: 'POST'
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to complete task");
+        return res.text(); // or .json() if you return JSON
+      })
+      .then(() => {
+        setTimeout(() => {
+          taskCard.remove();
+          taskDetails.remove();
+          
 
-      setTimeout(() => {
-        taskCard.remove();
-        taskDetails.remove();
-      }, 2000);
-    });
+          const remainingTasks = document.querySelectorAll('.task-card');
+  if (remainingTasks.length === 0) {
+    const noTasksMessage = document.getElementById("no-tasks-message");
+    if (noTasksMessage) {
+      noTasksMessage.style.display = "block";
+    }
+  }
+        }, 2000);
+      })
+      .catch(err => {
+        console.error("Error completing task:", err);
+        taskCard.style.opacity = "1"; // reset in case of error
+        taskDetails.style.opacity = "1";
+      });
   });
+});
 
   updateXPBar(currentXp, currentLevel);
 });
