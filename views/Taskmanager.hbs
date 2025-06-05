@@ -19,7 +19,7 @@
               <div class="task-info">
                 <span><strong>{{title}}</strong> (Character: {{characterName}})</span>
                 <span>Due Date: {{dueDate}}</span>
-                <span>Status: {{#if completed}} Completed {{else}} Pending {{/if}}</span>
+                <span>Status: {{#if completed}}Completed{{else if (eq Pending 1)}}In Progress{{else}}Not Started{{/if}}</span>
                 <span>XP: {{xp}}</span>
                <div 
   class="timer" 
