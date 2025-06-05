@@ -325,6 +325,7 @@ app.get('/Stats', requireLogin, (req, res) => {
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
+    const maxDate = '2050-12-31';
   // Verwijder taken waarvan de dueDate in het verleden ligt
   db.run(`
     DELETE FROM tasks
@@ -360,7 +361,7 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
         characterIds,
         (err, tasks) => {
           if (err) return res.status(500).send('Error loading tasks');
-          res.render('Taskmanager', { characters, tasks, today, pageTitel: 'Task Manager' });
+          res.render('Taskmanager', { characters, tasks, today, maxDate, pageTitel: 'Task Manager' });
         }
       );
     });
