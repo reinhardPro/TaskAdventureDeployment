@@ -1,3 +1,6 @@
+body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 .classroom-form {
   max-width: 600px;
   margin: 100px auto;

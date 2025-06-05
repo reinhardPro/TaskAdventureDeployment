@@ -187,7 +187,7 @@ app.get('/home', requireLogin, (req, res) => {
         selectedCharacterId: characterId,
         xp: selectedCharacter.xp,
         level: selectedCharacter.level,
-        selectedCharacter: selectedCharacter // Pass the full selectedCharacter object
+        selectedCharacter: selectedCharacter, // Pass the full selectedCharacter object
       });
     });
   });
@@ -299,7 +299,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
             const updatedTaskCompleted = (stats.taskCompleted || 0) + 1;
             const updatedXp = (stats.totalXpGained || 0) + taskXp;
 
-            // ✅ Bepaal of deze taak de meeste XP tot nu toe heeft opgeleverd
+            // Determen if this task gave the most xp
             const updatedMostXp = Math.max(taskXp, stats.mostXpForOneTask || 0);
 
             db.run(
