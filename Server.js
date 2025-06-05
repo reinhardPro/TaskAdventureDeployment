@@ -196,7 +196,8 @@ app.get('/home', requireLogin, (req, res) => {
         xpIntoCurrentLevel,
         xpToNextLevel,
         xpPercentage,
-        selectedCharacter
+        selectedCharacter,
+        pageTitel: 'Home'
       });
     });
   });
