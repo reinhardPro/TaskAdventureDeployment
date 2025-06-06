@@ -140,10 +140,26 @@ app.get('/', (req, res) => {
 
 
 //Home
+function calculateLevelAndXpProgress(totalXp) {
+  let level = 1;
+  let xpForNextLevel = 100;
+  let remainingXp = totalXp;
+
+  while (remainingXp >= xpForNextLevel) {
+    remainingXp -= xpForNextLevel;
+    level++;
+    xpForNextLevel = 100 + (level - 1) * 50;
+  }
+
+  return {
+    level,
+    xpIntoCurrentLevel: remainingXp,
+    xpToNextLevel: xpForNextLevel
+  };
+}
+
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
-
-  const xpThreshold = 100; // XP required per level
 
   db.all(`
     SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
@@ -177,12 +193,9 @@ app.get('/home', requireLogin, (req, res) => {
     db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
-      // Calculate XP progress inside the current level
       const totalXp = selectedCharacter.xp;
       const level = selectedCharacter.level;
-      const xpForPreviousLevels = (level - 1) * xpThreshold;
-      const xpIntoCurrentLevel = totalXp - xpForPreviousLevels;
-      const xpToNextLevel = xpThreshold;
+      const { xpIntoCurrentLevel, xpToNextLevel } = calculateLevelAndXpProgress(totalXp);
       const xpPercentage = Math.min(100, (xpIntoCurrentLevel / xpToNextLevel) * 100);
 
       res.render('Home', {
@@ -196,7 +209,8 @@ app.get('/home', requireLogin, (req, res) => {
         xpIntoCurrentLevel,
         xpToNextLevel,
         xpPercentage,
-        selectedCharacter
+        selectedCharacter,
+        pageTitel: 'Home'
       });
     });
   });
@@ -213,15 +227,15 @@ app.post('/api/gain-xp', (req, res) => {
   }
 
   db.get(
-    'SELECT xp FROM characters WHERE id = ? AND userId = ?',
+    'SELECT xp, level FROM characters WHERE id = ? AND userId = ?',
     [characterId, userId],
     (err, character) => {
       if (err) return res.status(500).json({ error: 'Database error' });
       if (!character) return res.status(404).json({ error: 'Character not found' });
 
-      const xpThreshold = 100;
+      const oldLevel = character.level;
       const totalXp = character.xp + xpGained;
-      const newLevel = Math.floor(totalXp / xpThreshold) + 1;
+      const { level: newLevel } = calculateLevelAndXpProgress(totalXp);
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ? AND userId = ?',
@@ -229,7 +243,7 @@ app.post('/api/gain-xp', (req, res) => {
         function (updateErr) {
           if (updateErr) return res.status(500).json({ error: 'Failed to update XP' });
 
-          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > character.level });
+          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > oldLevel });
         }
       );
     }
@@ -241,24 +255,19 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
   const characterId = req.query.characterId;
 
-  if (!characterId) return res.status(400).send('characterId ontbreekt');
+  if (!characterId) return res.status(400).send('characterId is missing');
 
   db.get('SELECT * FROM tasks WHERE id = ?', [taskId], (err, task) => {
-    if (err || !task) return res.status(500).send('Taak niet gevonden');
+    if (err || !task) return res.status(500).send('Task not found');
 
     const taskXp = Number(task.xp) || 0;
 
     db.get('SELECT * FROM characters WHERE id = ?', [characterId], (err, character) => {
-      if (err || !character) return res.status(500).send('Character niet gevonden');
+      if (err || !character) return res.status(500).send('Character not found');
 
       const userId = character.userId;
       const newXp = (character.xp || 0) + taskXp;
-      let newLevel = character.level || 1;
-      const requiredXp = 100; // Assuming 100 XP per level for simplicity
-
-      while (newXp >= newLevel * requiredXp) { // This logic also needs to be adjusted based on desired level up curve.
-        newLevel++;
-      }
+      let newLevel = calculateLevelAndXpProgress(newXp).level;
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ?',
@@ -325,7 +334,7 @@ app.get('/Stats', requireLogin, (req, res) => {
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
-    const maxDate = '2050-12-31';
+  const maxDate = '2050-12-31';
   // Verwijder taken waarvan de dueDate in het verleden ligt
   db.run(`
     DELETE FROM tasks
@@ -372,14 +381,14 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 app.post('/Taskmanager', requireLogin, (req, res) => {
   const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-db.run(
-  `INSERT INTO tasks (title, description, dueDate, completed, pending, characterId, xp) VALUES (?, ?, ?, 0, 0, ?, ?)`,
-  [taskName, taskDescription, taskDeadline, characterId, taskXp],
-  err => {
-    if (err) return res.status(500).send('Error adding task');
-    res.redirect('/Taskmanager');
-  }
-);
+  db.run(
+    `INSERT INTO tasks (title, description, dueDate, completed, pending, characterId, xp) VALUES (?, ?, ?, 0, 0, ?, ?)`,
+    [taskName, taskDescription, taskDeadline, characterId, taskXp],
+    err => {
+      if (err) return res.status(500).send('Error adding task');
+      res.redirect('/Taskmanager');
+    }
+  );
 });
 
 // Handle task accept
@@ -997,152 +1006,288 @@ app.post('/reset-password', (req, res) => {
   });
 });
 
-app.get('/Classroom', requireLogin, (req, res) => {
-  const userId = req.session.user.id;
+app.get('/Classroom', requireLogin, async (req, res) => {
+  const user = req.session.user;
 
-  // Stap 1: Zoek alle klassen waarin de gebruiker zit
-  const klasQuery = `
-    SELECT c.id AS classId, c.name AS className, c.code, c.teacherId, u.username AS teacherName
-    FROM classes c
-    JOIN users u ON c.teacherId = u.id
-    JOIN class_users cu ON cu.classId = c.id
-    WHERE cu.userId = ?
-  `;
+  if (!user || !user.id) {
+    return res.status(401).send("User not logged in");
+  }
 
-  db.all(klasQuery, [userId], (err, classes) => {
-    if (err) {
-      console.error("❌ Fout bij ophalen van klassen:", err);
-      return res.status(500).send("Interne fout bij ophalen van klassen.");
-    }
+  const userId = user.id;
+
+  try {
+    const classesQuery = `
+            SELECT
+                c.id,
+                c.name AS className,
+                c.code,
+                c.characterId,
+                c.user_id,
+                tu.username AS teacherUsername
+            FROM classes c
+            JOIN class_users cu ON c.id = cu.classId
+            JOIN users tu ON c.user_id = tu.id
+            WHERE cu.userId = ?
+        `;
+
+    let classes = await new Promise((resolve, reject) => {
+      db.all(classesQuery, [userId], (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
 
     if (classes.length === 0) {
+      const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+      let characters = await new Promise((resolve, reject) => {
+        db.all(charQuery, [userId], (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        });
+      });
       return res.render('CreateClassroom', {
-        pageTitel: 'Nieuwe Klas Aanmaken',
-        message: 'Je zit nog niet in een klas. Maak er een aan!'
+        pageTitel: 'Create New Class',
+        message: 'You are not yet in a class. Create one!',
+        characters
       });
     }
 
-    // Stap 2: Voor elke klas de leden ophalen met hun personages
-    const classIds = classes.map(c => c.classId);
+    const classesWithMembers = await Promise.all(classes.map(async (classroom) => {
+      const membersQuery = `
+                SELECT
+                    u.username,
+                    ch.name AS characterName,
+                    ch.level,
+                    ch.xp
+                FROM class_users clu
+                JOIN users u ON clu.userId = u.id
+                LEFT JOIN characters ch ON u.id = ch.userId
+                WHERE clu.classId = ?
+                AND u.id != ?
+                GROUP BY u.id
+                ORDER BY ch.xp DESC, ch.id ASC
+            `;
 
-    const memberQuery = `
-      SELECT cu.classId, u.id AS userId, u.username, ch.name AS characterName, ch.level, ch.xp
-  FROM class_users cu
-  JOIN users u ON u.id = cu.userId
-  LEFT JOIN (
-    SELECT * FROM characters
-    WHERE id IN (
-      SELECT MAX(id) FROM characters GROUP BY userId
-    )
-  ) ch ON ch.userId = u.id
-  WHERE cu.classId IN (${classIds.map(() => '?').join(',')})
-  ORDER BY cu.classId, u.username
-    `;
-
-    db.all(memberQuery, classIds, (err, members) => {
-      if (err) {
-        console.error("❌ Fout bij ophalen van klasleden:", err);
-        return res.status(500).send("Fout bij ophalen van klasleden.");
-      }
-
-      // Groepeer per klas
-      const classData = classes.map(klas => {
-        return {
-          id: klas.classId,
-          name: klas.className,
-          code: klas.code,
-          teacher: klas.teacherName,
-          isTeacher: klas.teacherId === userId, // 👈 toegevoegd veld
-          members: members
-            .filter(m => m.classId === klas.classId)
-            .map(m => ({
-              username: m.username,
-              character: m.characterName,
-              level: m.level,
-              xp: m.xp
-            }))
-        };
+      const members = await new Promise((resolve, reject) => {
+        db.all(membersQuery, [classroom.id, classroom.user_id], (err, memberRows) => {
+          if (err) {
+            console.error(`❌ Error fetching members for class ${classroom.id}:`, err.message);
+            return reject(err);
+          }
+          if (!memberRows) {
+            console.warn(`⚠️ No member data returned for class ${classroom.id}.`);
+            return resolve([]);
+          }
+          resolve(memberRows.map(member => ({
+            username: member.username,
+            character: member.characterName || 'No character',
+            level: member.level || 0,
+            xp: member.xp || 0
+          })));
+        });
       });
 
-      res.render('Classroom', {
-        pageTitel: 'Mijn Classroom',
-        classes: classData
-      });
+      const isTeacher = (classroom.user_id === userId);
+
+      return {
+        ...classroom,
+        members: members,
+        isTeacher: isTeacher
+      };
+    }));
+
+    console.log("DEBUG: Final classes data with members:", JSON.stringify(classesWithMembers, null, 2));
+
+    res.render('Classroom', { classes: classesWithMembers, pageTitel: 'My Class' });
+
+  } catch (err) {
+    console.error("❌ Error fetching classes and members:", err.message);
+    return res.status(500).send("Internal server error fetching class data.");
+  }
+});
+
+app.get('/CreateClassroom', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const userId = user.id;
+
+  const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+
+  db.all(charQuery, [userId], (err, characters) => {
+    if (err) {
+      console.error("❌ Error fetching characters:", err);
+      return res.status(500).send("Error fetching characters.");
+    }
+
+    res.render('CreateClassroom', {
+      pageTitel: 'Create New Class',
+      message: null,
+      characters
     });
   });
 });
-app.post('/Classroom', requireLogin, (req, res) => {
+app.post('/CreateClassroom', requireLogin, (req, res) => {
+  const { className, characterId, code } = req.body;
+  console.log("DEBUG: characterId from req.body:", characterId);
+  console.log("DEBUG: className from req.body:", className);
+  console.log("DEBUG: code from req.body:", code);
   const userId = req.session.user.id;
-  const { name, code } = req.body;
 
-  // ✅ Eerst controleren of er al een klas bestaat met dezelfde NAAM
-  const checkQuery = `SELECT * FROM classes WHERE name = ?`;
+  if (!userId) {
+    console.error("❌ userId is missing in session for /CreateClassroom POST");
+    return res.redirect('/login');
+  }
 
-  db.get(checkQuery, [name], (err, row) => {
-    if (err) {
-      console.error("❌ Fout bij controleren van klasnaam:", err);
-      return res.status(500).send("Interne fout bij controleren van klasnaam.");
+  if (!className || !characterId || !code) {
+    console.error("❌ Missing required fields for classroom creation.");
+    return res.status(400).send("All fields are required.");
+  }
+
+  db.get('SELECT id FROM characters WHERE id = ? AND userId = ?', [characterId, userId], (err, charRow) => {
+    if (err || !charRow) {
+      console.error("❌ Selected character does not belong to the user or does not exist:", err);
+      return res.status(403).send("You can only choose a character that belongs to you.");
     }
 
-    if (row) {
-      // ❌ Klasnaam bestaat al, render het formulier opnieuw met foutmelding
-      return res.render('CreateClassroom', {
-        pageTitel: 'Nieuwe Klas Aanmaken',
-        message: `De naam "${name}" is al in gebruik. Kies een andere naam.`,
-        name,
-        code
-      });
-    }
-
-    // ✅ Naam bestaat niet, klas toevoegen
-    const insertQuery = `INSERT INTO classes (name, code, teacherId) VALUES (?, ?, ?)`;
-
-    db.run(insertQuery, [name, code, userId], function (err) {
+    db.get('SELECT id FROM classes WHERE name = ?', [className], (err, existingClassByName) => {
       if (err) {
-        console.error("❌ Fout bij toevoegen van klas:", err);
-        return res.status(500).send("Kon klas niet toevoegen.");
+        console.error("❌ Error checking unique class name:", err.message);
+        return res.status(500).send("Internal server error checking class name.");
+      }
+      if (existingClassByName) {
+        console.error("❌ Class with this name already exists:", className);
+        const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+        db.all(charQuery, [userId], (err, characters) => {
+          if (err) {
+            console.error("❌ Error fetching characters after name error:", err);
+            return res.status(500).send("Error fetching characters.");
+          }
+          return res.render('CreateClassroom', {
+            pageTitel: 'Create New Class',
+            message: 'This class name is already in use. Choose another one.',
+            characters,
+            oldClassName: className,
+            oldCharacterId: characterId,
+            oldCode: code
+          });
+        });
+        return;
       }
 
-      const classId = this.lastID;
+      const insertClassQuery = `
+                INSERT INTO classes (name, user_id, characterId, code)
+                VALUES (?, ?, ?, ?)
+            `;
 
-      // Voeg de leraar toe als lid van deze klas
-      const insertClassUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
-
-      db.run(insertClassUser, [classId, userId], (err) => {
+      db.run(insertClassQuery, [className, userId, characterId, code], function (err) {
         if (err) {
-          console.error("❌ Fout bij toevoegen van klas-gebruiker:", err);
-          return res.status(500).send("Kon klasgebruikers niet bijwerken.");
+          console.error("❌ Error adding class:", err.message);
+          return res.status(500).send("Internal server error creating class.");
         }
 
-        res.redirect('/Classroom');
+        const classId = this.lastID;
+
+        db.run('INSERT INTO class_users (classId, userId) VALUES (?, ?)', [classId, userId], (err) => {
+          if (err) {
+            console.error("❌ Error adding user to class_users:", err.message);
+            return res.status(500).send("Error adding user to class.");
+          }
+          console.log("✅ New class added with ID:", classId, "and user added to class.");
+          res.redirect('/Classroom');
+        });
       });
     });
   });
 });
+
 app.post('/Classroom/:id/delete', requireLogin, (req, res) => {
   const classId = req.params.id;
   const userId = req.session.user.id;
 
-  db.get(`SELECT * FROM classes WHERE id = ? AND teacherId = ?`, [classId, userId], (err, row) => {
-    if (err) return res.status(500).send("Databasefout.");
-    if (!row) return res.status(403).send("Geen toegang.");
+  if (!userId) {
+    console.error("❌ userId is missing in session for /Classroom/:id/delete POST");
+    return res.status(401).send("User not logged in.");
+  }
 
-    db.run(`DELETE FROM class_users WHERE classId = ?`, [classId], function (err) {
-      if (err) return res.status(500).send("Fout bij verwijderen klasgebruikers.");
+  if (!classId) {
+    console.error("❌ Class ID is missing for delete request.");
+    return res.status(400).send("Invalid class ID.");
+  }
 
-      db.run(`DELETE FROM classes WHERE id = ?`, [classId], function (err) {
-        if (err) return res.status(500).send("Fout bij verwijderen klas.");
+  db.get('SELECT user_id FROM classes WHERE id = ?', [classId], (err, classRow) => {
+    if (err) {
+      console.error(`❌ Error checking class creator for class ${classId}:`, err.message);
+      return res.status(500).send("Internal server error.");
+    }
+    if (!classRow) {
+      console.warn(`⚠️ Class with ID ${classId} not found for deletion.`);
+      return res.status(404).send("Class not found.");
+    }
+    if (classRow.user_id !== userId) {
+      console.warn(`⚠️ User ${userId} tried to delete class ${classId} without being the owner.`);
+      return res.status(403).send("You do not have permission to delete this class.");
+    }
+
+    db.run('DELETE FROM class_users WHERE classId = ?', [classId], (err) => {
+      if (err) {
+        console.error(`❌ Error deleting members from class ${classId}:`, err.message);
+        return res.status(500).send("Error deleting class members.");
+      }
+
+      db.run('DELETE FROM classes WHERE id = ?', [classId], function (err) {
+        if (err) {
+          console.error(`❌ Error deleting class ${classId}:`, err.message);
+          return res.status(500).send("Error deleting the class.");
+        }
+
+        if (this.changes === 0) {
+          console.warn(`⚠️ Class with ID ${classId} was already deleted.`);
+        } else {
+          console.log(`✅ Class with ID ${classId} successfully deleted.`);
+        }
         res.redirect('/Classroom');
       });
     });
   });
 });
 
+app.post('/Classroom/:id/leave', requireLogin, (req, res) => {
+  const classId = req.params.id;
+  const userId = req.session.user.id;
+
+  if (!userId) {
+    console.error("❌ userId is missing in session for /Classroom/:id/leave POST");
+    return res.status(401).send("User not logged in.");
+  }
+
+  if (!classId) {
+    console.error("❌ Class ID is missing for leave request.");
+    return res.status(400).send("Invalid class ID.");
+  }
+
+  const deleteQuery = `DELETE FROM class_users WHERE classId = ? AND userId = ?`;
+
+  db.run(deleteQuery, [classId, userId], function (err) {
+    if (err) {
+      console.error(`❌ Error leaving class ${classId} by user ${userId}:`, err.message);
+      return res.status(500).send("Error leaving the class.");
+    }
+
+    if (this.changes === 0) {
+      console.warn(`⚠️ User ${userId} was not a member of class ${classId} or has already left.`);
+    } else {
+      console.log(`✅ User ${userId} left class ${classId}.`);
+    }
+    res.redirect('/Classroom');
+  });
+});
 
 app.get('/joinClassroom', requireLogin, (req, res) => {
+  const message = req.session.joinClassMessage;
+  delete req.session.joinClassMessage;
+
   res.render('JoinClassroom', {
     pageTitel: 'Join Classroom',
-    message: ''
+    message: message || null
   });
 });
 
@@ -1150,48 +1295,49 @@ app.post('/joinClassroom', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const { name, code } = req.body;
 
-  // Zoek classroom met gegeven naam + code
+  if (!name || !code) {
+    req.session.joinClassMessage = 'Please enter both the class name and code.';
+    return res.redirect('/joinClassroom');
+  }
+
   const query = `SELECT * FROM classes WHERE name = ? AND code = ?`;
 
   db.get(query, [name, code], (err, classroom) => {
     if (err) {
-      console.error("❌ Fout bij zoeken classroom:", err);
-      return res.status(500).send("Interne fout.");
+      console.error("❌ Error searching classroom:", err);
+      req.session.joinClassMessage = 'An internal error occurred. Please try again.';
+      return res.redirect('/joinClassroom');
     }
 
     if (!classroom) {
-      // Geen klas gevonden met die naam + code
-      return res.render('JoinClassroom', {
-        pageTitel: 'Join Classroom',
-        message: 'Geen classroom gevonden met deze naam en code.',
-        name,
-        code
-      });
+      req.session.joinClassMessage = 'No class found with this name and code.';
+      return res.redirect('/joinClassroom');
     }
 
-    // Check of gebruiker al in die klas zit
     const checkUserInClass = `SELECT * FROM class_users WHERE classId = ? AND userId = ?`;
 
     db.get(checkUserInClass, [classroom.id, userId], (err, row) => {
       if (err) {
-        console.error("❌ Fout bij checken klaslid:", err);
-        return res.status(500).send("Interne fout.");
+        console.error("❌ Error checking class membership:", err);
+        req.session.joinClassMessage = 'An internal error occurred while checking your membership.';
+        return res.redirect('/joinClassroom');
       }
 
       if (row) {
-        // Gebruiker zit al in de klas
-        return res.redirect('/Classroom'); // of een melding tonen
+        req.session.joinClassMessage = 'You are already a member of this class.';
+        return res.redirect('/Classroom');
       }
 
-      // Voeg gebruiker toe aan klas
       const insertUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
 
       db.run(insertUser, [classroom.id, userId], (err) => {
         if (err) {
-          console.error("❌ Fout bij toevoegen aan klas:", err);
-          return res.status(500).send("Interne fout.");
+          console.error("❌ Error adding to class:", err);
+          req.session.joinClassMessage = 'An error occurred while adding to the class.';
+          return res.redirect('/joinClassroom');
         }
 
+        req.session.joinClassMessage = 'You have successfully joined the class!';
         res.redirect('/Classroom');
       });
     });
@@ -1211,63 +1357,157 @@ app.get('/Friends', requireLogin, (req, res) => {
     }
 
     const potentialFriends = rows.slice(0);
-    
-    res.render('Friends', { potentialFriends, pageTitel: 'Friends' });
+
+    res.render('Friends', { potentialFriends, pageTitel: 'Users' });
   });
 });
+
 //add Friend
 app.post('/addFriend', requireLogin, (req, res) => {
-    // Get the ID of the logged-in user
-    const currentUserId = req.session.userId; // Or req.user.id if using Passport.js
+  const currentUserId = req.session.user.id;
+  const potentialFriendId = req.body.friendId;
+  console.log("DEBUG: currentUserId:", currentUserId);
+  console.log("DEBUG: potentialFriendId:", potentialFriendId);
+  console.log("DEBUG: Type of potentialFriendId:", typeof potentialFriendId); // Check type
+  // Input validation
+  if (!potentialFriendId) {
+    return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
+  }
+  if (currentUserId === parseInt(potentialFriendId)) {
+    return res.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
+  }
 
-    // Get the ID of the potential friend from the request body
-    const potentialFriendId = req.body.friendId;
-
-    // Input validation
-    if (!potentialFriendId) {
-        return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
-    }
-    if (currentUserId === parseInt(potentialFriendId)) {
-        return res.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
-    }
-
-    // Check if a friend request already exists (in either direction)
-    db.get(`
+  // Check if a friend request already exists (in either direction)
+  db.get(`
         SELECT * FROM friends
         WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
     `, [currentUserId, potentialFriendId, potentialFriendId, currentUserId], (err, existingFriendship) => {
-        if (err) {
-            console.error("Database error checking existing friendship:", err.message);
-            return res.status(500).json({ success: false, message: "Database error." });
-        }
+    if (err) {
+      console.error("Database error checking existing friendship:", err.message);
+      return res.status(500).json({ success: false, message: "Database error." });
+    }
 
-        if (existingFriendship) {
-            let message = '';
-            if (existingFriendship.status === 'pending') {
-                if (existingFriendship.user1_id === currentUserId) {
-                    message = 'Friend request already sent.';
-                } else {
-                    message = 'You have a pending friend request from this user. Accept it on your Friends page!';
-                }
-            } else if (existingFriendship.status === 'accepted') {
-                message = 'You are already friends with this user.';
-            }
-            return res.status(409).json({ success: false, message: message }); // 409 Conflict
+    if (existingFriendship) {
+      let message = '';
+      if (existingFriendship.status === 'pending') {
+        if (existingFriendship.user1_id === currentUserId) {
+          message = 'Friend request already sent.';
+        } else {
+          message = 'You have a pending friend request from this user. Accept it on your Friends page!';
         }
+      } else if (existingFriendship.status === 'accepted') {
+        message = 'You are already friends with this user.';
+      }
+      return res.status(409).json({ success: false, message: message }); // 409 Conflict
+    }
 
-        // If no existing friendship, insert the new friend request
-        db.run(`
+    // If no existing friendship, insert the new friend request
+    db.run(`
             INSERT INTO friends (user1_id, user2_id, status)
             VALUES (?, ?, 'pending')
-        `, [currentUserId, potentialFriendId], function(err) {
-            if (err) {
-                console.error("Database error adding friend:", err.message);
-                return res.status(500).json({ success: false, message: "Could not send friend request." });
-            }
-            console.log(`Friend request sent: User ${currentUserId} to User ${potentialFriendId}`);
-            res.status(200).json({ success: true, message: "Friend request sent!" });
-        });
+        `, [currentUserId, potentialFriendId], function (err) {
+      if (err) {
+        console.error("Database error adding friend:", err.message);
+        return res.status(500).json({ success: false, message: "Could not send friend request." });
+      }
+      console.log(`Friend request sent: User ${currentUserId} to User ${potentialFriendId}`);
+      res.status(200).json({ success: true, message: "Friend request sent!" });
     });
+  });
+});
+
+
+// Friends Requests Page
+app.get('/friend-requests', requireLogin, (req, res) => {
+  const currentUserId = req.session.user.id;
+
+  if (!currentUserId) {
+    //extra contole
+    return res.redirect('/login');
+  }
+
+  db.all(`
+        SELECT
+            f.id AS requestId,
+            u.id AS userId,
+            u.username,
+            u.email
+        FROM
+            friends f
+        JOIN
+            users u ON f.user1_id = u.id
+        WHERE
+            f.user2_id = ?
+            AND f.status = 'pending';
+    `, [currentUserId], (err, pendingRequests) => {
+    if (err) {
+      console.error("Query error fetching friend requests:", err.message);
+      return res.status(500).send("Database error fetching requests");
+    }
+
+    res.render('friendRequests', {
+      pendingRequests,
+      pageTitle: 'Fiends'
+    });
+  });
+});
+
+
+// Endpoint om vriendschapsverzoeken te accepteren of weigeren
+app.post('/handle-friend-request', requireLogin, (req, res) => {
+  const currentUserId = req.session.userId; // Of req.user.id
+  const { requestId, action } = req.body; // 'action' zal 'accept' of 'decline' zijn
+
+  if (!requestId || !action || (action !== 'accept' && action !== 'decline')) {
+    return res.status(400).json({ success: false, message: 'Ongeldige aanvraag.' });
+  }
+
+  // Bepaal de nieuwe status op basis van de actie
+  const newStatus = (action === 'accept') ? 'accepted' : 'declined';
+
+  // Voer de update uit
+  db.run(`
+        UPDATE friends
+        SET status = ?
+        WHERE id = ? AND user2_id = ? AND status = 'pending';
+    `, [newStatus, requestId, currentUserId], function (err) {
+    if (err) {
+      console.error("Database error updating friend request status:", err.message);
+      return res.status(500).json({ success: false, message: "Kon verzoek niet verwerken." });
+    }
+
+    if (this.changes === 0) {
+      console.warn(`Attempted to update request ${requestId} but no rows changed. User: ${currentUserId}, Action: ${action}`);
+      return res.status(404).json({ success: false, message: "Verzoek niet gevonden of niet geautoriseerd." });
+    }
+
+
+    if (action === 'accept') {
+      db.get(`SELECT user1_id FROM friends WHERE id = ?`, [requestId], (err, row) => {
+        if (err || !row) {
+          console.error("Error getting user1_id for accepted request:", err ? err.message : "No row found");
+          return res.status(200).json({ success: true, message: "Verzoek geaccepteerd, maar interne fout met bidirectionele toevoeging." });
+        }
+
+        const user1Id = row.user1_id;
+
+
+        db.run(`
+                    INSERT OR IGNORE INTO friends (user1_id, user2_id, status)
+                    VALUES (?, ?, 'accepted');
+                `, [currentUserId, user1Id], function (err) {
+          if (err) {
+            console.error("Database error inserting reverse friend relationship:", err.message);
+          }
+          console.log(`Friend request ${requestId} accepted. Reverse relationship added: User ${currentUserId} to User ${user1Id}`);
+          res.status(200).json({ success: true, message: "Vriendschapsverzoek geaccepteerd!" });
+        });
+      });
+    } else {
+      console.log(`Friend request ${requestId} declined.`);
+      res.status(200).json({ success: true, message: "Vriendschapsverzoek geweigerd." });
+    }
+  });
 });
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

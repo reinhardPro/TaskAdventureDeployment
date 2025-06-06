@@ -1,52 +1,3 @@
-{{!-- <head>
-    <title>Friends</title>
-    <link rel="stylesheet" href="/styles/Friends.css">
-</head>
-
-<body>
-    <div class="container">
-        <input type="text" id="friendSearch" placeholder="Zoek gebruikers...">
-        <div class="scroll-box">
-            <div class="scroll-content">
-                {{#each potentialFriends}}
-                <div class="item">
-                    <p class="name">{{this.username}}</p>
-                    <p class="experience">email: {{this.email}}</p>
-                    <button>Add Friend</button>
-                </div>
-                {{/each}}
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('friendSearch');
-            const scrollContent = document.querySelector('.scroll-content');
-            const allFriendItems = Array.from(scrollContent.getElementsByClassName('item')); // Alle vrienden items
-
-            searchInput.addEventListener('keyup', (event) => {
-                const searchTerm = event.target.value.toLowerCase(); // Zoekterm in kleine letters
-
-                allFriendItems.forEach(item => {
-                    const usernameElement = item.querySelector('.name');
-                    if (usernameElement) {
-                        const username = usernameElement.textContent.toLowerCase();
-
-                        // Toon of verberg het item op basis van de zoekterm
-                        if (username.includes(searchTerm)) {
-                            item.style.display = ''; // Toon het item
-                        } else {
-                            item.style.display = 'none'; // Verberg het item
-                        }
-                    }
-                });
-            });
-        });
-    </script>
-</body> --}}
-
-
 <head>
     <title>Friends</title>
     <link rel="stylesheet" href="/styles/Friends.css">
@@ -69,7 +20,7 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const searchInput = document.getElementById('friendSearch');
@@ -84,7 +35,7 @@
                 allFriendItems.forEach(item => {
                     const usernameElement = item.querySelector('.name');
                     const emailElement = item.querySelector('.experience'); // Also check email for search
-                    
+
                     if (usernameElement) {
                         const username = usernameElement.textContent.toLowerCase();
                         const email = emailElement ? emailElement.textContent.toLowerCase() : ''; // Handle if email is missing

@@ -126,12 +126,12 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
+      name TEXT NOT NULL UNIQUE,
       code TEXT NOT NULL,
-      teacherId INTEGER NOT NULL,
-      maxStudents INTEGER DEFAULT 40,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (teacherId) REFERENCES users(id)
+      characterId INTEGER,
+      user_id INTEGER NOT NULL,
+      FOREIGN KEY (characterId ) REFERENCES characters(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
 
