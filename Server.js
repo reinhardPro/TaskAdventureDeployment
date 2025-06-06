@@ -140,10 +140,26 @@ app.get('/', (req, res) => {
 
 
 //Home
+function calculateLevelAndXpProgress(totalXp) {
+  let level = 1;
+  let xpForNextLevel = 100;
+  let remainingXp = totalXp;
+
+  while (remainingXp >= xpForNextLevel) {
+    remainingXp -= xpForNextLevel;
+    level++;
+    xpForNextLevel = 100 + (level - 1) * 50;
+  }
+
+  return {
+    level,
+    xpIntoCurrentLevel: remainingXp,
+    xpToNextLevel: xpForNextLevel
+  };
+}
+
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
-
-  const xpThreshold = 100; // XP required per level
 
   db.all(`
     SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
@@ -177,12 +193,9 @@ app.get('/home', requireLogin, (req, res) => {
     db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
-      // Calculate XP progress inside the current level
       const totalXp = selectedCharacter.xp;
       const level = selectedCharacter.level;
-      const xpForPreviousLevels = (level - 1) * xpThreshold;
-      const xpIntoCurrentLevel = totalXp - xpForPreviousLevels;
-      const xpToNextLevel = xpThreshold;
+     const { xpIntoCurrentLevel, xpToNextLevel } = calculateLevelAndXpProgress(totalXp);
       const xpPercentage = Math.min(100, (xpIntoCurrentLevel / xpToNextLevel) * 100);
 
       res.render('Home', {
@@ -214,15 +227,15 @@ app.post('/api/gain-xp', (req, res) => {
   }
 
   db.get(
-    'SELECT xp FROM characters WHERE id = ? AND userId = ?',
+    'SELECT xp, level FROM characters WHERE id = ? AND userId = ?',
     [characterId, userId],
     (err, character) => {
       if (err) return res.status(500).json({ error: 'Database error' });
       if (!character) return res.status(404).json({ error: 'Character not found' });
 
-      const xpThreshold = 100;
+      const oldLevel = character.level;
       const totalXp = character.xp + xpGained;
-      const newLevel = Math.floor(totalXp / xpThreshold) + 1;
+      const { level: newLevel } = calculateLevelAndXpProgress(totalXp);
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ? AND userId = ?',
@@ -230,7 +243,7 @@ app.post('/api/gain-xp', (req, res) => {
         function (updateErr) {
           if (updateErr) return res.status(500).json({ error: 'Failed to update XP' });
 
-          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > character.level });
+          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > oldLevel });
         }
       );
     }
@@ -242,24 +255,19 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
   const characterId = req.query.characterId;
 
-  if (!characterId) return res.status(400).send('characterId ontbreekt');
+  if (!characterId) return res.status(400).send('characterId is missing');
 
   db.get('SELECT * FROM tasks WHERE id = ?', [taskId], (err, task) => {
-    if (err || !task) return res.status(500).send('Taak niet gevonden');
+    if (err || !task) return res.status(500).send('Task not found');
 
     const taskXp = Number(task.xp) || 0;
 
     db.get('SELECT * FROM characters WHERE id = ?', [characterId], (err, character) => {
-      if (err || !character) return res.status(500).send('Character niet gevonden');
+      if (err || !character) return res.status(500).send('Character not found');
 
       const userId = character.userId;
       const newXp = (character.xp || 0) + taskXp;
-      let newLevel = character.level || 1;
-      const requiredXp = 100; // Assuming 100 XP per level for simplicity
-
-      while (newXp >= newLevel * requiredXp) { // This logic also needs to be adjusted based on desired level up curve.
-        newLevel++;
-      }
+      let newLevel = calculateLevelAndXpProgress(newXp).level;
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ?',

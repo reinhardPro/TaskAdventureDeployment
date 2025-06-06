@@ -52,9 +52,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const xpInfo = document.getElementById("xpInfo");
   const levelInfo = document.querySelector(".level-info");
 
-  function calculateXpNeeded(level) {
-    return 100 + Math.floor((level - 1) / 5) * 50;
-  }
+function calculateXpNeeded(level) {
+  return 100 + (level - 1) * 50;
+}
 
   function updateXPBar(xp, level) {
     currentXp = xp;
@@ -85,16 +85,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function addXP(amount) {
-    currentXp += amount;
+  currentXp += amount;
 
-    while (currentXp >= xpNeeded) {
-      currentXp -= xpNeeded;
-      currentLevel++;
-      xpNeeded = calculateXpNeeded(currentLevel);
-    }
-
-    updateXPBar(currentXp, currentLevel);
+  while (currentXp >= xpNeeded) {
+    currentXp -= xpNeeded;
+    currentLevel++;
+    xpNeeded = calculateXpNeeded(currentLevel);
   }
+
+  updateXPBar(currentXp, currentLevel);
+}
 
   // complete btn
 document.querySelectorAll(".complete-btn").forEach(button => {
