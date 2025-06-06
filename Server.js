@@ -105,7 +105,6 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
-  console.log("📦 Sessiedata:", req.session);
   const user = req.session.user;
 
   if (!user) {
