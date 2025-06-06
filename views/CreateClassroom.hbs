@@ -5,20 +5,29 @@
   <p class="message">{{message}}</p>
 {{/if}}
 
-
-<form action="/classroom" method="POST" class="classroom-form">
+<form action="/CreateClassroom" method="POST" class="classroom-form">
   <div>
-    <label for="name">Naam klas:</label>
-    <input type="text" id="name" name="name" required value="{{name}}">
+    <label for="className">Class Name:</label>
+    <input type="text" id="className" name="className" required value="{{oldClassName}}">
   </div>
 
   <div>
-    <label for="code">Code klas:</label>
-    <input type="text" id="code" name="code" required value="{{code}}">
+    <label for="code">Class Code:</label>
+    <input type="text" id="code" name="code" required value="{{oldCode}}">
   </div>
 
-  <button type="submit">Maak klas aan</button>
+  <div>
+    <label for="characterId">Choose a character:</label>
+    <select name="characterId" id="characterId" required>
+      {{#each characters}}
+        <option value="{{this.id}}" {{#ifEquals this.id ../oldCharacterId}}selected{{/ifEquals}}>{{this.name}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <button type="submit">Create Class</button>
 </form>
+
 <div class="extra-button">
-  <a href="/joinClassroom" class="button-secondary">Of sluit aan bij een klas</a>
+  <a href="/joinClassroom" class="button-secondary">Or join a class</a>
 </div>
