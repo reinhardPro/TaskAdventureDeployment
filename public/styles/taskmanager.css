@@ -215,5 +215,5 @@ button.accept-button:hover {
     }
 }
 .timer {
-  color: white;
+  color: white !important;
 }
