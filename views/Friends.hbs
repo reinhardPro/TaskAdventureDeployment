@@ -1,19 +1,144 @@
+{{!-- <head>
+    <title>Friends</title>
+    <link rel="stylesheet" href="/styles/Friends.css">
+</head>
+
+<body>
+    <div class="container">
+        <input type="text" id="friendSearch" placeholder="Zoek gebruikers...">
+        <div class="scroll-box">
+            <div class="scroll-content">
+                {{#each potentialFriends}}
+                <div class="item">
+                    <p class="name">{{this.username}}</p>
+                    <p class="experience">email: {{this.email}}</p>
+                    <button>Add Friend</button>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('friendSearch');
+            const scrollContent = document.querySelector('.scroll-content');
+            const allFriendItems = Array.from(scrollContent.getElementsByClassName('item')); // Alle vrienden items
+
+            searchInput.addEventListener('keyup', (event) => {
+                const searchTerm = event.target.value.toLowerCase(); // Zoekterm in kleine letters
+
+                allFriendItems.forEach(item => {
+                    const usernameElement = item.querySelector('.name');
+                    if (usernameElement) {
+                        const username = usernameElement.textContent.toLowerCase();
+
+                        // Toon of verberg het item op basis van de zoekterm
+                        if (username.includes(searchTerm)) {
+                            item.style.display = ''; // Toon het item
+                        } else {
+                            item.style.display = 'none'; // Verberg het item
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body> --}}
+
+
 <head>
     <title>Friends</title>
     <link rel="stylesheet" href="/styles/Friends.css">
 </head>
+
 <body>
     <div class="container">
-    <div class="scroll-box">
-        <div class="scroll-content">
-            {{#each potentialFriends}}
-            <div class="item">
-                <p class="name">{{this.username}}</p>
-                <p class="experience">email: {{this.email}}</p>
-                <button>Add Friend</button>
+        <input type="text" id="friendSearch" placeholder="Zoek gebruikers...">
+        <div class="scroll-box">
+            <div class="scroll-content" id="friendList"> {{#each potentialFriends}}
+                <div class="item">
+                    <p class="name">{{this.username}}</p>
+                    <p class="experience">{{this.email}}</p>
+                    <button class="add-friend-btn" data-userid="{{this.id}}">Add Friend</button>
+                </div>
+                {{/each}}
+                <div id="noResults" style="display: none; text-align: center; color: #888; padding: 20px;">
+                    Geen gebruikers gevonden.
+                </div>
             </div>
-            {{/each}}
         </div>
     </div>
-</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('friendSearch');
+            const friendList = document.getElementById('friendList');
+            const allFriendItems = Array.from(friendList.getElementsByClassName('item'));
+            const noResultsMessage = document.getElementById('noResults');
+
+            searchInput.addEventListener('keyup', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                let resultsFound = false;
+
+                allFriendItems.forEach(item => {
+                    const usernameElement = item.querySelector('.name');
+                    const emailElement = item.querySelector('.experience'); // Also check email for search
+                    
+                    if (usernameElement) {
+                        const username = usernameElement.textContent.toLowerCase();
+                        const email = emailElement ? emailElement.textContent.toLowerCase() : ''; // Handle if email is missing
+
+                        if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                            item.style.display = ''; // Show the item
+                            resultsFound = true;
+                        } else {
+                            item.style.display = 'none'; // Hide the item
+                        }
+                    }
+                });
+
+                if (resultsFound) {
+                    noResultsMessage.style.display = 'none';
+                } else {
+                    noResultsMessage.style.display = 'block';
+                }
+            });
+
+            // Add Friend button ---
+            const addFriendButtons = document.querySelectorAll('.add-friend-btn');
+
+            addFriendButtons.forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const friendId = event.target.dataset.userid; // Get the user ID from the data attribute
+
+                    try {
+                        const response = await fetch('/addFriend', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ friendId: friendId })
+                        });
+
+                        const data = await response.json(); // Parse the JSON response
+
+                        if (response.ok) { // Check if the response status is 2xx
+                            alert(data.message); // Show success message
+                            // Optionally, disable the button or change its text after success
+                            event.target.textContent = 'Verzoek verstuurd';
+                            event.target.disabled = true;
+                            event.target.style.backgroundColor = '#6c757d'; // Grey out button
+                        } else {
+                            // Handle errors (e.g., friend already added, request pending)
+                            alert('Fout: ' + data.message); // Show error message from server
+                        }
+                    } catch (error) {
+                        console.error('Error sending friend request:', error);
+                        alert('Er is een netwerkfout opgetreden bij het verzenden van het vriendschapsverzoek.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>

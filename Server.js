@@ -325,6 +325,7 @@ app.get('/Stats', requireLogin, (req, res) => {
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
+    const maxDate = '2050-12-31';
   // Verwijder taken waarvan de dueDate in het verleden ligt
   db.run(`
     DELETE FROM tasks
@@ -349,7 +350,9 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 
       db.all(
         `
-        SELECT tasks.*, characters.name AS characterName
+        SELECT tasks.id, tasks.title, tasks.description, tasks.dueDate,
+       tasks.completed, tasks.Pending AS Pending, tasks.xp,
+       characters.name AS characterName
         FROM tasks
         JOIN characters ON tasks.characterId = characters.id
         WHERE tasks.characterId IN (${placeholders})
@@ -358,7 +361,7 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
         characterIds,
         (err, tasks) => {
           if (err) return res.status(500).send('Error loading tasks');
-          res.render('Taskmanager', { characters, tasks, today, pageTitel: 'Task Manager' });
+          res.render('Taskmanager', { characters, tasks, today, maxDate, pageTitel: 'Task Manager' });
         }
       );
     });
@@ -369,14 +372,14 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 app.post('/Taskmanager', requireLogin, (req, res) => {
   const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-  db.run(
-    `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
-    [taskName, taskDescription, taskDeadline, characterId, taskXp],
-    err => {
-      if (err) return res.status(500).send('Error adding task');
-      res.redirect('/Taskmanager');
-    }
-  );
+db.run(
+  `INSERT INTO tasks (title, description, dueDate, completed, pending, characterId, xp) VALUES (?, ?, ?, 0, 0, ?, ?)`,
+  [taskName, taskDescription, taskDeadline, characterId, taskXp],
+  err => {
+    if (err) return res.status(500).send('Error adding task');
+    res.redirect('/Taskmanager');
+  }
+);
 });
 
 // Handle task accept
@@ -392,8 +395,8 @@ app.post('/task/accept/:id', requireLogin, (req, res) => {
         SELECT id FROM characters WHERE userId = ?
       )
   `, [taskId, userId], err => {
-    if (err) return res.status(500).send('Error accepting task');
-    res.redirect('/Taskmanager');
+    if (err) return res.status(500).json({ error: 'Error accepting task' });
+    res.json({ success: true });
   });
 });
 
@@ -1212,7 +1215,60 @@ app.get('/Friends', requireLogin, (req, res) => {
     res.render('Friends', { potentialFriends, pageTitel: 'Friends' });
   });
 });
+//add Friend
+app.post('/addFriend', requireLogin, (req, res) => {
+    // Get the ID of the logged-in user
+    const currentUserId = req.session.userId; // Or req.user.id if using Passport.js
 
+    // Get the ID of the potential friend from the request body
+    const potentialFriendId = req.body.friendId;
+
+    // Input validation
+    if (!potentialFriendId) {
+        return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
+    }
+    if (currentUserId === parseInt(potentialFriendId)) {
+        return res.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
+    }
+
+    // Check if a friend request already exists (in either direction)
+    db.get(`
+        SELECT * FROM friends
+        WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+    `, [currentUserId, potentialFriendId, potentialFriendId, currentUserId], (err, existingFriendship) => {
+        if (err) {
+            console.error("Database error checking existing friendship:", err.message);
+            return res.status(500).json({ success: false, message: "Database error." });
+        }
+
+        if (existingFriendship) {
+            let message = '';
+            if (existingFriendship.status === 'pending') {
+                if (existingFriendship.user1_id === currentUserId) {
+                    message = 'Friend request already sent.';
+                } else {
+                    message = 'You have a pending friend request from this user. Accept it on your Friends page!';
+                }
+            } else if (existingFriendship.status === 'accepted') {
+                message = 'You are already friends with this user.';
+            }
+            return res.status(409).json({ success: false, message: message }); // 409 Conflict
+        }
+
+        // If no existing friendship, insert the new friend request
+        db.run(`
+            INSERT INTO friends (user1_id, user2_id, status)
+            VALUES (?, ?, 'pending')
+        `, [currentUserId, potentialFriendId], function(err) {
+            if (err) {
+                console.error("Database error adding friend:", err.message);
+                return res.status(500).json({ success: false, message: "Could not send friend request." });
+            }
+            console.log(`Friend request sent: User ${currentUserId} to User ${potentialFriendId}`);
+            res.status(200).json({ success: true, message: "Friend request sent!" });
+        });
+    });
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

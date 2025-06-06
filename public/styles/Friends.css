@@ -55,3 +55,28 @@ body{
     font-weight: bold;
     margin-right: auto;
 }
+#friendSearch {
+    width: 90%; /* Maakt de zoekbalk iets smaller dan de container */
+    padding: 12px 15px; /* Meer padding voor een comfortabele invoer */
+    margin: 20px auto; /* Centreer de balk en geef wat ruimte erboven/eronder */
+    margin-top: 50px;
+    display: block; /* Zorgt ervoor dat de margin: auto werkt om te centreren */
+    border: 1px solid #ddd; /* Dunne, lichte rand */
+    border-radius: 12px;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    outline: none;
+    color: white;
+}
+
+#friendSearch::placeholder {
+    color: #aaa; /* Lichtere kleur voor de placeholder tekst */
+    font-style: italic; /* Optioneel: cursieve placeholder */
+}
+
+#friendSearch:focus {
+    border-color: #007bff; /* Blauwe rand bij focus */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Een subtiele "glow" bij focus */
+    transform: translateY(-2px); /* Geef een klein 'lift'-effect */
+}
