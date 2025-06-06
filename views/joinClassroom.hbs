@@ -2,19 +2,22 @@
 <h1>{{pageTitel}}</h1>
 
 {{#if message}}
-<p class="message-status {{#ifEquals message 'Je bent succesvol lid geworden van de klas!'}}success{{else}}error{{/ifEquals}}">{{message}}</p>
+<p class="message-status {{#ifEquals message 'You have successfully joined the class!'}}success{{else}}error{{/ifEquals}}">{{message}}</p>
 {{/if}}
 
 <form action="/joinClassroom" method="POST" class="classroom-form">
   <div>
-    <label for="name">Naam classroom:</label>
+    <label for="name">Class Name:</label>
     <input type="text" id="name" name="name" required value="{{name}}">
   </div>
 
   <div>
-    <label for="code">Code classroom:</label>
+    <label for="code">Class Code:</label>
     <input type="text" id="code" name="code" required value="{{code}}">
   </div>
 
   <button type="submit">Join Classroom</button>
 </form>
+<div class="extra-button">
+  <a href="/CreateClassroom" class="button-secondary">Back to Create Class</a>
+</div>

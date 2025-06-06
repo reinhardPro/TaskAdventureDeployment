@@ -126,8 +126,8 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS classes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL UNIQUE,
+      code TEXT NOT NULL,
       characterId INTEGER,
       user_id INTEGER NOT NULL,
       FOREIGN KEY (characterId ) REFERENCES characters(id),
