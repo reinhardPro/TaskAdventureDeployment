@@ -44,16 +44,19 @@
       {{#if noCharacter}}
       {{else}}
       {{#if selectedCharacterId}}
-      <div class="character-display-box">
-      <img class="character-image" src="{{getCharacterImage selectedCharacter selectedCharacter}}" alt="Selected Character">
-        <div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
-        <div class="xp-bar-wrapper">
-          <div class="xp-bar-container">
-            <div class="xp-bar-fill" id="xpFill"></div>
-          </div>
-          <span id="xpInfo" data-xp="{{xp}}">XP: {{xp}}</span>
-        </div>
-      </div>
+<div class="character-display-box">
+  <img class="character-image" src="{{getCharacterImage selectedCharacter selectedCharacter}}" alt="Selected Character">
+  <div class="level-info" id="level" data-level="{{level}}">Level: {{level}}</div>
+  <div class="xp-bar-wrapper">
+    <div class="xp-bar-container">
+      <div class="xp-bar-fill" id="xpFill" style="width: {{xpPercentage}}%;"></div>
+    </div>
+    <span id="xpInfo" data-xp="{{xpIntoCurrentLevel}}">
+      XP: {{xpIntoCurrentLevel}} / {{xpToNextLevel}}
+    </span>
+  </div>
+</div>
+
       {{else}}
       <div class="no-character-selected">
         <h2>No character selected</h2>

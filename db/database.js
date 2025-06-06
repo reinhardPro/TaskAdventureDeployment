@@ -152,13 +152,13 @@ db.serialize(() => {
   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/malePixel.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
-        ['/img/malePixel.png', '/img/malePixel_evo1.png', '/img/malePixel_evo2.png', 'Basic Male']);
+        ['/img/malePixel.png', '/img/malePixel2.png', '/img/malePixel3.png', 'Basic Male']);
     }
   });
   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/pixelFemale.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
-        ['/img/pixelFemale.png', '/img/pixelFemale_evo1.png', '/img/pixelFemale_evo2.png', 'Basic Female']);
+        ['/img/pixelFemale.png', '/img/pixelFemale2.png', '/img/pixelFemale3.png', 'Basic Female']);
     }
   });
  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/Hermit.png'`, (err, rows) => {
