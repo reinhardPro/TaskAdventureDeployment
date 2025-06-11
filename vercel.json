@@ -1,9 +1,9 @@
 {
   "version": 2,
   "builds": [
-    { "src": "todo-app/api/server.js", "use": "@vercel/node" }
+    { "src": "Todo-app/api/server.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "todo-app/api/server.js" }
+    { "src": "/(.*)", "dest": "Todo-app/api/server.js" }
   ]
 }
