@@ -35,17 +35,17 @@
 
                 allFriendItems.forEach(item => {
                     const usernameElement = item.querySelector('.name');
-                    const emailElement = item.querySelector('.experience'); // Also check email for search
+                    const emailElement = item.querySelector('.experience');
 
                     if (usernameElement) {
                         const username = usernameElement.textContent.toLowerCase();
-                        const email = emailElement ? emailElement.textContent.toLowerCase() : ''; // Handle if email is missing
+                        const email = emailElement ? emailElement.textContent.toLowerCase() : '';
 
                         if (username.includes(searchTerm) || email.includes(searchTerm)) {
-                            item.style.display = ''; // Show the item
+                            item.style.display = '';
                             resultsFound = true;
                         } else {
-                            item.style.display = 'none'; // Hide the item
+                            item.style.display = 'none';
                         }
                     }
                 });
@@ -62,7 +62,7 @@
 
             addFriendButtons.forEach(button => {
                 button.addEventListener('click', async (event) => {
-                    const friendId = event.target.dataset.userid; // Get the user ID from the data attribute
+                    const friendId = event.target.dataset.userid;
 
                     try {
                         const response = await fetch('/addFriend', {
@@ -73,21 +73,20 @@
                             body: JSON.stringify({ friendId: friendId })
                         });
 
-                        const data = await response.json(); // Parse the JSON response
+                        const data = await response.json(); 
 
-                        if (response.ok) { // Check if the response status is 2xx
-                            alert(data.message); // Show success message
-                            // Optionally, disable the button or change its text after success
-                            event.target.textContent = 'Verzoek verstuurd';
+                        if (response.ok) {
+                            alert(data.message); 
+                            event.target.textContent = 'Request sent';
                             event.target.disabled = true;
-                            event.target.style.backgroundColor = '#6c757d'; // Grey out button
+                            event.target.style.backgroundColor = '#6c757d'
                         } else {
-                            // Handle errors (e.g., friend already added, request pending)
-                            alert('Fout: ' + data.message); // Show error message from server
+
+                            alert('Fout: ' + data.message);
                         }
                     } catch (error) {
                         console.error('Error sending friend request:', error);
-                        alert('Er is een netwerkfout opgetreden bij het verzenden van het vriendschapsverzoek.');
+                        alert('A network error occurred while sending the friend request.');
                     }
                 });
             });
