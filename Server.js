@@ -1321,7 +1321,300 @@ app.post('/joinClassroom', requireLogin, (req, res) => {
   });
 });
 
-// Start the server
+//Friends
+app.get('/Friends', requireLogin, (req, res) => {
+    db.all(`
+        SELECT *
+        FROM users
+        ORDER BY users.username ASC;
+    `, [], (err, rows) => {
+        if (err) {
+            console.error("Query error:", err.message);
+            return res.status(500).send("Database error");
+        }
+
+        const potentialFriends = rows.slice(0);
+
+        res.render('Friends', { potentialFriends, pageTitle: 'Users' }); // Corrected pageTitel to pageTitle
+    });
+});
+
+// Add Friend Route
+app.post('/addFriend', requireLogin, (req, res) => {
+    const currentUserId = req.session.user.id;
+    const potentialFriendId = req.body.friendId;
+    console.log("DEBUG: currentUserId:", currentUserId);
+    console.log("DEBUG: potentialFriendId:", potentialFriendId);
+    console.log("DEBUG: Type of potentialFriendId:", typeof potentialFriendId); // Check type
+
+    // Input validation
+    if (!potentialFriendId) {
+        return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
+    }
+    if (currentUserId === parseInt(potentialFriendId)) {
+        return res.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
+    }
+
+    // Check if a friend request already exists (in either direction)
+    db.get(`
+        SELECT * FROM friends
+        WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+    `, [currentUserId, potentialFriendId, potentialFriendId, currentUserId], (err, existingFriendship) => {
+        if (err) {
+            console.error("Database error checking existing friendship:", err.message);
+            return res.status(500).json({ success: false, message: "Database error." });
+        }
+
+        if (existingFriendship) {
+            let message = '';
+            if (existingFriendship.status === 'pending') {
+                if (existingFriendship.user1_id === currentUserId) {
+                    message = 'Friend request already sent.';
+                } else {
+                    message = 'You have a pending friend request from this user. Accept it on your Friends page!';
+                }
+            } else if (existingFriendship.status === 'accepted') {
+                message = 'You are already friends with this user.';
+            }
+            return res.status(409).json({ success: false, message: message }); // 409 Conflict
+        }
+
+        // If no existing friendship, insert the new friend request
+        db.run(`
+            INSERT INTO friends (user1_id, user2_id, status)
+            VALUES (?, ?, 'pending')
+        `, [currentUserId, potentialFriendId], function (err) {
+            if (err) {
+                console.error("Database error adding friend:", err.message);
+                return res.status(500).json({ success: false, message: "Could not send friend request." });
+            }
+            console.log(`Friend request sent: User ${currentUserId} to User ${potentialFriendId}`);
+            res.status(200).json({ success: true, message: "Friend request sent!" });
+        });
+    });
+});
+
+
+// Friends Requests Page
+app.get('/friend-requests', requireLogin, (req, res) => {
+    const currentUserId = req.session.user.id;
+
+    if (!currentUserId) {
+        return res.redirect('/login');
+    }
+
+    db.all(`
+        SELECT
+            f.id AS requestId,
+            u.id AS userId,
+            u.username,
+            u.email
+        FROM
+            friends f
+        JOIN
+            users u ON f.user1_id = u.id
+        WHERE
+            f.user2_id = ?
+            AND f.status = 'pending';
+    `, [currentUserId], (err, pendingRequests) => {
+        if (err) {
+            console.error("Query error fetching friend requests:", err.message);
+            return res.status(500).send("Database error fetching requests");
+        }
+
+        res.render('friendRequests', {
+            pendingRequests,
+            pageTitle: 'Friend Requests' // Corrected pageTitle
+        });
+    });
+});
+
+
+// Handle Friend Request (Accept/Decline) Route
+app.post('/handle-friend-request', requireLogin, (req, res) => {
+    const currentUserId = req.session.user.id; // Corrected from req.session.userId
+    const { requestId, action } = req.body;
+
+    if (!requestId || !action || (action !== 'accept' && action !== 'decline')) {
+        return res.status(400).json({ success: false, message: 'Invalid request.' });
+    }
+
+    const newStatus = (action === 'accept') ? 'accepted' : 'declined';
+
+    db.run(`
+        UPDATE friends
+        SET status = ?
+        WHERE id = ? AND user2_id = ? AND status = 'pending';
+    `, [newStatus, requestId, currentUserId], function (err) {
+        if (err) {
+            console.error("Database error updating friend request status:", err.message);
+            return res.status(500).json({ success: false, message: "Could not process request." });
+        }
+
+        if (this.changes === 0) {
+            console.warn(`Attempted to update request ${requestId} but no rows changed. User: ${currentUserId}, Action: ${action}`);
+            return res.status(404).json({ success: false, message: "Request not found or not authorized." });
+        }
+
+        if (action === 'accept') {
+            db.get(`SELECT user1_id FROM friends WHERE id = ?`, [requestId], (err, row) => {
+                if (err || !row) {
+                    console.error("Error getting user1_id for accepted request:", err ? err.message : "No row found");
+                    return res.status(200).json({ success: true, message: "Request accepted, but internal error with bidirectional addition." });
+                }
+
+                const user1Id = row.user1_id;
+
+                db.run(`
+                    INSERT OR IGNORE INTO friends (user1_id, user2_id, status)
+                    VALUES (?, ?, 'accepted');
+                `, [currentUserId, user1Id], function (err) {
+                    if (err) {
+                        console.error("Database error inserting reverse friend relationship:", err.message);
+                    }
+                    console.log(`Friend request ${requestId} accepted. Reverse relationship added: User ${currentUserId} to User ${user1Id}`);
+
+                    // --- START STATS UPDATE ON ACCEPT ---
+                    // Increment currentUserId's friends count
+                    db.run(`
+                        UPDATE stats
+                        SET friends = friends + 1
+                        WHERE userId = ?;
+                    `, [currentUserId], function(err) {
+                        if (err) {
+                            console.error(`Error updating friends count for user ${currentUserId}:`, err.message);
+                        } else {
+                            console.log(`Friends count incremented for user ${currentUserId}.`);
+                        }
+                    });
+
+                    // Increment user1Id's friends count (the requester)
+                    db.run(`
+                        UPDATE stats
+                        SET friends = friends + 1
+                        WHERE userId = ?;
+                    `, [user1Id], function(err) {
+                        if (err) {
+                            console.error(`Error updating friends count for user ${user1Id}:`, err.message);
+                        } else {
+                            console.log(`Friends count incremented for user ${user1Id}.`);
+                        }
+                    });
+                    // --- END STATS UPDATE ON ACCEPT ---
+
+                    res.status(200).json({ success: true, message: "Friend request accepted!" });
+                });
+            });
+        } else { // This is the 'decline' action
+            console.log(`Friend request ${requestId} declined.`);
+            res.status(200).json({ success: true, message: "Friend request declined." });
+        }
+    });
+});
+
+// Display My Friends Route
+app.get('/my-friends', requireLogin, (req, res) => {
+    const currentUserId = req.session.user.id;
+
+    if (!currentUserId) {
+        return res.redirect('/login');
+    }
+
+    // Simplified and corrected SQL query for fetching unique friends
+    db.all(`
+        SELECT
+            CASE
+                WHEN f.user1_id = ? THEN u2.id
+                ELSE u1.id
+            END AS friendId,
+            CASE
+                WHEN f.user1_id = ? THEN u2.username
+                ELSE u1.username
+            END AS username,
+            CASE
+                WHEN f.user1_id = ? THEN u2.email
+                ELSE u1.email
+            END AS email
+        FROM
+            friends f
+        JOIN
+            users u1 ON f.user1_id = u1.id
+        JOIN
+            users u2 ON f.user2_id = u2.id
+        WHERE
+            (f.user1_id = ? OR f.user2_id = ?) AND f.status = 'accepted'
+        GROUP BY
+            MIN(f.user1_id, f.user2_id), MAX(f.user1_id, f.user2_id)
+        ORDER BY
+            username ASC;
+    `, [currentUserId, currentUserId, currentUserId, currentUserId, currentUserId], (err, friends) => {
+        if (err) {
+            console.error("Query error fetching friends:", err.message);
+            return res.status(500).send("Database error fetching friends list.");
+        }
+
+        res.render('myFriends', {
+            friends,
+            pageTitle: 'My Friends'
+        });
+    });
+});
+
+// Remove Friend Route
+app.post('/remove-friend', requireLogin, (req, res) => {
+    const currentUserId = req.session.user.id;
+    const { friendId } = req.body;
+
+    if (!friendId) {
+        return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
+    }
+
+    db.run(`
+        DELETE FROM friends
+        WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?);
+    `, [currentUserId, friendId, friendId, currentUserId], function (err) {
+        if (err) {
+            console.error("Database error removing friend:", err.message);
+            return res.status(500).json({ success: false, message: "Could not remove friend." });
+        }
+
+        if (this.changes === 0) {
+            console.warn(`Attempted to remove friend (user ${currentUserId} from ${friendId}) but no rows changed.`);
+            return res.status(404).json({ success: false, message: "Friendship not found." });
+        }
+
+        // --- START STATS UPDATE ON REMOVE ---
+        // Decrement currentUserId's friends count
+        db.run(`
+            UPDATE stats
+            SET friends = friends - 1
+            WHERE userId = ? AND friends > 0; -- Prevent negative counts
+        `, [currentUserId], function(err) {
+            if (err) {
+                console.error(`Error updating friends count for user ${currentUserId}:`, err.message);
+            } else {
+                console.log(`Friends count decremented for user ${currentUserId}.`);
+            }
+        });
+
+        // Decrement friendId's friends count
+        db.run(`
+            UPDATE stats
+            SET friends = friends - 1
+            WHERE userId = ? AND friends > 0; -- Prevent negative counts
+        `, [friendId], function(err) {
+            if (err) {
+                console.error(`Error updating friends count for user ${friendId}:`, err.message);
+            } else {
+                console.log(`Friends count decremented for user ${friendId}.`);
+            }
+        });
+        // --- END STATS UPDATE ON REMOVE ---
+
+        console.log(`Friendship removed: User ${currentUserId} and User ${friendId}`);
+        res.status(200).json({ success: true, message: "Friend removed successfully." });
+    });
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
