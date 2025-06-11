@@ -214,3 +214,6 @@ button.accept-button:hover {
         margin-top: 8px;
     }
 }
+.timer {
+  color: white !important;
+}

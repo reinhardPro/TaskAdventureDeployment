@@ -138,7 +138,7 @@ label {
 
 /* Level Info directly below the character image */
 .level-info {
-    color: white;
+    color: white !important;
     font-size: 20px; /* Slightly increased font size for level */
     font-weight: bold;
     margin-top: 15px; /* Space between image and level */

@@ -7,7 +7,7 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './public/uploads'); // Zorg dat deze map bestaat
+    cb(null, './public/uploads');
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -46,8 +46,8 @@ function requireAdmin(req, res, next) {
   });
 }
 
-  const app = express();
-  const port = 3000;
+const app = express();
+const port = 3000;
 
 app.engine('hbs', exphbs.engine({
   extname: 'hbs',
@@ -58,22 +58,20 @@ app.engine('hbs', exphbs.engine({
     eq: (a, b) => a == b,
     ifEquals: (a, b, options) => {
       if (a == b) {
-        return options.fn(this);  // Render the block if the values are equal
+        return options.fn(this);
       }
-      return options.inverse(this);  // Otherwise, render the inverse block
+      return options.inverse(this);
     },
     lookupCharacter: (characters, id) => {
-      // Find the character by the given ID
       return characters.find(character => character.id == id);
     },
-// NEW HELPER: Get character image based on level
+
     getCharacterImage: (character, characterInfo) => {
       if (!characterInfo) {
         console.warn('getCharacterImage: characterInfo is null or undefined', character);
-        return '/img/default.png'; // Fallback image
+        return '/img/default.png';
       }
 
-      // Example: Simple evolution based on level
       if (character.level >= 5 && characterInfo.evolutionStage2Image) {
         return characterInfo.evolutionStage2Image;
       } else if (character.level >= 2 && characterInfo.evolutionStage1Image) {
@@ -98,7 +96,7 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: false,  // Set this to true in production with HTTPS
+    secure: false,
     maxAge: 3600000,
     sameSite: 'lax'
   }
@@ -129,7 +127,7 @@ app.use((req, res, next) => {
   );
 });
 
-  // Landing Page Route
+// Landing Page Route
 app.get('/', (req, res) => {
   if (req.session && req.session.userId) {
     return res.redirect('/home');
@@ -140,10 +138,26 @@ app.get('/', (req, res) => {
 
 
 //Home
+function calculateLevelAndXpProgress(totalXp) {
+  let level = 1;
+  let xpForNextLevel = 100;
+  let remainingXp = totalXp;
+
+  while (remainingXp >= xpForNextLevel) {
+    remainingXp -= xpForNextLevel;
+    level++;
+    xpForNextLevel = 100 + (level - 1) * 50;
+  }
+
+  return {
+    level,
+    xpIntoCurrentLevel: remainingXp,
+    xpToNextLevel: xpForNextLevel
+  };
+}
+
 app.get('/home', requireLogin, (req, res) => {
   const userId = req.session.user.id;
-
-  const xpThreshold = 100; // XP required per level
 
   db.all(`
     SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
@@ -177,12 +191,9 @@ app.get('/home', requireLogin, (req, res) => {
     db.all('SELECT * FROM tasks WHERE characterId = ? AND pending = 1', [characterId], (err, tasks) => {
       if (err) return res.status(500).send('Error fetching tasks');
 
-      // Calculate XP progress inside the current level
       const totalXp = selectedCharacter.xp;
       const level = selectedCharacter.level;
-      const xpForPreviousLevels = (level - 1) * xpThreshold;
-      const xpIntoCurrentLevel = totalXp - xpForPreviousLevels;
-      const xpToNextLevel = xpThreshold;
+      const { xpIntoCurrentLevel, xpToNextLevel } = calculateLevelAndXpProgress(totalXp);
       const xpPercentage = Math.min(100, (xpIntoCurrentLevel / xpToNextLevel) * 100);
 
       res.render('Home', {
@@ -196,13 +207,14 @@ app.get('/home', requireLogin, (req, res) => {
         xpIntoCurrentLevel,
         xpToNextLevel,
         xpPercentage,
-        selectedCharacter
+        selectedCharacter,
+        pageTitel: 'Home'
       });
     });
   });
 });
 
-// XP gain route (No direct changes needed here, as it operates on character XP and level)
+// XP gain route
 app.post('/api/gain-xp', (req, res) => {
   const userId = req.session.user?.id;
   const characterId = parseInt(req.body.characterId);
@@ -213,15 +225,15 @@ app.post('/api/gain-xp', (req, res) => {
   }
 
   db.get(
-    'SELECT xp FROM characters WHERE id = ? AND userId = ?',
+    'SELECT xp, level FROM characters WHERE id = ? AND userId = ?',
     [characterId, userId],
     (err, character) => {
       if (err) return res.status(500).json({ error: 'Database error' });
       if (!character) return res.status(404).json({ error: 'Character not found' });
 
-      const xpThreshold = 100;
+      const oldLevel = character.level;
       const totalXp = character.xp + xpGained;
-      const newLevel = Math.floor(totalXp / xpThreshold) + 1;
+      const { level: newLevel } = calculateLevelAndXpProgress(totalXp);
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ? AND userId = ?',
@@ -229,36 +241,31 @@ app.post('/api/gain-xp', (req, res) => {
         function (updateErr) {
           if (updateErr) return res.status(500).json({ error: 'Failed to update XP' });
 
-          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > character.level });
+          res.json({ xp: totalXp, level: newLevel, leveledUp: newLevel > oldLevel });
         }
       );
     }
   );
 });
 
-// Taak voltooien + XP toekennen (No direct changes needed here, as it operates on character XP and level)
+// complete task
 app.post('/task/complete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
   const characterId = req.query.characterId;
 
-  if (!characterId) return res.status(400).send('characterId ontbreekt');
+  if (!characterId) return res.status(400).send('characterId is missing');
 
   db.get('SELECT * FROM tasks WHERE id = ?', [taskId], (err, task) => {
-    if (err || !task) return res.status(500).send('Taak niet gevonden');
+    if (err || !task) return res.status(500).send('Task not found');
 
     const taskXp = Number(task.xp) || 0;
 
     db.get('SELECT * FROM characters WHERE id = ?', [characterId], (err, character) => {
-      if (err || !character) return res.status(500).send('Character niet gevonden');
+      if (err || !character) return res.status(500).send('Character not found');
 
       const userId = character.userId;
       const newXp = (character.xp || 0) + taskXp;
-      let newLevel = character.level || 1;
-      const requiredXp = 100; // Assuming 100 XP per level for simplicity
-
-      while (newXp >= newLevel * requiredXp) { // This logic also needs to be adjusted based on desired level up curve.
-        newLevel++;
-      }
+      let newLevel = calculateLevelAndXpProgress(newXp).level;
 
       db.run(
         'UPDATE characters SET xp = ?, level = ? WHERE id = ?',
@@ -275,7 +282,6 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
             const updatedTaskCompleted = (stats.taskCompleted || 0) + 1;
             const updatedXp = (stats.totalXpGained || 0) + taskXp;
 
-            // Determen if this task gave the most xp
             const updatedMostXp = Math.max(taskXp, stats.mostXpForOneTask || 0);
 
             db.run(
@@ -288,7 +294,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
                   function (err) {
                     if (err) return res.status(500).send('Taak voltooien faalde');
 
-                    res.redirect('/home?characterId=' + characterId); // Redirect naar de home pagina
+                    res.redirect('/home?characterId=' + characterId);
 
                   });
               }
@@ -308,15 +314,13 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
 //Stats route
 app.get('/Stats', requireLogin, (req, res) => {
   const userId = req.session.user?.id;
-  const username =req.session.user?.username;
-  // Fetch stats for the logged-in user
+  const username = req.session.user?.username;
   db.get('SELECT * FROM stats WHERE username = ?', [username], (err, stat) => {
     if (err) {
       console.error('Error fetching stats:', err);
       return res.status(500).send('Error fetching stats');
     }
-    //Render the "Stats" view with stats 
-    res.render('Stats', { stats: stat, pageTitel:'Stats'});
+    res.render('Stats', { stats: stat, pageTitel: 'Stats' });
   });
 });
 
@@ -325,7 +329,7 @@ app.get('/Stats', requireLogin, (req, res) => {
 app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
-  // Verwijder taken waarvan de dueDate in het verleden ligt
+  const maxDate = '2050-12-31';
   db.run(`
     DELETE FROM tasks
     WHERE dueDate < date('now')
@@ -333,8 +337,6 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
   `, [userId], (err) => {
     if (err) return res.status(500).send('Fout bij het verwijderen van verlopen taken');
 
-    // Daarna pas: laadt characters en taken
-    // IMPORTANT CHANGE: Join with character_info for Taskmanager too, so you can display images
     db.all(`
         SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
         FROM characters c
@@ -349,7 +351,9 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 
       db.all(
         `
-        SELECT tasks.*, characters.name AS characterName
+        SELECT tasks.id, tasks.title, tasks.description, tasks.dueDate,
+       tasks.completed, tasks.Pending AS Pending, tasks.xp,
+       characters.name AS characterName
         FROM tasks
         JOIN characters ON tasks.characterId = characters.id
         WHERE tasks.characterId IN (${placeholders})
@@ -358,7 +362,7 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
         characterIds,
         (err, tasks) => {
           if (err) return res.status(500).send('Error loading tasks');
-          res.render('Taskmanager', { characters, tasks, today, pageTitel: 'Task Manager' });
+          res.render('Taskmanager', { characters, tasks, today, maxDate, pageTitel: 'Task Manager' });
         }
       );
     });
@@ -369,14 +373,14 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
 app.post('/Taskmanager', requireLogin, (req, res) => {
   const { taskName, taskDeadline, taskDescription, characterId, taskXp } = req.body;
 
-db.run(
-  `INSERT INTO tasks (title, description, dueDate, completed, characterId, xp) VALUES (?, ?, ?, 0, ?, ?)`,
-  [taskName, taskDescription, taskDeadline, characterId, taskXp],
-  err => {
-    if (err) return res.status(500).send('Error adding task');
-    res.redirect('/Taskmanager');
-  }
-);
+  db.run(
+    `INSERT INTO tasks (title, description, dueDate, completed, pending, characterId, xp) VALUES (?, ?, ?, 0, 0, ?, ?)`,
+    [taskName, taskDescription, taskDeadline, characterId, taskXp],
+    err => {
+      if (err) return res.status(500).send('Error adding task');
+      res.redirect('/Taskmanager');
+    }
+  );
 });
 
 // Handle task accept
@@ -392,8 +396,8 @@ app.post('/task/accept/:id', requireLogin, (req, res) => {
         SELECT id FROM characters WHERE userId = ?
       )
   `, [taskId, userId], err => {
-    if (err) return res.status(500).send('Error accepting task');
-    res.redirect('/Taskmanager');
+    if (err) return res.status(500).json({ error: 'Error accepting task' });
+    res.json({ success: true });
   });
 });
 
@@ -429,12 +433,12 @@ app.post('/task/delete/:id', requireLogin, (req, res) => {
 
 
 // Login
-app.get('/Login', (req, res) => res.render('Login',{pageTitel:'Login'}));
+app.get('/Login', (req, res) => res.render('Login', { pageTitel: 'Login' }));
 
 app.post('/Login', (req, res) => {
   const { username, password } = req.body;
   findUser(username, (err, user) => {
-    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel:'Login' });
+    if (err || !user) return res.render('Login', { error: 'Gebruiker niet gevonden.', pageTitel: 'Login' });
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err || !isMatch) return res.render('Login', { error: 'Wachtwoord incorrect.' });
       req.session.user = user;
@@ -444,18 +448,16 @@ app.post('/Login', (req, res) => {
 });
 
 // Create Account
-app.get('/CreateAccount', (req, res) => res.render('CreateAccount',{pageTitel:'Create Account'}));
+app.get('/CreateAccount', (req, res) => res.render('CreateAccount', { pageTitel: 'Create Account' }));
 
 app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
   const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
-  // Basic password confirmation check
   if (password !== confirmPassword) {
     return res.render('CreateAccount', { error: 'Passwords do not match.' });
   }
 
-  // Password strength check
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
   if (!passwordRegex.test(password)) {
     return res.render('CreateAccount', {
@@ -463,7 +465,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
     });
   }
 
-  // Check if username or email already exists
   db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, existingUser) => {
     if (err) {
       return res.render('CreateAccount', { error: 'An error has occurred. Please try again.' });
@@ -473,7 +474,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
       return res.render('CreateAccount', { error: 'Username or e-mail already exists.' });
     }
 
-    // Create user
     createUser(email, username, password, profileImage, (err, userId) => {
       if (err) {
         return res.render('CreateAccount', { error: 'An error occurred while trying to create your account.' });
@@ -505,8 +505,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
     });
   });
 });
-
-
 
 // Logout
 app.post('/Logout', (req, res) => {
@@ -561,7 +559,7 @@ app.get('/AdminPanel', requireAdmin, (req, res) => {
       }
     });
 
-    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel:'Admin Panel' });
+    res.render('AdminPanel', { users: Object.values(usersMap), pageTitel: 'Admin Panel' });
   });
 });
 
@@ -596,7 +594,7 @@ app.post('/admin/delete-character', requireAdmin, (req, res) => {
 // Finish Task (mark as completed)
 app.post('/admin/finish-task', requireAdmin, (req, res) => {
   const { taskId } = req.body;
-db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
+  db.run(`UPDATE tasks SET pending = 0, completed = 1 WHERE id = ?`, [taskId], err => {
     if (err) return res.status(500).send('Error finishing task');
     res.redirect('/AdminPanel');
   });
@@ -611,6 +609,7 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 });
 
+// update character XP
 app.post('/admin/update-character-xp', (req, res) => {
   const characterId = parseInt(req.body.characterId);
   const newTotalXp = parseInt(req.body.newXp);
@@ -637,18 +636,13 @@ app.post('/admin/update-character-xp', (req, res) => {
   );
 });
 
-
-
-  // Focus Mode route
-  app.get('/FocusMode', requireLogin, (req, res) => {
-    res.render('FocusMode', {pageTitel:'Focus Mode'});
-  });
-
-  // Settings route
+// Focus Mode route
+app.get('/FocusMode', requireLogin, (req, res) => {
+  res.render('FocusMode', { pageTitel: 'Focus Mode' });
+});
 
 // Helper functies
 function getCharacters(userId, callback) {
-  // IMPORTANT CHANGE: Join with character_info here too for settings page if you want to display current images
   db.all(`
     SELECT c.id, c.name, c.level,
            ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
@@ -675,12 +669,12 @@ function renderSettingsPage(res, user, alert) {
       user,
       characters,
       alert,
-      pageTitel:'Settings'
+      pageTitel: 'Settings'
     });
   });
 }
 
-// GET Settings pagina
+// get Settings pagina
 app.get('/Settings', requireLogin, (req, res) => {
   const user = req.session.user;
   const alert = req.session.alert;
@@ -689,7 +683,7 @@ app.get('/Settings', requireLogin, (req, res) => {
   renderSettingsPage(res, user, alert);
 });
 
-// Wachtwoord wijzigen
+// Change Password
 app.post('/Settings/changePassword', requireLogin, (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const user = req.session.user;
@@ -736,7 +730,7 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
   });
 });
 
-// Account verwijderen
+// Delete Account
 app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   const user = req.session.user;
 
@@ -785,14 +779,12 @@ app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   });
 });
 
-// Character verwijderen
+// Delete Character
 app.post('/Settings/removecharacter', requireLogin, (req, res) => {
   const user = req.session.user;
   const characterId = req.body.characterId;
 
-
-  // Bekijkt het aantal characters van de gebruiker
- db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
+  db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
     if (err) {
       req.session.alert = { type: 'error', message: 'Error checking characters' };
       return res.redirect('/Settings');
@@ -804,30 +796,30 @@ app.post('/Settings/removecharacter', requireLogin, (req, res) => {
     }
 
 
-  db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
-    if (err || !character) {
-      req.session.alert = { type: 'error', message: 'Character not found or not yours' };
-      return res.redirect('/Settings');
-    }
-
-    db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
-      if (err) {
-        req.session.alert = { type: 'error', message: 'Error deleting tasks' };
+    db.get('SELECT * FROM characters WHERE id = ? AND userId = ?', [characterId, user.id], (err, character) => {
+      if (err || !character) {
+        req.session.alert = { type: 'error', message: 'Character not found or not yours' };
         return res.redirect('/Settings');
       }
 
-      db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+      db.run('DELETE FROM tasks WHERE characterId = ?', [characterId], (err) => {
         if (err) {
-          req.session.alert = { type: 'error', message: 'Error deleting character' };
+          req.session.alert = { type: 'error', message: 'Error deleting tasks' };
           return res.redirect('/Settings');
         }
 
-        req.session.alert = { type: 'success', message: 'Character removed successfully' };
-        res.redirect('/Settings');
+        db.run('DELETE FROM characters WHERE id = ?', [characterId], (err) => {
+          if (err) {
+            req.session.alert = { type: 'error', message: 'Error deleting character' };
+            return res.redirect('/Settings');
+          }
+
+          req.session.alert = { type: 'success', message: 'Character removed successfully' };
+          res.redirect('/Settings');
+        });
       });
     });
   });
-});
 });
 
 
@@ -836,7 +828,7 @@ app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
-// Leaderboard (Needs join to character_info to get character image for leaderboard display)
+// Leaderboard
 app.get('/leaderboard', requireLogin, (req, res) => {
   db.all(`
     SELECT c.name, c.xp, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image, c.level
@@ -849,10 +841,6 @@ app.get('/leaderboard', requireLogin, (req, res) => {
       console.error("Query error:", err.message);
       return res.status(500).send("Database error");
     }
-
-    // You might want to determine the correct image path for each character here
-    // based on their level before passing to the template, or use the helper.
-    // For now, the helper 'getCharacterImage' will handle it in the template.
 
     const top3 = rows.slice(0, 3);
     const others = rows.slice(3);
@@ -870,22 +858,18 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
   });
 });
 
-// Inside your server.js, find a logical place for this.
-// For example, you can put it near your other app.get routes like '/Login' or '/CreateAccount'.
+// Character Creation GET route
+app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', { pageTitel: 'Character Creation' }));
 
-// Character Creation GET route (to display the character creation form)
-app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', {pageTitel:'Character Creation'}));
-
-// Character Creation POST (IMPORTANT CHANGES HERE)
+// Character Creation POST
 app.post('/CharacterCreation', (req, res) => {
-  const { name, gender, imagevalue } = req.body; // imagevalue is now the baseImage path
+  const { name, gender, imagevalue } = req.body;
   const userId = req.session.user?.id;
 
   if (!userId) {
     return res.status(401).send("Unauthorized: You must be logged in.");
   }
 
-  // First, find the characterInfoId based on the selected base image
   getCharacterInfoByBaseImage(imagevalue, (err, characterInfo) => {
     if (err || !characterInfo) {
       console.error('Error fetching character info:', err);
@@ -894,7 +878,6 @@ app.post('/CharacterCreation', (req, res) => {
 
     const characterInfoId = characterInfo.id;
 
-    // Now insert into the characters table using characterInfoId
     db.run(
       'INSERT INTO characters (userId, name, gender, characterInfoId) VALUES (?, ?, ?, ?)', // Use characterInfoId
       [userId, name, gender, characterInfoId],
@@ -904,13 +887,13 @@ app.post('/CharacterCreation', (req, res) => {
           return res.status(500).json({ success: false, message: 'Error adding character to the database' });
         }
 
-        // Return success message as JSON
         return res.json({ success: true, message: 'Character created successfully!' });
       }
     );
   });
 });
 
+// GET profile
 app.get('/profile', requireLogin, (req, res) => {
   const user = req.session.user;
 
@@ -923,7 +906,7 @@ app.get('/profile', requireLogin, (req, res) => {
   });
 });
 
-
+// Update profile
 app.post('/profile/update', requireLogin, (req, res) => {
   const { username, email } = req.body;
   const userId = req.session.user.id;
@@ -972,6 +955,7 @@ app.post('/profile/update', requireLogin, (req, res) => {
   });
 });
 
+// Reset password
 app.get('/reset-password', (req, res) => {
   res.render('reset-password');
 });
@@ -994,152 +978,293 @@ app.post('/reset-password', (req, res) => {
   });
 });
 
-app.get('/Classroom', requireLogin, (req, res) => {
-  const userId = req.session.user.id;
+// Classroom
+app.get('/Classroom', requireLogin, async (req, res) => {
+  const user = req.session.user;
 
-  // Stap 1: Zoek alle klassen waarin de gebruiker zit
-  const klasQuery = `
-    SELECT c.id AS classId, c.name AS className, c.code, c.teacherId, u.username AS teacherName
-    FROM classes c
-    JOIN users u ON c.teacherId = u.id
-    JOIN class_users cu ON cu.classId = c.id
-    WHERE cu.userId = ?
-  `;
+  if (!user || !user.id) {
+    return res.status(401).send("User not logged in");
+  }
 
-  db.all(klasQuery, [userId], (err, classes) => {
-    if (err) {
-      console.error("❌ Fout bij ophalen van klassen:", err);
-      return res.status(500).send("Interne fout bij ophalen van klassen.");
-    }
+  const userId = user.id;
+
+  try {
+    const classesQuery = `
+            SELECT
+                c.id,
+                c.name AS className,
+                c.code,
+                c.characterId,
+                c.user_id,
+                tu.username AS teacherUsername
+            FROM classes c
+            JOIN class_users cu ON c.id = cu.classId
+            JOIN users tu ON c.user_id = tu.id
+            WHERE cu.userId = ?
+        `;
+
+    let classes = await new Promise((resolve, reject) => {
+      db.all(classesQuery, [userId], (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
 
     if (classes.length === 0) {
-  return res.render('CreateClassroom', {
-    pageTitel: 'Nieuwe Klas Aanmaken',
-    message: 'Je zit nog niet in een klas. Maak er een aan!'
-  });
-}
-
-    // Stap 2: Voor elke klas de leden ophalen met hun personages
-    const classIds = classes.map(c => c.classId);
-
-    const memberQuery = `
-      SELECT cu.classId, u.id AS userId, u.username, ch.name AS characterName, ch.level, ch.xp
-  FROM class_users cu
-  JOIN users u ON u.id = cu.userId
-  LEFT JOIN (
-    SELECT * FROM characters
-    WHERE id IN (
-      SELECT MAX(id) FROM characters GROUP BY userId
-    )
-  ) ch ON ch.userId = u.id
-  WHERE cu.classId IN (${classIds.map(() => '?').join(',')})
-  ORDER BY cu.classId, u.username
-    `;
-
-    db.all(memberQuery, classIds, (err, members) => {
-      if (err) {
-        console.error("❌ Fout bij ophalen van klasleden:", err);
-        return res.status(500).send("Fout bij ophalen van klasleden.");
-      }
-
-      // Groepeer per klas
-      const classData = classes.map(klas => {
-    return {
-      id: klas.classId,
-      name: klas.className,
-      code: klas.code,
-      teacher: klas.teacherName,
-      isTeacher: klas.teacherId === userId, // 👈 toegevoegd veld
-      members: members
-        .filter(m => m.classId === klas.classId)
-        .map(m => ({
-          username: m.username,
-          character: m.characterName,
-          level: m.level,
-          xp: m.xp
-        }))
-    };
-  });
-
-  res.render('Classroom', {
-    pageTitel: 'Mijn Classroom',
-    classes: classData
-  });
-    });
-  });
-});
-app.post('/Classroom', requireLogin, (req, res) => {
-  const userId = req.session.user.id;
-  const { name, code } = req.body;
-
-  // ✅ Eerst controleren of er al een klas bestaat met dezelfde NAAM
-  const checkQuery = `SELECT * FROM classes WHERE name = ?`;
-
-  db.get(checkQuery, [name], (err, row) => {
-    if (err) {
-      console.error("❌ Fout bij controleren van klasnaam:", err);
-      return res.status(500).send("Interne fout bij controleren van klasnaam.");
-    }
-
-    if (row) {
-      // ❌ Klasnaam bestaat al, render het formulier opnieuw met foutmelding
+      const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+      let characters = await new Promise((resolve, reject) => {
+        db.all(charQuery, [userId], (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        });
+      });
       return res.render('CreateClassroom', {
-        pageTitel: 'Nieuwe Klas Aanmaken',
-        message: `De naam "${name}" is al in gebruik. Kies een andere naam.`,
-        name,
-        code
+        pageTitel: 'Create New Class',
+        message: 'You are not yet in a class. Create one!',
+        characters
       });
     }
 
-    // ✅ Naam bestaat niet, klas toevoegen
-    const insertQuery = `INSERT INTO classes (name, code, teacherId) VALUES (?, ?, ?)`;
+    const classesWithMembers = await Promise.all(classes.map(async (classroom) => {
+      const membersQuery = `
+                SELECT
+                    u.username,
+                    ch.name AS characterName,
+                    ch.level,
+                    ch.xp
+                FROM class_users clu
+                JOIN users u ON clu.userId = u.id
+                LEFT JOIN characters ch ON u.id = ch.userId
+                WHERE clu.classId = ?
+                AND u.id != ?
+                GROUP BY u.id
+                ORDER BY ch.xp DESC, ch.id ASC
+            `;
 
-    db.run(insertQuery, [name, code, userId], function(err) {
+      const members = await new Promise((resolve, reject) => {
+        db.all(membersQuery, [classroom.id, classroom.user_id], (err, memberRows) => {
+          if (err) {
+            console.error(`❌ Error fetching members for class ${classroom.id}:`, err.message);
+            return reject(err);
+          }
+          if (!memberRows) {
+            console.warn(`⚠️ No member data returned for class ${classroom.id}.`);
+            return resolve([]);
+          }
+          resolve(memberRows.map(member => ({
+            username: member.username,
+            character: member.characterName || 'No character',
+            level: member.level || 0,
+            xp: member.xp || 0
+          })));
+        });
+      });
+
+      const isTeacher = (classroom.user_id === userId);
+
+      return {
+        ...classroom,
+        members: members,
+        isTeacher: isTeacher
+      };
+    }));
+
+    console.log("DEBUG: Final classes data with members:", JSON.stringify(classesWithMembers, null, 2));
+
+    res.render('Classroom', { classes: classesWithMembers, pageTitel: 'My Class' });
+
+  } catch (err) {
+    console.error("❌ Error fetching classes and members:", err.message);
+    return res.status(500).send("Internal server error fetching class data.");
+  }
+});
+
+// Create classroom
+app.get('/CreateClassroom', requireLogin, (req, res) => {
+  const user = req.session.user;
+  const userId = user.id;
+
+  const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+
+  db.all(charQuery, [userId], (err, characters) => {
+    if (err) {
+      console.error("❌ Error fetching characters:", err);
+      return res.status(500).send("Error fetching characters.");
+    }
+
+    res.render('CreateClassroom', {
+      pageTitel: 'Create New Class',
+      message: null,
+      characters
+    });
+  });
+});
+app.post('/CreateClassroom', requireLogin, (req, res) => {
+  const { className, characterId, code } = req.body;
+  console.log("DEBUG: characterId from req.body:", characterId);
+  console.log("DEBUG: className from req.body:", className);
+  console.log("DEBUG: code from req.body:", code);
+  const userId = req.session.user.id;
+
+  if (!userId) {
+    console.error("❌ userId is missing in session for /CreateClassroom POST");
+    return res.redirect('/login');
+  }
+
+  if (!className || !characterId || !code) {
+    console.error("❌ Missing required fields for classroom creation.");
+    return res.status(400).send("All fields are required.");
+  }
+
+  db.get('SELECT id FROM characters WHERE id = ? AND userId = ?', [characterId, userId], (err, charRow) => {
+    if (err || !charRow) {
+      console.error("❌ Selected character does not belong to the user or does not exist:", err);
+      return res.status(403).send("You can only choose a character that belongs to you.");
+    }
+
+    db.get('SELECT id FROM classes WHERE name = ?', [className], (err, existingClassByName) => {
       if (err) {
-        console.error("❌ Fout bij toevoegen van klas:", err);
-        return res.status(500).send("Kon klas niet toevoegen.");
+        console.error("❌ Error checking unique class name:", err.message);
+        return res.status(500).send("Internal server error checking class name.");
+      }
+      if (existingClassByName) {
+        console.error("❌ Class with this name already exists:", className);
+        const charQuery = `SELECT id, name FROM characters WHERE userId = ?`;
+        db.all(charQuery, [userId], (err, characters) => {
+          if (err) {
+            console.error("❌ Error fetching characters after name error:", err);
+            return res.status(500).send("Error fetching characters.");
+          }
+          return res.render('CreateClassroom', {
+            pageTitel: 'Create New Class',
+            message: 'This class name is already in use. Choose another one.',
+            characters,
+            oldClassName: className,
+            oldCharacterId: characterId,
+            oldCode: code
+          });
+        });
+        return;
       }
 
-      const classId = this.lastID;
+      const insertClassQuery = `
+                INSERT INTO classes (name, user_id, characterId, code)
+                VALUES (?, ?, ?, ?)
+            `;
 
-      // Voeg de leraar toe als lid van deze klas
-      const insertClassUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
-
-      db.run(insertClassUser, [classId, userId], (err) => {
+      db.run(insertClassQuery, [className, userId, characterId, code], function (err) {
         if (err) {
-          console.error("❌ Fout bij toevoegen van klas-gebruiker:", err);
-          return res.status(500).send("Kon klasgebruikers niet bijwerken.");
+          console.error("❌ Error adding class:", err.message);
+          return res.status(500).send("Internal server error creating class.");
         }
 
-        res.redirect('/Classroom');
+        const classId = this.lastID;
+
+        db.run('INSERT INTO class_users (classId, userId) VALUES (?, ?)', [classId, userId], (err) => {
+          if (err) {
+            console.error("❌ Error adding user to class_users:", err.message);
+            return res.status(500).send("Error adding user to class.");
+          }
+          console.log("✅ New class added with ID:", classId, "and user added to class.");
+          res.redirect('/Classroom');
+        });
       });
     });
   });
 });
+
+// Delete classroom
 app.post('/Classroom/:id/delete', requireLogin, (req, res) => {
   const classId = req.params.id;
   const userId = req.session.user.id;
 
-  db.get(`SELECT * FROM classes WHERE id = ? AND teacherId = ?`, [classId, userId], (err, row) => {
-    if (err) return res.status(500).send("Databasefout.");
-    if (!row) return res.status(403).send("Geen toegang.");
+  if (!userId) {
+    console.error("❌ userId is missing in session for /Classroom/:id/delete POST");
+    return res.status(401).send("User not logged in.");
+  }
 
-    db.run(`DELETE FROM class_users WHERE classId = ?`, [classId], function (err) {
-      if (err) return res.status(500).send("Fout bij verwijderen klasgebruikers.");
+  if (!classId) {
+    console.error("❌ Class ID is missing for delete request.");
+    return res.status(400).send("Invalid class ID.");
+  }
 
-      db.run(`DELETE FROM classes WHERE id = ?`, [classId], function (err) {
-        if (err) return res.status(500).send("Fout bij verwijderen klas.");
+  db.get('SELECT user_id FROM classes WHERE id = ?', [classId], (err, classRow) => {
+    if (err) {
+      console.error(`❌ Error checking class creator for class ${classId}:`, err.message);
+      return res.status(500).send("Internal server error.");
+    }
+    if (!classRow) {
+      console.warn(`⚠️ Class with ID ${classId} not found for deletion.`);
+      return res.status(404).send("Class not found.");
+    }
+    if (classRow.user_id !== userId) {
+      console.warn(`⚠️ User ${userId} tried to delete class ${classId} without being the owner.`);
+      return res.status(403).send("You do not have permission to delete this class.");
+    }
+
+    db.run('DELETE FROM class_users WHERE classId = ?', [classId], (err) => {
+      if (err) {
+        console.error(`❌ Error deleting members from class ${classId}:`, err.message);
+        return res.status(500).send("Error deleting class members.");
+      }
+
+      db.run('DELETE FROM classes WHERE id = ?', [classId], function (err) {
+        if (err) {
+          console.error(`❌ Error deleting class ${classId}:`, err.message);
+          return res.status(500).send("Error deleting the class.");
+        }
+
+        if (this.changes === 0) {
+          console.warn(`⚠️ Class with ID ${classId} was already deleted.`);
+        } else {
+          console.log(`✅ Class with ID ${classId} successfully deleted.`);
+        }
         res.redirect('/Classroom');
       });
     });
   });
 });
 
+// Leave classroom
+app.post('/Classroom/:id/leave', requireLogin, (req, res) => {
+  const classId = req.params.id;
+  const userId = req.session.user.id;
 
+  if (!userId) {
+    console.error("❌ userId is missing in session for /Classroom/:id/leave POST");
+    return res.status(401).send("User not logged in.");
+  }
+
+  if (!classId) {
+    console.error("❌ Class ID is missing for leave request.");
+    return res.status(400).send("Invalid class ID.");
+  }
+
+  const deleteQuery = `DELETE FROM class_users WHERE classId = ? AND userId = ?`;
+
+  db.run(deleteQuery, [classId, userId], function (err) {
+    if (err) {
+      console.error(`❌ Error leaving class ${classId} by user ${userId}:`, err.message);
+      return res.status(500).send("Error leaving the class.");
+    }
+
+    if (this.changes === 0) {
+      console.warn(`⚠️ User ${userId} was not a member of class ${classId} or has already left.`);
+    } else {
+      console.log(`✅ User ${userId} left class ${classId}.`);
+    }
+    res.redirect('/Classroom');
+  });
+});
+
+// Join classroom
 app.get('/joinClassroom', requireLogin, (req, res) => {
+  const message = req.session.joinClassMessage;
+  delete req.session.joinClassMessage;
+
   res.render('JoinClassroom', {
     pageTitel: 'Join Classroom',
-    message: ''
+    message: message || null
   });
 });
 
@@ -1147,55 +1272,56 @@ app.post('/joinClassroom', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const { name, code } = req.body;
 
-  // Zoek classroom met gegeven naam + code
+  if (!name || !code) {
+    req.session.joinClassMessage = 'Please enter both the class name and code.';
+    return res.redirect('/joinClassroom');
+  }
+
   const query = `SELECT * FROM classes WHERE name = ? AND code = ?`;
 
   db.get(query, [name, code], (err, classroom) => {
     if (err) {
-      console.error("❌ Fout bij zoeken classroom:", err);
-      return res.status(500).send("Interne fout.");
+      console.error("❌ Error searching classroom:", err);
+      req.session.joinClassMessage = 'An internal error occurred. Please try again.';
+      return res.redirect('/joinClassroom');
     }
 
     if (!classroom) {
-      // Geen klas gevonden met die naam + code
-      return res.render('JoinClassroom', {
-        pageTitel: 'Join Classroom',
-        message: 'Geen classroom gevonden met deze naam en code.',
-        name,
-        code
-      });
+      req.session.joinClassMessage = 'No class found with this name and code.';
+      return res.redirect('/joinClassroom');
     }
 
-    // Check of gebruiker al in die klas zit
     const checkUserInClass = `SELECT * FROM class_users WHERE classId = ? AND userId = ?`;
 
     db.get(checkUserInClass, [classroom.id, userId], (err, row) => {
       if (err) {
-        console.error("❌ Fout bij checken klaslid:", err);
-        return res.status(500).send("Interne fout.");
+        console.error("❌ Error checking class membership:", err);
+        req.session.joinClassMessage = 'An internal error occurred while checking your membership.';
+        return res.redirect('/joinClassroom');
       }
 
       if (row) {
-        // Gebruiker zit al in de klas
-        return res.redirect('/Classroom'); // of een melding tonen
+        req.session.joinClassMessage = 'You are already a member of this class.';
+        return res.redirect('/Classroom');
       }
 
-      // Voeg gebruiker toe aan klas
       const insertUser = `INSERT INTO class_users (classId, userId) VALUES (?, ?)`;
 
       db.run(insertUser, [classroom.id, userId], (err) => {
         if (err) {
-          console.error("❌ Fout bij toevoegen aan klas:", err);
-          return res.status(500).send("Interne fout.");
+          console.error("❌ Error adding to class:", err);
+          req.session.joinClassMessage = 'An error occurred while adding to the class.';
+          return res.redirect('/joinClassroom');
         }
 
+        req.session.joinClassMessage = 'You have successfully joined the class!';
         res.redirect('/Classroom');
       });
     });
   });
 });
 
-
+// Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

@@ -80,7 +80,7 @@ body{
 #characterImg[src$="malePixel.png"] { transform: scale(0.7); }
 #characterImg[src$="purpleguy.png"] { transform: scale(1.7); }
 #characterImg[src$="pixelFemale.png"] { transform: scale(0.8); }
-#characterImg[src$="Hermit.png"] { transform: scale(0.4); }
+#characterImg[src$="Hermit.png"] { transform: scale(0.8); }
 #characterImg[src$="FeyereJoe.png"] { transform: scale(1.4); }
 #characterImg[src$="samurai.png"] { transform: scale(1.3); }
 
