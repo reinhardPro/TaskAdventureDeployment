@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-const { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage } = require('./db/database');
+const { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage } = require('../db/database');
 
 function requireLogin(req, res, next) {
   if (!req.session.user) {
