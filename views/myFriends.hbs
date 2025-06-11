@@ -33,7 +33,6 @@
                 button.addEventListener('click', async (event) => {
                     const friendIdToRemove = event.target.dataset.friendid;
 
-                    // Confirm with the user before removing
                     if (!confirm('Are you sure you want to remove this friend?')) {
                         return;
                     }
@@ -51,9 +50,8 @@
 
                         if (response.ok) {
                             alert(data.message);
-                            event.target.closest('.friend-item').remove(); // Remove the item from the UI
+                            event.target.closest('.friend-item').remove();
 
-                            // Check if there are any friends left
                             const scrollContent = document.querySelector('.scroll-content');
                             const remainingFriendItems = scrollContent.querySelectorAll('.friend-item');
                             if (remainingFriendItems.length === 0) {

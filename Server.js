@@ -1335,7 +1335,7 @@ app.get('/Friends', requireLogin, (req, res) => {
 
         const potentialFriends = rows.slice(0);
 
-        res.render('Friends', { potentialFriends, pageTitle: 'Users' }); // Corrected pageTitel to pageTitle
+        res.render('Friends', { potentialFriends, pageTitle: 'Users' });
     });
 });
 
@@ -1345,9 +1345,8 @@ app.post('/addFriend', requireLogin, (req, res) => {
     const potentialFriendId = req.body.friendId;
     console.log("DEBUG: currentUserId:", currentUserId);
     console.log("DEBUG: potentialFriendId:", potentialFriendId);
-    console.log("DEBUG: Type of potentialFriendId:", typeof potentialFriendId); // Check type
+    console.log("DEBUG: Type of potentialFriendId:", typeof potentialFriendId);
 
-    // Input validation
     if (!potentialFriendId) {
         return res.status(400).json({ success: false, message: 'Friend ID is missing.' });
     }
@@ -1355,7 +1354,6 @@ app.post('/addFriend', requireLogin, (req, res) => {
         return res.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
     }
 
-    // Check if a friend request already exists (in either direction)
     db.get(`
         SELECT * FROM friends
         WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
@@ -1376,10 +1374,9 @@ app.post('/addFriend', requireLogin, (req, res) => {
             } else if (existingFriendship.status === 'accepted') {
                 message = 'You are already friends with this user.';
             }
-            return res.status(409).json({ success: false, message: message }); // 409 Conflict
+            return res.status(409).json({ success: false, message: message });
         }
 
-        // If no existing friendship, insert the new friend request
         db.run(`
             INSERT INTO friends (user1_id, user2_id, status)
             VALUES (?, ?, 'pending')
@@ -1424,15 +1421,15 @@ app.get('/friend-requests', requireLogin, (req, res) => {
 
         res.render('friendRequests', {
             pendingRequests,
-            pageTitle: 'Friend Requests' // Corrected pageTitle
+            pageTitle: 'Friend Requests'
         });
     });
 });
 
 
-// Handle Friend Request (Accept/Decline) Route
+// Handle Friend Request
 app.post('/handle-friend-request', requireLogin, (req, res) => {
-    const currentUserId = req.session.user.id; // Corrected from req.session.userId
+    const currentUserId = req.session.user.id; 
     const { requestId, action } = req.body;
 
     if (!requestId || !action || (action !== 'accept' && action !== 'decline')) {
@@ -1474,8 +1471,6 @@ app.post('/handle-friend-request', requireLogin, (req, res) => {
                     }
                     console.log(`Friend request ${requestId} accepted. Reverse relationship added: User ${currentUserId} to User ${user1Id}`);
 
-                    // --- START STATS UPDATE ON ACCEPT ---
-                    // Increment currentUserId's friends count
                     db.run(`
                         UPDATE stats
                         SET friends = friends + 1
@@ -1512,7 +1507,7 @@ app.post('/handle-friend-request', requireLogin, (req, res) => {
     });
 });
 
-// Display My Friends Route
+// My Friends Route
 app.get('/my-friends', requireLogin, (req, res) => {
     const currentUserId = req.session.user.id;
 
@@ -1520,7 +1515,6 @@ app.get('/my-friends', requireLogin, (req, res) => {
         return res.redirect('/login');
     }
 
-    // Simplified and corrected SQL query for fetching unique friends
     db.all(`
         SELECT
             CASE
@@ -1583,12 +1577,10 @@ app.post('/remove-friend', requireLogin, (req, res) => {
             return res.status(404).json({ success: false, message: "Friendship not found." });
         }
 
-        // --- START STATS UPDATE ON REMOVE ---
-        // Decrement currentUserId's friends count
         db.run(`
             UPDATE stats
             SET friends = friends - 1
-            WHERE userId = ? AND friends > 0; -- Prevent negative counts
+            WHERE userId = ? AND friends > 0;
         `, [currentUserId], function(err) {
             if (err) {
                 console.error(`Error updating friends count for user ${currentUserId}:`, err.message);
@@ -1597,7 +1589,6 @@ app.post('/remove-friend', requireLogin, (req, res) => {
             }
         });
 
-        // Decrement friendId's friends count
         db.run(`
             UPDATE stats
             SET friends = friends - 1

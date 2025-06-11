@@ -22,13 +22,13 @@
                 </div>
                 {{/each}}
                 {{else}}
-                <p style="text-align: center; color: #666;">no opens friendrequests.</p>
+                <p style="text-align: center; color: #666;">no open friend requests.</p>
                 {{/if}}
             </div>
         </div>
     </div>
     <button onclick="location.href='/my-friends'" type="button">Friends</button>
-    <button onclick="location.href='/Friends'" type="button">sen friend request</button>
+    <button onclick="location.href='/Friends'" type="button">send friend request</button>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const requestItems = document.querySelectorAll('.request-item');
@@ -71,7 +71,7 @@
                                 const noRequestsMessage = document.createElement('p');
                                 noRequestsMessage.style.textAlign = 'center';
                                 noRequestsMessage.style.color = '#666';
-                                noRequestsMessage.textContent = 'Geen openstaande vriendschapsverzoeken.';
+                                noRequestsMessage.textContent = 'No pending friend requests.';
                                 scrollContent.appendChild(noRequestsMessage);
                                 const existingNoResults = document.getElementById('noResults');
                                 if (existingNoResults) existingNoResults.remove();
@@ -80,7 +80,7 @@
                             const noRequestsMessage = document.createElement('p');
                             noRequestsMessage.style.textAlign = 'center';
                             noRequestsMessage.style.color = '#666';
-                            noRequestsMessage.textContent = 'Geen openstaande vriendschapsverzoeken.';
+                            noRequestsMessage.textContent = 'No pending friend requests.';
                             scrollContent.appendChild(noRequestsMessage);
                         }
 
@@ -89,8 +89,8 @@
                         alert('Fout: ' + data.message);
                     }
                 } catch (error) {
-                    console.error('Fout bij verwerken verzoek:', error);
-                    alert('Er is een netwerkfout opgetreden.');
+                    console.error('Error processing request:', error);
+                    alert('A network error has occurred.');
                 }
             }
         });
