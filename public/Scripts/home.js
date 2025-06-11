@@ -56,6 +56,29 @@ function calculateXpNeeded(level) {
   return 100 + (level - 1) * 50;
 }
 
+function maybeEvolveCharacter(level) {
+  const characterImg = document.querySelector(".character-image");
+
+  if (!characterImg) return;
+
+  const stage1Level = 2; // set this to your real evolution threshold
+  const stage2Level = 5;
+
+  const baseImage = characterImg.src; // fallback
+
+  const base = characterImg.dataset.base;
+  const evo1 = characterImg.dataset.evo1;
+  const evo2 = characterImg.dataset.evo2;
+
+  if (level >= stage2Level && evo2) {
+    characterImg.src = evo2;
+  } else if (level >= stage1Level && evo1) {
+    characterImg.src = evo1;
+  } else {
+    characterImg.src = base;
+  }
+}
+
   function updateXPBar(xp, level) {
     currentXp = xp;
     currentLevel = level;
@@ -65,23 +88,7 @@ function calculateXpNeeded(level) {
     xpFill.style.width = `${percent}%`;
     xpInfo.textContent = `XP: ${currentXp} / ${xpNeeded}`;
     levelInfo.textContent = `Level: ${currentLevel}`;
-  }
-
-  function gainXP(amount) {
-    fetch('/api/gain-xp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ xpGained: amount })
-    })
-      .then(res => res.json())
-      .then(data => {
-        updateXPBar(data.xp, data.level);
-        if (data.leveledUp) {
-          alert(`Level Up! Je bent nu op level ${data.level}`);
-        }
-      });
+    maybeEvolveCharacter(currentLevel);
   }
 
   function addXP(amount) {
@@ -93,7 +100,7 @@ function calculateXpNeeded(level) {
     xpNeeded = calculateXpNeeded(currentLevel);
   }
 
-  updateXPBar(currentXp, currentLevel);
+  updateXPBar(currentXp, currentLevel); 
 }
 
   // complete btn
