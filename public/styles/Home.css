@@ -84,7 +84,7 @@ label {
 /* Character Display Box (Contains image, level, XP) - This is the central box */
 .character-display-box {
     background-color: #2c2c2c; /* Background for the box */
-    padding: 20px;
+    padding: 10px;
     border-radius: 10px;
     margin-top: 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -113,7 +113,7 @@ label {
     padding-bottom: 20px;
 }
 .character-image {
-    max-height: 350px;
+    
     /* Adjusted from 300px to 320px for even larger */
     height: auto;
     border-radius: 5px;
@@ -121,7 +121,9 @@ label {
     transition: transform 0.3s ease;
     display: block;
     /* margin: 0 auto 15px auto; Removed specific bottom margin as level-info will follow */
+    height: 450px;
 }
+
 
 .character-image:hover {
     transform: scale(1.05);
