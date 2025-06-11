@@ -146,6 +146,18 @@ db.serialize(() => {
       UNIQUE (classId, userId)
     )
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS friends (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user1_id INTEGER NOT NULL,
+        user2_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user1_id) REFERENCES users(id),
+        FOREIGN KEY (user2_id) REFERENCES users(id),
+        UNIQUE (user1_id, user2_id)
+    )
+`);
 
    // Insert initial character info (you'll need to decide on your base images and evolutions)
   // This is just an example. You'll add more based on your characterImages array.

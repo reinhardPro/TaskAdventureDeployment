@@ -1,0 +1,98 @@
+<head>
+    <title>{{pageTitle}}</title>
+    <link rel="stylesheet" href="/styles/Friends.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>{{pageTitle}}</h2>
+        <div class="scroll-box">
+            <div class="scroll-content">
+                {{#if pendingRequests.length}}
+                {{#each pendingRequests}}
+                <div class="request-item">
+                    <div class="request-info">
+                        <p class="username">{{this.username}}</p>
+                        <p class="email">{{this.email}}</p>
+                    </div>
+                    <div class="request-actions">
+                        <button class="accept-btn" data-requestid="{{this.requestId}}">Accept</button>
+                        <button class="decline-btn" data-requestid="{{this.requestId}}">Refuse</button>
+                    </div>
+                </div>
+                {{/each}}
+                {{else}}
+                <p style="text-align: center; color: #666;">no open friend requests.</p>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    <button onclick="location.href='/my-friends'" type="button">Friends</button>
+    <button onclick="location.href='/Friends'" type="button">send friend request</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const requestItems = document.querySelectorAll('.request-item');
+
+            requestItems.forEach(item => {
+                const acceptButton = item.querySelector('.accept-btn');
+                const declineButton = item.querySelector('.decline-btn');
+
+                if (acceptButton) {
+                    acceptButton.addEventListener('click', () => handleRequest(event, 'accept'));
+                }
+                if (declineButton) {
+                    declineButton.addEventListener('click', () => handleRequest(event, 'decline'));
+                }
+            });
+
+            async function handleRequest(event, action) {
+                const button = event.target;
+                const requestId = button.dataset.requestid;
+
+                try {
+                    const response = await fetch('/handle-friend-request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ requestId: requestId, action: action })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(data.message);
+                        button.closest('.request-item').remove();
+
+                        const scrollContent = document.querySelector('.scroll-content');
+                        if (scrollContent && scrollContent.children.length === 1 && scrollContent.querySelector('#noResults')) {
+                            const remainingRequestItems = scrollContent.querySelectorAll('.request-item');
+                            if (remainingRequestItems.length === 0) {
+                                const noRequestsMessage = document.createElement('p');
+                                noRequestsMessage.style.textAlign = 'center';
+                                noRequestsMessage.style.color = '#666';
+                                noRequestsMessage.textContent = 'No pending friend requests.';
+                                scrollContent.appendChild(noRequestsMessage);
+                                const existingNoResults = document.getElementById('noResults');
+                                if (existingNoResults) existingNoResults.remove();
+                            }
+                        } else if (scrollContent && scrollContent.querySelectorAll('.request-item').length === 0) {
+                            const noRequestsMessage = document.createElement('p');
+                            noRequestsMessage.style.textAlign = 'center';
+                            noRequestsMessage.style.color = '#666';
+                            noRequestsMessage.textContent = 'No pending friend requests.';
+                            scrollContent.appendChild(noRequestsMessage);
+                        }
+
+
+                    } else {
+                        alert('Fout: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error processing request:', error);
+                    alert('A network error has occurred.');
+                }
+            }
+        });
+    </script>
+</body>

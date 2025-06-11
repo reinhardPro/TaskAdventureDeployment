@@ -1,0 +1,95 @@
+<head>
+    <title>Friends</title>
+    <link rel="stylesheet" href="/styles/Friends.css">
+</head>
+
+<body>
+    <div class="container">
+        <input type="text" id="friendSearch" placeholder="Zoek gebruikers...">
+        <div class="scroll-box">
+            <div class="scroll-content" id="friendList"> {{#each potentialFriends}}
+                <div class="item">
+                    <p class="name">{{this.username}}</p>
+                    <p class="experience">{{this.email}}</p>
+                    <button class="add-friend-btn" data-userid="{{this.id}}">Add Friend</button>
+                </div>
+                {{/each}}
+                <div id="noResults" style="display: none; text-align: center; color: #888; padding: 20px;">
+                    Geen gebruikers gevonden.
+                </div>
+            </div>
+        </div>
+    </div>
+    <button onclick="location.href='/my-friends'" type="button">Friends</button>
+    <button onclick="location.href='/friend-requests'" type="button">Friend requests</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('friendSearch');
+            const friendList = document.getElementById('friendList');
+            const allFriendItems = Array.from(friendList.getElementsByClassName('item'));
+            const noResultsMessage = document.getElementById('noResults');
+
+            searchInput.addEventListener('keyup', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                let resultsFound = false;
+
+                allFriendItems.forEach(item => {
+                    const usernameElement = item.querySelector('.name');
+                    const emailElement = item.querySelector('.experience');
+
+                    if (usernameElement) {
+                        const username = usernameElement.textContent.toLowerCase();
+                        const email = emailElement ? emailElement.textContent.toLowerCase() : '';
+
+                        if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                            item.style.display = '';
+                            resultsFound = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    }
+                });
+
+                if (resultsFound) {
+                    noResultsMessage.style.display = 'none';
+                } else {
+                    noResultsMessage.style.display = 'block';
+                }
+            });
+
+            // Add Friend button ---
+            const addFriendButtons = document.querySelectorAll('.add-friend-btn');
+
+            addFriendButtons.forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const friendId = event.target.dataset.userid;
+
+                    try {
+                        const response = await fetch('/addFriend', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ friendId: friendId })
+                        });
+
+                        const data = await response.json(); 
+
+                        if (response.ok) {
+                            alert(data.message); 
+                            event.target.textContent = 'Request sent';
+                            event.target.disabled = true;
+                            event.target.style.backgroundColor = '#6c757d'
+                        } else {
+
+                            alert('Fout: ' + data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error sending friend request:', error);
+                        alert('A network error occurred while sending the friend request.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>

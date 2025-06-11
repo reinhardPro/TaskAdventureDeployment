@@ -1,0 +1,76 @@
+<head>
+    <title>{{pageTitle}}</title>
+    <link rel="stylesheet" href="/styles/Friends.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>{{pageTitle}}</h2>
+        <div class="scroll-box">
+            <div class="scroll-content">
+                {{#if friends.length}}
+                    {{#each friends}}
+                        <div class="friend-item">
+                            <p class="username">{{this.username}}</p>
+                            <p class="email">{{this.email}}</p>
+                            <button class="remove-friend-btn" data-friendid="{{this.friendId}}">Remove Friend</button>
+                        </div>
+                    {{/each}}
+                {{else}}
+                    <p style="text-align: center; color: #666;">You don't have any friends yet.</p>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    
+    <button onclick="location.href='/friend-requests'" type="button">Friend requests</button>
+    <button onclick="location.href='/Friends'" type="button">Send friend request</button>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const removeFriendButtons = document.querySelectorAll('.remove-friend-btn');
+
+            removeFriendButtons.forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const friendIdToRemove = event.target.dataset.friendid;
+
+                    if (!confirm('Are you sure you want to remove this friend?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/remove-friend', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ friendId: friendIdToRemove })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            alert(data.message);
+                            event.target.closest('.friend-item').remove();
+
+                            const scrollContent = document.querySelector('.scroll-content');
+                            const remainingFriendItems = scrollContent.querySelectorAll('.friend-item');
+                            if (remainingFriendItems.length === 0) {
+                                const noFriendsMessage = document.createElement('p');
+                                noFriendsMessage.style.textAlign = 'center';
+                                noFriendsMessage.style.color = '#666';
+                                noFriendsMessage.textContent = "You don't have any friends yet.";
+                                scrollContent.appendChild(noFriendsMessage);
+                            }
+
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    } catch (error) {
+                        console.error('Error removing friend:', error);
+                        alert('A network error occurred while removing the friend.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
