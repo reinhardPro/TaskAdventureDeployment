@@ -5,18 +5,20 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './public/uploads');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
-    cb(null, uniqueName);
-  }
-});
 
-const upload = multer({ storage });
+//TEMPORARY comment
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, './public/uploads');
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = path.extname(file.originalname);
+//     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+//     cb(null, uniqueName);
+//   }
+// });
+
+// const upload = multer({ storage });
 
 const { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage } = require('../db/database');
 
@@ -150,7 +152,7 @@ function calculateLevelAndXpProgress(totalXp) {
 
   return {
     level,
-    xpIntoCurrentLevel: remainingXp,
+    xpIntoCurrentLevel: remainingXp, 
     xpToNextLevel: xpForNextLevel
   };
 }
