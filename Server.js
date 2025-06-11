@@ -47,7 +47,6 @@ function requireAdmin(req, res, next) {
 }
 
 const app = express();
-const port = 3000;
 
 app.engine('hbs', exphbs.engine({
   extname: 'hbs',
@@ -1668,6 +1667,4 @@ app.post('/remove-friend', requireLogin, (req, res) => {
         res.status(200).json({ success: true, message: "Friend removed successfully." });
     });
 });
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+module.exports = app;
