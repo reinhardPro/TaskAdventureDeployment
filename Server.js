@@ -7,7 +7,7 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './public/uploads'); // Zorg dat deze map bestaat
+    cb(null, './public/uploads');
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -58,22 +58,20 @@ app.engine('hbs', exphbs.engine({
     eq: (a, b) => a == b,
     ifEquals: (a, b, options) => {
       if (a == b) {
-        return options.fn(this);  // Render the block if the values are equal
+        return options.fn(this);
       }
-      return options.inverse(this);  // Otherwise, render the inverse block
+      return options.inverse(this);
     },
     lookupCharacter: (characters, id) => {
-      // Find the character by the given ID
       return characters.find(character => character.id == id);
     },
-    // NEW HELPER: Get character image based on level
+
     getCharacterImage: (character, characterInfo) => {
       if (!characterInfo) {
         console.warn('getCharacterImage: characterInfo is null or undefined', character);
-        return '/img/default.png'; // Fallback image
+        return '/img/default.png';
       }
 
-      // Example: Simple evolution based on level
       if (character.level >= 5 && characterInfo.evolutionStage2Image) {
         return characterInfo.evolutionStage2Image;
       } else if (character.level >= 2 && characterInfo.evolutionStage1Image) {
@@ -98,7 +96,7 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: false,  // Set this to true in production with HTTPS
+    secure: false,
     maxAge: 3600000,
     sameSite: 'lax'
   }
@@ -216,7 +214,7 @@ app.get('/home', requireLogin, (req, res) => {
   });
 });
 
-// XP gain route (No direct changes needed here, as it operates on character XP and level)
+// XP gain route
 app.post('/api/gain-xp', (req, res) => {
   const userId = req.session.user?.id;
   const characterId = parseInt(req.body.characterId);
@@ -250,7 +248,7 @@ app.post('/api/gain-xp', (req, res) => {
   );
 });
 
-// Taak voltooien + XP toekennen (No direct changes needed here, as it operates on character XP and level)
+// complete task
 app.post('/task/complete/:id', requireLogin, (req, res) => {
   const taskId = req.params.id;
   const characterId = req.query.characterId;
@@ -284,7 +282,6 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
             const updatedTaskCompleted = (stats.taskCompleted || 0) + 1;
             const updatedXp = (stats.totalXpGained || 0) + taskXp;
 
-            // Determen if this task gave the most xp
             const updatedMostXp = Math.max(taskXp, stats.mostXpForOneTask || 0);
 
             db.run(
@@ -297,7 +294,7 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
                   function (err) {
                     if (err) return res.status(500).send('Taak voltooien faalde');
 
-                    res.redirect('/home?characterId=' + characterId); // Redirect naar de home pagina
+                    res.redirect('/home?characterId=' + characterId);
 
                   });
               }
@@ -318,13 +315,11 @@ app.post('/task/complete/:id', requireLogin, (req, res) => {
 app.get('/Stats', requireLogin, (req, res) => {
   const userId = req.session.user?.id;
   const username = req.session.user?.username;
-  // Fetch stats for the logged-in user
   db.get('SELECT * FROM stats WHERE username = ?', [username], (err, stat) => {
     if (err) {
       console.error('Error fetching stats:', err);
       return res.status(500).send('Error fetching stats');
     }
-    //Render the "Stats" view with stats 
     res.render('Stats', { stats: stat, pageTitel: 'Stats' });
   });
 });
@@ -335,7 +330,6 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const today = new Date().toISOString().split('T')[0];
   const maxDate = '2050-12-31';
-  // Verwijder taken waarvan de dueDate in het verleden ligt
   db.run(`
     DELETE FROM tasks
     WHERE dueDate < date('now')
@@ -343,8 +337,6 @@ app.get('/Taskmanager', requireLogin, (req, res) => {
   `, [userId], (err) => {
     if (err) return res.status(500).send('Fout bij het verwijderen van verlopen taken');
 
-    // Daarna pas: laadt characters en taken
-    // IMPORTANT CHANGE: Join with character_info for Taskmanager too, so you can display images
     db.all(`
         SELECT c.*, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
         FROM characters c
@@ -462,12 +454,10 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
   const { email, username, password, confirmPassword } = req.body;
   const profileImage = req.file ? `/uploads/${req.file.filename}` : null;
 
-  // Basic password confirmation check
   if (password !== confirmPassword) {
     return res.render('CreateAccount', { error: 'Passwords do not match.' });
   }
 
-  // Password strength check
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/;
   if (!passwordRegex.test(password)) {
     return res.render('CreateAccount', {
@@ -475,7 +465,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
     });
   }
 
-  // Check if username or email already exists
   db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email], (err, existingUser) => {
     if (err) {
       return res.render('CreateAccount', { error: 'An error has occurred. Please try again.' });
@@ -485,7 +474,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
       return res.render('CreateAccount', { error: 'Username or e-mail already exists.' });
     }
 
-    // Create user
     createUser(email, username, password, profileImage, (err, userId) => {
       if (err) {
         return res.render('CreateAccount', { error: 'An error occurred while trying to create your account.' });
@@ -517,8 +505,6 @@ app.post('/CreateAccount', upload.single('profileImage'), (req, res) => {
     });
   });
 });
-
-
 
 // Logout
 app.post('/Logout', (req, res) => {
@@ -623,6 +609,7 @@ app.post('/admin/delete-task', requireAdmin, (req, res) => {
   });
 });
 
+// update character XP
 app.post('/admin/update-character-xp', (req, res) => {
   const characterId = parseInt(req.body.characterId);
   const newTotalXp = parseInt(req.body.newXp);
@@ -649,18 +636,13 @@ app.post('/admin/update-character-xp', (req, res) => {
   );
 });
 
-
-
 // Focus Mode route
 app.get('/FocusMode', requireLogin, (req, res) => {
   res.render('FocusMode', { pageTitel: 'Focus Mode' });
 });
 
-// Settings route
-
 // Helper functies
 function getCharacters(userId, callback) {
-  // IMPORTANT CHANGE: Join with character_info here too for settings page if you want to display current images
   db.all(`
     SELECT c.id, c.name, c.level,
            ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image
@@ -692,7 +674,7 @@ function renderSettingsPage(res, user, alert) {
   });
 }
 
-// GET Settings pagina
+// get Settings pagina
 app.get('/Settings', requireLogin, (req, res) => {
   const user = req.session.user;
   const alert = req.session.alert;
@@ -701,7 +683,7 @@ app.get('/Settings', requireLogin, (req, res) => {
   renderSettingsPage(res, user, alert);
 });
 
-// Wachtwoord wijzigen
+// Change Password
 app.post('/Settings/changePassword', requireLogin, (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const user = req.session.user;
@@ -748,7 +730,7 @@ app.post('/Settings/changePassword', requireLogin, (req, res) => {
   });
 });
 
-// Account verwijderen
+// Delete Account
 app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   const user = req.session.user;
 
@@ -797,13 +779,11 @@ app.post('/Settings/removeAccount', requireLogin, (req, res) => {
   });
 });
 
-// Character verwijderen
+// Delete Character
 app.post('/Settings/removecharacter', requireLogin, (req, res) => {
   const user = req.session.user;
   const characterId = req.body.characterId;
 
-
-  // Bekijkt het aantal characters van de gebruiker
   db.get('SELECT COUNT(*) AS count FROM characters WHERE userId = ?', [user.id], (err, row) => {
     if (err) {
       req.session.alert = { type: 'error', message: 'Error checking characters' };
@@ -848,7 +828,7 @@ app.get('/access-rights', (req, res) => {
   res.redirect('https://en.wikipedia.org/wiki/Access_control');
 });
 
-// Leaderboard (Needs join to character_info to get character image for leaderboard display)
+// Leaderboard
 app.get('/leaderboard', requireLogin, (req, res) => {
   db.all(`
     SELECT c.name, c.xp, ci.baseImage, ci.evolutionStage1Image, ci.evolutionStage2Image, c.level
@@ -861,10 +841,6 @@ app.get('/leaderboard', requireLogin, (req, res) => {
       console.error("Query error:", err.message);
       return res.status(500).send("Database error");
     }
-
-    // You might want to determine the correct image path for each character here
-    // based on their level before passing to the template, or use the helper.
-    // For now, the helper 'getCharacterImage' will handle it in the template.
 
     const top3 = rows.slice(0, 3);
     const others = rows.slice(3);
@@ -882,22 +858,18 @@ app.post('/admin/delete-user', requireAdmin, (req, res) => {
   });
 });
 
-// Inside your server.js, find a logical place for this.
-// For example, you can put it near your other app.get routes like '/Login' or '/CreateAccount'.
-
-// Character Creation GET route (to display the character creation form)
+// Character Creation GET route
 app.get('/CharacterCreation', requireLogin, (req, res) => res.render('CharacterCreation', { pageTitel: 'Character Creation' }));
 
-// Character Creation POST (IMPORTANT CHANGES HERE)
+// Character Creation POST
 app.post('/CharacterCreation', (req, res) => {
-  const { name, gender, imagevalue } = req.body; // imagevalue is now the baseImage path
+  const { name, gender, imagevalue } = req.body;
   const userId = req.session.user?.id;
 
   if (!userId) {
     return res.status(401).send("Unauthorized: You must be logged in.");
   }
 
-  // First, find the characterInfoId based on the selected base image
   getCharacterInfoByBaseImage(imagevalue, (err, characterInfo) => {
     if (err || !characterInfo) {
       console.error('Error fetching character info:', err);
@@ -906,7 +878,6 @@ app.post('/CharacterCreation', (req, res) => {
 
     const characterInfoId = characterInfo.id;
 
-    // Now insert into the characters table using characterInfoId
     db.run(
       'INSERT INTO characters (userId, name, gender, characterInfoId) VALUES (?, ?, ?, ?)', // Use characterInfoId
       [userId, name, gender, characterInfoId],
@@ -916,13 +887,13 @@ app.post('/CharacterCreation', (req, res) => {
           return res.status(500).json({ success: false, message: 'Error adding character to the database' });
         }
 
-        // Return success message as JSON
         return res.json({ success: true, message: 'Character created successfully!' });
       }
     );
   });
 });
 
+// GET profile
 app.get('/profile', requireLogin, (req, res) => {
   const user = req.session.user;
 
@@ -935,7 +906,7 @@ app.get('/profile', requireLogin, (req, res) => {
   });
 });
 
-
+// Update profile
 app.post('/profile/update', requireLogin, (req, res) => {
   const { username, email } = req.body;
   const userId = req.session.user.id;
@@ -984,6 +955,7 @@ app.post('/profile/update', requireLogin, (req, res) => {
   });
 });
 
+// Reset password
 app.get('/reset-password', (req, res) => {
   res.render('reset-password');
 });
@@ -1006,6 +978,7 @@ app.post('/reset-password', (req, res) => {
   });
 });
 
+// Classroom
 app.get('/Classroom', requireLogin, async (req, res) => {
   const user = req.session.user;
 
@@ -1106,6 +1079,7 @@ app.get('/Classroom', requireLogin, async (req, res) => {
   }
 });
 
+// Create classroom
 app.get('/CreateClassroom', requireLogin, (req, res) => {
   const user = req.session.user;
   const userId = user.id;
@@ -1199,6 +1173,7 @@ app.post('/CreateClassroom', requireLogin, (req, res) => {
   });
 });
 
+// Delete classroom
 app.post('/Classroom/:id/delete', requireLogin, (req, res) => {
   const classId = req.params.id;
   const userId = req.session.user.id;
@@ -1250,6 +1225,7 @@ app.post('/Classroom/:id/delete', requireLogin, (req, res) => {
   });
 });
 
+// Leave classroom
 app.post('/Classroom/:id/leave', requireLogin, (req, res) => {
   const classId = req.params.id;
   const userId = req.session.user.id;
@@ -1281,6 +1257,7 @@ app.post('/Classroom/:id/leave', requireLogin, (req, res) => {
   });
 });
 
+// Join classroom
 app.get('/joinClassroom', requireLogin, (req, res) => {
   const message = req.session.joinClassMessage;
   delete req.session.joinClassMessage;
