@@ -1,18 +1,26 @@
+
+
 {
   "name": "todo-app",
   "version": "1.0.0",
   "main": "api/server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "brace-expansion": "^4.0.1",
+    "brace-expansion": "^4.0.1",  
     "express": "^4.18.2",
     "express-handlebars": "^8.0.3",
     "express-session": "^1.18.1",
     "hbs": "^4.2.0",
-    "minimatch": "1.1.11",
+    "minimatch": "^10.0.2",        
     "multer": "^2.0.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
-  "type": "module"
+  "scripts": {
+    "postinstall": "node -e \"require('fs').writeFileSync('node_modules/brace-expansion/index.js', require('fs').readFileSync('node_modules/brace-expansion/index.js', 'utf8').replace('export default', 'module.exports ='), 'utf8')\""
+  }
 }
