@@ -140,6 +140,7 @@ function calculateLevelAndXpProgress(totalXp) {
     remainingXp -= xpForNextLevel;
     level++;
     xpForNextLevel = 100 + (level - 1) * 50;
+    console.log("Skibididi");
   }
 
   return {
