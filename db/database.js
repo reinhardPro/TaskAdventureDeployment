@@ -1,10 +1,13 @@
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
+// db/database.js - Converted to ES Modules
 
-const db = new sqlite3.Database('./TAdatabase.db');
+import sqlite3 from 'sqlite3'; // Import sqlite3 as an ES Module
+import bcrypt from 'bcrypt';   // Import bcrypt as an ES Module
+
+// You might need to adjust how verbose() is used if sqlite3's ES Module
+// export changes its structure. Assuming .verbose() is still a method on the default export.
+const db = new (sqlite3.verbose()).Database('./TAdatabase.db');
 
 db.serialize(() => {
-
   // Tabellen aanmaken
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -47,7 +50,7 @@ db.serialize(() => {
   )
 `);
 
-    db.run(`
+  db.run(`
   CREATE TABLE IF NOT EXISTS character_info (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     baseImage TEXT UNIQUE NOT NULL, -- The initial image path that links characters to this info
@@ -159,7 +162,7 @@ db.serialize(() => {
     )
 `);
 
-   // Insert initial character info (you'll need to decide on your base images and evolutions)
+  // Insert initial character info (you'll need to decide on your base images and evolutions)
   // This is just an example. You'll add more based on your characterImages array.
   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/malePixel.png'`, (err, rows) => {
     if (rows.length === 0) {
@@ -173,25 +176,25 @@ db.serialize(() => {
         ['/img/pixelFemale.png', '/img/pixelFemale2.png', '/img/pixelFemale3.png', 'Basic Female']);
     }
   });
- db.all(`SELECT id FROM character_info WHERE baseImage = '/img/Hermit.png'`, (err, rows) => {
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/Hermit.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
         ['/img/Hermit.png', '/img/Hermit2.png', '/img/Hermit3.png', 'Hermit']);
     }
   });
-   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/FeyereJoe.png'`, (err, rows) => {
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/FeyereJoe.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
         ['/img/FeyereJoe.png', '/img/FeyereJoe2.png', '/img/FeyereJoe3.png', 'Feyere Joe']);
     }
   });
-   db.all(`SELECT id FROM character_info WHERE baseImage = '/img/samurai.png'`, (err, rows) => {
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/samurai.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
         ['/img/samurai.png', '/img/samurai2Evo.png', '/img/samurai3.png', 'Samurai']);
     }
   });
-    db.all(`SELECT id FROM character_info WHERE baseImage = '/img/purpleguy.png'`, (err, rows) => {
+  db.all(`SELECT id FROM character_info WHERE baseImage = '/img/purpleguy.png'`, (err, rows) => {
     if (rows.length === 0) {
       db.run(`INSERT INTO character_info (baseImage, evolutionStage1Image, evolutionStage2Image, evolutionName) VALUES (?, ?, ?, ?)`,
         ['/img/purpleguy.png', '/img/purpleguy2.png', '/img/purpleguy3.png', 'Purple Guy']);
@@ -245,8 +248,8 @@ db.serialize(() => {
 
 }); // Einde db.serialize()
 
-// Gebruikersfuncties
-function createUser(email, username, password, profileImage, callback) {
+// Gebruikersfuncties - now with export keyword
+export function createUser(email, username, password, profileImage, callback) {
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) return callback(err);
     db.run(
@@ -259,7 +262,7 @@ function createUser(email, username, password, profileImage, callback) {
   });
 }
 
-function findUser(usernameOrEmail, callback) {
+export function findUser(usernameOrEmail, callback) {
   db.get(
     `SELECT * FROM users WHERE username = ? OR email = ?`,
     [usernameOrEmail, usernameOrEmail],
@@ -269,7 +272,7 @@ function findUser(usernameOrEmail, callback) {
   );
 }
 
-function getTasks(userId, callback) {
+export function getTasks(userId, callback) {
   db.all(
     `SELECT * FROM tasks WHERE userId = ?`,
     [userId],
@@ -279,12 +282,12 @@ function getTasks(userId, callback) {
   );
 }
 
-function getCharacterInfoByBaseImage(baseImage, callback) {
+export function getCharacterInfoByBaseImage(baseImage, callback) {
   db.get('SELECT * FROM character_info WHERE baseImage = ?', [baseImage], (err, row) => {
     callback(err, row);
   });
 }
 
-module.exports = { db, createUser, findUser, getTasks, getCharacterInfoByBaseImage };
-
-//correct script
+// Export the 'db' object explicitly if it's used directly in other files.
+// If it's only used internally within this file, you don't need to export it.
+export { db };
