@@ -12,8 +12,5 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
   },
-  "scripts": {
-  "postinstall": "npm rebuild"
-},
 "type": "module"
 }
